@@ -238,8 +238,10 @@ export default function ProjectPage() {
         <main id="project-main-container" className={`fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] z-[60] ${isDesktop ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'}`}>
 
             {isLoading && (
-                <div className="fixed inset-0 z-[100] flex items-center justify-center bg-[#efefef]">
-                    <span className="text-[12px] font-bold tracking-widest text-[#111] uppercase opacity-40 animate-pulse">Loading...</span>
+                <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
+                    <span className="text-[12px] font-bold tracking-widest text-[#111] uppercase opacity-40 animate-pulse">
+                        Loading...
+                    </span>
                 </div>
             )}
 
