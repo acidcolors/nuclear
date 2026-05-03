@@ -8,68 +8,113 @@ import { TransitionLink } from '@/components/TransitionLink';
 import { getNotionContactData, getNotionFriendsData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
 
-// --- КОМПОНЕНТ "МАГНИТНЫЕ" СОЦСЕТИ ---
-const MagneticSocials = ({ items }: { items: any[] }) => {
+// --- УНИФИЦИРОВАННЫЙ МАГНИТНЫЙ КОМПОНЕНТ ---
+const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boolean }) => {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-    if (!items || items.length === 0) return null;
+    // Собираем все элементы в один массив
+    const allItems = useMemo(() => {
+        const socials = items.map(it => ({ ...it, type: 'social' }));
+        if (showFriends) {
+            return [...socials, { id: 'friends', type: 'button', title: 'Друзья', url: '/friends' }];
+        }
+        return socials;
+    }, [items, showFriends]);
+
+    if (allItems.length === 0) return null;
 
     return (
         <div
-            className="flex flex-row items-center gap-[10px] md:gap-[20px] lg:gap-[30px] xl:gap-[10px] mt-[40px] lg:mt-[50px] xl:mt-[40px] z-10 w-max -ml-[15px]"
+            className="flex flex-row items-center gap-[10px] md:gap-[20px] lg:gap-[30px] xl:gap-[15px] mt-[20px] md:mt-[30px] lg:mt-[40px] xl:mt-[35px] z-10 w-full flex-wrap pl-0 -ml-[10px]"
             onMouseLeave={() => setHoveredIndex(null)}
         >
-            {items.map((item, index) => {
-                let transformClass = "translate-x-0 scale-100 opacity-60";
+            {allItems.map((item, index) => {
+                let xOffset = 0;
+                let scale = 1;
+                let opacity = 0.6;
 
+                if (hoveredIndex !== null) {
+                    if (index === hoveredIndex) {
+                        scale = 1.1;
+                        opacity = 1;
+                    } else if (index < hoveredIndex) {
+                        xOffset = -15;
+                        scale = 0.95;
+                        opacity = 0.3;
+                    } else if (index > hoveredIndex) {
+                        xOffset = 15;
+                        scale = 0.95;
+                        opacity = 0.3;
+                    }
+                }
+
+                const commonStyle = {
+                    transform: `translateX(${xOffset}px) scale(${scale})`,
+                    opacity: opacity,
+                    transition: 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)'
+                };
+
+                if (item.type === 'button') {
+                    return (
+                        <div
+                            key={item.id}
+                            className="xl:hidden animate-stagger opacity-0 translate-y-5 z-[100] relative mr-[10px]"
+                            onMouseEnter={() => setHoveredIndex(index)}
+                        >
+                            <div style={commonStyle}>
+                                <TransitionLink
+                                    href="/friends"
+                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-white hover:bg-[#ff6d6d] no-underline pointer-events-auto"
+                                >
+                                    <img src="/icons/Fire.svg" alt="fire" className="w-[18px] h-auto pointer-events-none" />
+                                    <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>Друзья</span>
+                                </TransitionLink>
+                            </div>
+                        </div>
+                    );
+                }
+
+                // Логика иконок
                 const lowerName = item.title.toLowerCase();
                 let currentIcon = '/icons/telegram.svg';
                 let iconColor = '/icons/telegram_color.svg';
-                
                 if (lowerName.includes('instagram')) {
                     currentIcon = '/icons/instagram.svg';
                     iconColor = '/icons/instagram_color.svg';
                 }
-
                 const isTelegram = lowerName.includes('telegram') || (!lowerName.includes('instagram'));
+                
+                if (hoveredIndex === index && !isTelegram) {
+                    currentIcon = iconColor;
+                }
 
-                // Применяем фильтр ТОЛЬКО для Telegram при наведении
                 const iconStyle = (hoveredIndex === index && isTelegram)
                     ? { filter: 'invert(58%) sepia(82%) saturate(541%) hue-rotate(159deg) brightness(91%) contrast(92%)' }
                     : {};
 
-                if (hoveredIndex !== null) {
-                    if (index === hoveredIndex) {
-                        transformClass = "scale-[1.4] opacity-100";
-                        // Для Instagram подменяем файл на цветной, как было раньше
-                        if (!isTelegram) {
-                            currentIcon = iconColor;
-                        }
-                    } else if (index < hoveredIndex) {
-                        transformClass = "-translate-x-[25px] scale-90 opacity-30";
-                    } else if (index > hoveredIndex) {
-                        transformClass = "translate-x-[25px] scale-90 opacity-30";
-                    }
-                }
-
                 return (
-                    <a
+                    <div 
                         key={item.id}
-                        href={item.url}
-                        target="_blank"
-                        rel="noopener noreferrer"
+                        className="animate-stagger opacity-0 translate-y-5"
                         onMouseEnter={() => setHoveredIndex(index)}
-                        className="animate-stagger opacity-0 translate-y-5 outline-none cursor-pointer block shrink-0 p-[15px] will-change-[opacity,transform]"
                     >
-                        <div className={`transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${transformClass} w-[32px] h-[32px] md:w-[40px] md:h-[40px] lg:w-[48px] lg:h-[48px] xl:w-[32px] xl:h-[32px]`}>
-                            <img 
-                                src={currentIcon} 
-                                alt={item.title} 
-                                className="w-full h-full object-contain pointer-events-none transition-all duration-300" 
-                                style={iconStyle}
-                            />
-                        </div>
-                    </a>
+                        <a
+                            href={item.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={commonStyle}
+                            className="outline-none cursor-pointer block shrink-0 p-[10px] will-change-[opacity,transform]"
+                        >
+                            <div className="w-[32px] h-[32px] md:w-[40px] md:h-[40px] lg:w-[48px] lg:h-[48px] xl:w-[32px] xl:h-[32px]">
+                                <img 
+                                    src={currentIcon} 
+                                    alt={item.title} 
+                                    className="w-full h-full object-contain pointer-events-none transition-all duration-300" 
+                                    style={iconStyle}
+                                />
+                            </div>
+                        </a>
+                    </div>
                 );
             })}
         </div>
@@ -84,6 +129,14 @@ export default function ContactPage() {
     const containerRef = useRef<HTMLDivElement>(null);
     const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
     const animatedRef = useRef(false);
+    const [isMobile, setIsMobile] = useState(false);
+
+    useEffect(() => {
+        const checkMobile = () => setIsMobile(window.innerWidth < 768);
+        checkMobile();
+        window.addEventListener('resize', checkMobile);
+        return () => window.removeEventListener('resize', checkMobile);
+    }, []);
 
     useEffect(() => {
         const fetchAll = async () => {
@@ -186,7 +239,10 @@ export default function ContactPage() {
     return (
         <main ref={containerRef} className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] overflow-hidden z-[60]">
             <div className="absolute top-0 left-0 w-full h-[100dvh] pointer-events-none z-30 flex flex-col lg:flex-row">
-                <div className="pointer-events-auto w-full h-full lg:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 pt-[16vh] md:pt-[20vh] lg:pt-[28vh] box-border">
+                <div 
+                    className="pointer-events-auto w-full h-full lg:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 box-border"
+                    style={{ paddingTop: isMobile ? '10vh' : '22vh' }}
+                >
                     <div className="w-full">
                         {animations && (
                             <InteractiveRelax
@@ -200,19 +256,7 @@ export default function ContactPage() {
                             {description}
                         </p>
 
-                        <div className="flex flex-row items-end gap-[20px] md:gap-[40px] mb-8 lg:mb-12">
-                            <div className="xl:hidden animate-stagger opacity-0 translate-y-5 shrink-0 z-[100] relative">
-                                <TransitionLink
-                                    href="/friends"
-                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-white hover:bg-[#ff6d6d] no-underline pointer-events-auto"
-                                >
-                                    <img src="/icons/Fire.svg" alt="fire" className="w-[18px] h-auto pointer-events-none" />
-                                    <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>Друзья</span>
-                                </TransitionLink>
-                            </div>
-                        </div>
-
-                        <MagneticSocials items={socials} />
+                        <UnifiedSocials items={socials} showFriends={true} />
                     </div>
                 </div>
 
