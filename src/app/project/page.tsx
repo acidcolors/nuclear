@@ -239,8 +239,8 @@ export default function ProjectPage() {
 
             {isLoading && (
                 <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
-                    <span className="text-[12px] font-bold tracking-widest text-[#111] uppercase opacity-40 animate-pulse">
-                        Loading...
+                    <span className="text-[12px] font-bold tracking-widest text-[#111] opacity-40 animate-pulse">
+                        Loading
                     </span>
                 </div>
             )}

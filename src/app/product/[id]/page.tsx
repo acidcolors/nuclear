@@ -16,7 +16,7 @@ export default function ProductPage() {
     const params = useParams<{ id: string }>();
 
     const productId = params.id ? params.id.toLowerCase() : 'prj_01';
-    
+
     const [notionData, setNotionData] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
 
@@ -168,7 +168,13 @@ export default function ProductPage() {
     // Заглушка загрузки для динамических товаров (которых нет в статике)
     const isStaticProduct = products.some(p => p.id === productId);
     if (CMS_CONFIG.USE_NOTION && !isStaticProduct && isLoading) {
-        return <div className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] z-[100] flex items-center justify-center font-bold text-[#111] uppercase tracking-widest opacity-50">Loading...</div>;
+        return (
+            <div className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] z-[100] flex items-center justify-center">
+                <span className="text-[12px] font-bold tracking-widest text-[#111] opacity-40 animate-pulse">
+                    Loading
+                </span>
+            </div>
+        );
     }
 
     return (
@@ -201,9 +207,9 @@ export default function ProductPage() {
                             {product.title}
                         </h2>
 
-                            <h3 className="inline-block bg-[#f4f4f4] px-[18px] py-[8px] rounded-[8px] text-[#111] font-bold text-[22px] mb-[30px] self-start shadow-sm">
-                                {product.price && !isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
-                            </h3>
+                        <h3 className="inline-block bg-[#f4f4f4] px-[18px] py-[8px] rounded-[8px] text-[#111] font-bold text-[22px] mb-[30px] self-start shadow-sm">
+                            {product.price && !isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
+                        </h3>
 
                         <p className="text-[20px] md:text-lg lg:text-[1.2vw] font-medium leading-[1.6] opacity-90 mb-[50px] text-[#111]">
                             {product.description}
