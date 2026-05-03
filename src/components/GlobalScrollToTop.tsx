@@ -13,7 +13,7 @@ export const GlobalScrollToTop = () => {
     useEffect(() => {
         const handleScroll = (e: Event) => {
             const target = e.target;
-            
+
             // Игнорируем мелкие элементы, ищем только те, что могут быть основными контейнерами
             // Обычно это либо document, либо дивы с overflow
             let scrollTop = 0;
@@ -35,7 +35,7 @@ export const GlobalScrollToTop = () => {
 
         // Используем capture: true, чтобы ловить события скролла, которые не всплывают (на дивах)
         window.addEventListener('scroll', handleScroll, true);
-        
+
         return () => {
             window.removeEventListener('scroll', handleScroll, true);
         };
@@ -49,20 +49,20 @@ export const GlobalScrollToTop = () => {
 
     useEffect(() => {
         if (isVisible) {
-            gsap.to(btnRef.current, { 
-                opacity: 1, 
-                y: 0, 
-                pointerEvents: 'auto', 
-                duration: 0.6, 
+            gsap.to(btnRef.current, {
+                opacity: 1,
+                y: 0,
+                pointerEvents: 'auto',
+                duration: 0.6,
                 ease: 'power3.out',
                 display: 'block'
             });
         } else {
-            gsap.to(btnRef.current, { 
-                opacity: 0, 
-                y: 30, 
-                pointerEvents: 'none', 
-                duration: 0.5, 
+            gsap.to(btnRef.current, {
+                opacity: 0,
+                y: 30,
+                pointerEvents: 'none',
+                duration: 0.5,
                 ease: 'power3.in',
                 onComplete: () => {
                     if (btnRef.current) btnRef.current.style.display = 'none';
@@ -74,7 +74,7 @@ export const GlobalScrollToTop = () => {
     const handleBackToTop = () => {
         // 1. Прокручиваем окно (стандартный скролл)
         window.scrollTo({ top: 0, behavior: 'smooth' });
-        
+
         // 2. Прокручиваем все возможные контейнеры, если они были активны
         if (activeContainerRef.current) {
             activeContainerRef.current.scrollTo({ top: 0, behavior: 'smooth' });
@@ -92,16 +92,16 @@ export const GlobalScrollToTop = () => {
     };
 
     return (
-        <div 
+        <div
             ref={btnRef}
             onClick={handleBackToTop}
             className="fixed bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[200] cursor-pointer opacity-0 translate-y-[30px] hidden"
             style={{ pointerEvents: 'none' }}
         >
             <div className="relative group transition-transform duration-300 hover:scale-110 active:scale-95">
-                <img 
-                    src="/label_up.svg" 
-                    alt="Back to top" 
+                <img
+                    src="/label_up.svg"
+                    alt="Back to top"
                     className="w-[100px] md:w-[120px] lg:w-[150px] h-auto drop-shadow-md"
                 />
             </div>

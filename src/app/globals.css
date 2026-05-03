@@ -480,3 +480,17 @@ header,
     cursor: none !important;
   }
 }
+
+/* --- ФИКС ДЛЯ IPAD PRO (1024x1366) --- */
+@media (width: 1024px) and (height: 1366px) {
+  .custom-thank-you {
+    bottom: 20vh !important;
+    /* Опускаем ниже основного текста */
+  }
+
+  .custom-behance {
+    top: 75vh !important;
+    /* Смещаем Behance ниже центра, чтобы не зарезал текст */
+    transform: rotate(90deg) !important;
+  }
+}

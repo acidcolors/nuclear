@@ -39,7 +39,6 @@ const NavItem = ({ href, text, isActive, color }: { href: string; text: string; 
                         <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
                             {text} <span ref={star1Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
                         </span>
-                        {/* Состояние 2 (Hover): Используем тот же цвет */}
                         <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
                             {text} <span ref={star2Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
                         </span>
@@ -58,11 +57,11 @@ export const Header = () => {
     const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
     const isHomePage = pathname === '/';
 
-    // Определяем, нужно ли использовать темный цвет (для страниц продуктов и списка проектов)
     const isDarkTheme = isProjectActive;
     const themeColor = isDarkTheme ? '#1a1a1a' : '#ebebeb';
 
-    const bigStarRef = useRef<HTMLSpanElement>(null);
+    const bigStarRef = useRef<HTMLDivElement>(null);
+    const rotationTween = useRef<gsap.core.Tween | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
 
     const lottieContainerRef = useRef<HTMLDivElement>(null);
@@ -104,47 +103,55 @@ export const Header = () => {
 
     useEffect(() => { setIsMenuOpen(false); }, [pathname]);
 
+    // Анимация звезды с защитой от дерганья
     useEffect(() => {
-        if (isHomePage) {
+        if (isHomePage && bigStarRef.current) {
             gsap.set(bigStarRef.current, { display: 'flex', opacity: 1, scale: 1 });
-            gsap.to(bigStarRef.current, {
-                rotation: 360, duration: 25, ease: "none", repeat: -1, transformOrigin: "center center"
-            });
-        } else {
+            
+            if (!rotationTween.current) {
+                rotationTween.current = gsap.to(bigStarRef.current, {
+                    rotation: 360,
+                    duration: 25,
+                    ease: "none",
+                    repeat: -1,
+                    transformOrigin: "center center"
+                });
+            }
+        } else if (bigStarRef.current) {
             gsap.set(bigStarRef.current, { display: 'none', opacity: 0 });
+            if (rotationTween.current) {
+                rotationTween.current.kill();
+                rotationTween.current = null;
+            }
         }
+        
         return () => {
-            gsap.killTweensOf(bigStarRef.current);
+            if (rotationTween.current) {
+                rotationTween.current.kill();
+                rotationTween.current = null;
+            }
         };
     }, [isHomePage]);
 
     return (
         <>
-            {/* 1. СЛОЙ ДЛЯ ЗВЕЗДЫ (БЕЗ НАЛОЖЕНИЯ) */}
             <div className="fixed top-0 left-0 w-full h-[100px] z-[90] pointer-events-none">
                 <div className="absolute top-[10vh] right-[4vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[50] pointer-events-none h-[44px]">
-                    {/* Обёртка, которая отвечает только за позицию */}
                     <div className="absolute top-[-55px] right-[-80px] md:right-[-160px] lg:right-[-80px] min-[1441px]:right-auto lg:left-auto min-[1441px]:left-[120px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
-                        <span
+                        <div
                             ref={bigStarRef}
-                            className="flex items-center justify-center w-full h-full"
-                            style={{
-                                fontSize: '380px', lineHeight: 1,
-                                color: '#f5b3ffff'
-                            }}
+                            className="w-full h-full will-change-transform flex items-center justify-center"
+                            style={{ color: '#f5b3ffff' }}
                         >
-                            ✹
-                        </span>
+                            <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
+                                <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                            </svg>
+                        </div>
                     </div>
                 </div>
             </div>
 
-            {/* 2. СЛОЙ ХЕДЕРА */}
-            {/* На страницах продуктов убираем blend-exclusion, как просил пользователь */}
             <header className={`fixed top-0 left-0 w-full h-[100px] z-[100] pointer-events-none ${isDarkTheme ? '' : 'blend-exclusion'}`}>
-
-                {/* --- БУРГЕР (Только мобилка) --- */}
-                {/* Класс наложения убран отсюда, так как он теперь на родительском header */}
                 <button
                     className="lg:hidden absolute top-[4vh] left-[6vw] w-[44px] h-[44px] border-none !border-0 outline-none pointer-events-auto z-[200] flex items-center justify-center bg-transparent"
                     style={{ border: 'none', background: 'transparent', transform: 'translateZ(0)' }}
@@ -161,10 +168,7 @@ export const Header = () => {
                     />
                 </button>
 
-                {/* ОБЕРТКА ДЛЯ МЕНЮ И ЛОГОТИПА */}
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
-
-                    {/* --- 1. БЛОК ЛОГОТИПА --- */}
                     <div className="absolute top-[4vh] right-[10vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[150] pointer-events-auto h-[44px]">
                         <div className={`transition-all duration-300 flex items-center z-[10] origin-right min-[1441px]:origin-left lg:!delay-0
                             ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}
@@ -184,7 +188,6 @@ export const Header = () => {
                         </div>
                     </div>
 
-                    {/* --- 2. БЛОК ТОЛЬКО ДЛЯ МЕНЮ --- */}
                     <div className="absolute top-[4.2vh] right-[20vw] lg:top-[40px] lg:right-[220px] min-[1441px]:right-[40px] flex items-center justify-end z-[150] pointer-events-auto h-[44px]">
                         <nav className={`lg:hidden flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] absolute right-[26vw] origin-right z-[10]
                             ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto' : 'duration-200 opacity-0 translate-x-8 pointer-events-none'}

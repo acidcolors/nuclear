@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import gsap from 'gsap';
@@ -9,17 +9,54 @@ import { products, getProductById, getGalleryImagePaths } from '../../../data/pr
 import { TransitionLink } from '../../../components/TransitionLink';
 import { Lightbox } from '../../../components/ui/Lightbox';
 import { ShareModal } from '../../../components/ui/ShareModal';
+import { getNotionProducts } from '../../../lib/notion';
+import { CMS_CONFIG } from '../../../config/cmsSwitch';
 
 export default function ProductPage() {
     const params = useParams<{ id: string }>();
 
     const productId = params.id ? params.id.toLowerCase() : 'prj_01';
-    // Ищем продукт в новом массиве с помощью функции-хелпера
-    // Если по какой-то причине URL неверный, берем первый попавшийся как fallback
-    const product = getProductById(productId) || products[0];
+    
+    const [notionData, setNotionData] = useState<any | null>(null);
+    const [isLoading, setIsLoading] = useState(true);
 
-    // Генерируем массив путей к картинкам для этого продукта (image1.png, image2.png...)
-    const galleryPhotos = product ? getGalleryImagePaths(product.folderId, product.galleryImagesCount) : [];
+    useEffect(() => {
+        if (!CMS_CONFIG.USE_NOTION) {
+            setIsLoading(false);
+            return;
+        }
+        async function fetchData() {
+            try {
+                const allNotion = await getNotionProducts();
+                const current = allNotion.find((p: any) => p.id === productId);
+                if (current) setNotionData(current);
+            } catch (err) {
+                console.error(err);
+            } finally {
+                setIsLoading(false);
+            }
+        }
+        fetchData();
+    }, [productId]);
+
+    const baseProduct = getProductById(productId);
+
+    // В режиме Notion мы доверяем ТОЛЬКО данным из таблицы.
+    // В статичном режиме — только локальному файлу.
+    const product = CMS_CONFIG.USE_NOTION ? (notionData ? {
+        ...notionData,
+        // Если в Notion не указан folderId, используем заглушку
+        folderId: notionData.folderId || 'notion_fallback'
+    } : undefined) : baseProduct;
+
+    // Генерируем массив путей к картинкам
+    const galleryPhotos = useMemo(() => {
+        if (!product) return [];
+        if (CMS_CONFIG.USE_NOTION && notionData && notionData.notionImages && notionData.notionImages.length > 0) {
+            return notionData.notionImages;
+        }
+        return getGalleryImagePaths(product.folderId, product.galleryImagesCount);
+    }, [product, notionData]);
 
     const [isShareModalOpen, setIsShareModalOpen] = useState(false);
     const [fullscreenIdx, setFullscreenIdx] = useState<number | null>(null);
@@ -128,6 +165,12 @@ export default function ProductPage() {
     // Предотвращаем рендер, если продукт почему-то не найден
     if (!product) return null;
 
+    // Заглушка загрузки для динамических товаров (которых нет в статике)
+    const isStaticProduct = products.some(p => p.id === productId);
+    if (CMS_CONFIG.USE_NOTION && !isStaticProduct && isLoading) {
+        return <div className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] z-[100] flex items-center justify-center font-bold text-[#111] uppercase tracking-widest opacity-50">Loading...</div>;
+    }
+
     return (
         <div id="product-main-container" ref={containerRef} className={`fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] z-[60] ${isDesktop ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'}`}>
 
@@ -158,11 +201,9 @@ export default function ProductPage() {
                             {product.title}
                         </h2>
 
-                        {product.price && (
                             <h3 className="inline-block bg-[#f4f4f4] px-[18px] py-[8px] rounded-[8px] text-[#111] font-bold text-[22px] mb-[30px] self-start shadow-sm">
-                                {product.price}
+                                {product.price && !isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
                             </h3>
-                        )}
 
                         <p className="text-[20px] md:text-lg lg:text-[1.2vw] font-medium leading-[1.6] opacity-90 mb-[50px] text-[#111]">
                             {product.description}
@@ -170,10 +211,10 @@ export default function ProductPage() {
 
                         <div className="flex flex-col gap-1 mb-[50px]">
                             <span className="text-[11px] font-bold tracking-widest opacity-40 uppercase text-[#111]">Детали проекта</span>
-                            <span className="text-[14px] font-bold opacity-80 mt-2 text-[#111]">Размер: {product.size}</span>
-                            <span className="text-[14px] font-bold opacity-80 text-[#111]">Материал: {product.material}</span>
-                            <span className="text-[14px] font-bold opacity-80 text-[#111]">Год: {product.year}</span>
-                            <span className="text-[14px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>
+                            {product.size && <span className="text-[14px] font-bold opacity-80 mt-2 text-[#111]">Размер: {product.size}</span>}
+                            {product.material && <span className="text-[14px] font-bold opacity-80 text-[#111]">Материал: {product.material}</span>}
+                            {product.year && <span className="text-[14px] font-bold opacity-80 text-[#111]">Год: {product.year}</span>}
+                            {product.role && <span className="text-[14px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>}
                         </div>
 
                         <div className="flex items-center gap-[15px] w-full">

@@ -1,33 +1,50 @@
 'use client';
 
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import gsap from 'gsap';
-// ВАЖНО: Проверь, что путь к компоненту совпадает с тем, куда ты его сохранил
 import InteractiveRelax from '@/components/ui/InteractiveRelax';
+import { TransitionLink } from '@/components/TransitionLink';
+import { getNotionContactData, getNotionFriendsData } from '@/lib/notion';
+import { CMS_CONFIG } from '@/config/cmsSwitch';
 
-// --- КОМПОНЕНТ "МАГНИТНЫЕ" СОЦСЕТИ (Без изменений) ---
-const MagneticSocials = () => {
+// --- КОМПОНЕНТ "МАГНИТНЫЕ" СОЦСЕТИ ---
+const MagneticSocials = ({ items }: { items: any[] }) => {
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
-    const items = [
-        { id: 1, name: 'Instagram', url: 'https://www.instagram.com/gardennuclear/', icon: '/icons/instagram.svg', iconColor: '/icons/instagram_color.svg' },
-        { id: 2, name: 'Telegram', url: 'https://t.me', icon: '/icons/telegram.svg', iconColor: '/icons/telegram_color.svg' },
-    ];
+    if (!items || items.length === 0) return null;
 
     return (
         <div
-            className="animate-stagger opacity-0 flex flex-row items-center gap-[10px] md:gap-[20px] lg:gap-[30px] xl:gap-[10px] mt-[40px] lg:mt-[50px] xl:mt-[40px] z-10 w-max -ml-[15px]"
+            className="flex flex-row items-center gap-[10px] md:gap-[20px] lg:gap-[30px] xl:gap-[10px] mt-[40px] lg:mt-[50px] xl:mt-[40px] z-10 w-max -ml-[15px]"
             onMouseLeave={() => setHoveredIndex(null)}
         >
             {items.map((item, index) => {
                 let transformClass = "translate-x-0 scale-100 opacity-60";
-                let currentIcon = item.icon;
+
+                const lowerName = item.title.toLowerCase();
+                let currentIcon = '/icons/telegram.svg';
+                let iconColor = '/icons/telegram_color.svg';
+                
+                if (lowerName.includes('instagram')) {
+                    currentIcon = '/icons/instagram.svg';
+                    iconColor = '/icons/instagram_color.svg';
+                }
+
+                const isTelegram = lowerName.includes('telegram') || (!lowerName.includes('instagram'));
+
+                // Применяем фильтр ТОЛЬКО для Telegram при наведении
+                const iconStyle = (hoveredIndex === index && isTelegram)
+                    ? { filter: 'invert(58%) sepia(82%) saturate(541%) hue-rotate(159deg) brightness(91%) contrast(92%)' }
+                    : {};
 
                 if (hoveredIndex !== null) {
                     if (index === hoveredIndex) {
                         transformClass = "scale-[1.4] opacity-100";
-                        currentIcon = item.iconColor;
+                        // Для Instagram подменяем файл на цветной, как было раньше
+                        if (!isTelegram) {
+                            currentIcon = iconColor;
+                        }
                     } else if (index < hoveredIndex) {
                         transformClass = "-translate-x-[25px] scale-90 opacity-30";
                     } else if (index > hoveredIndex) {
@@ -42,10 +59,15 @@ const MagneticSocials = () => {
                         target="_blank"
                         rel="noopener noreferrer"
                         onMouseEnter={() => setHoveredIndex(index)}
-                        className="outline-none cursor-pointer block shrink-0 p-[15px]"
+                        className="animate-stagger opacity-0 translate-y-5 outline-none cursor-pointer block shrink-0 p-[15px] will-change-[opacity,transform]"
                     >
                         <div className={`transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] ${transformClass} w-[32px] h-[32px] md:w-[40px] md:h-[40px] lg:w-[48px] lg:h-[48px] xl:w-[32px] xl:h-[32px]`}>
-                            <img src={currentIcon} alt={item.name} className="w-full h-full object-contain pointer-events-none" />
+                            <img 
+                                src={currentIcon} 
+                                alt={item.title} 
+                                className="w-full h-full object-contain pointer-events-none transition-all duration-300" 
+                                style={iconStyle}
+                            />
                         </div>
                     </a>
                 );
@@ -56,66 +78,116 @@ const MagneticSocials = () => {
 
 export default function ContactPage() {
     const [loading, setLoading] = useState(true);
-    // Стейт для хранения всех трех анимаций
     const [animations, setAnimations] = useState<{ girl: any, cube: any, triangle: any } | null>(null);
+    const [contactData, setContactData] = useState<any[]>([]);
+    const [friendsData, setFriendsData] = useState<any[]>([]);
+    const containerRef = useRef<HTMLDivElement>(null);
     const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
-    const router = useRouter();
+    const animatedRef = useRef(false);
 
-    // 1. ЕДИНЫЙ ЦИКЛ ЗАГРУЗКИ (Сразу 3 файла)
     useEffect(() => {
-        gsap.set([".animate-stagger"], { opacity: 0, y: 20 });
+        const fetchAll = async () => {
+            try {
+                // 1. Грузим только быстрые локальные файлы — ждем их для старта
+                Promise.all([
+                    fetch('/relax_girl.json').then(res => res.json()),
+                    fetch('/relax_cube.json').then(res => res.json()),
+                    fetch('/relax_triangle.json').then(res => res.json())
+                ]).then(([girlData, cubeData, triangleData]) => {
+                    setAnimations({ girl: girlData, cube: cubeData, triangle: triangleData });
 
-        // Убедись, что файлы в папке public называются именно так и имеют формат .json
-        Promise.all([
-            fetch('/relax_girl.json').then(res => res.json()),
-            fetch('/relax_cube.json').then(res => res.json()),
-            fetch('/relax_triangle.json').then(res => res.json())
-        ])
-            .then(([girlData, cubeData, triangleData]) => {
-                setAnimations({ girl: girlData, cube: cubeData, triangle: triangleData });
+                    loadTimerRef.current = setTimeout(() => {
+                        setLoading(false); // Снимаем блокировку, страница появляется сразу!
+                    }, 50);
+                });
 
-                loadTimerRef.current = setTimeout(() => {
-                    setLoading(false);
-                }, 100);
-            })
-            .catch(error => {
-                console.error('Ошибка загрузки анимаций:', error);
+                // 2. Медленные данные из Notion грузим параллельно, "в фоне"
+                if (CMS_CONFIG.USE_NOTION) {
+                    getNotionContactData()
+                        .then(data => setContactData(data))
+                        .catch(err => console.error("Ошибка Notion Contacts:", err));
+
+                    getNotionFriendsData()
+                        .then(data => setFriendsData(data))
+                        .catch(err => console.error("Ошибка Notion Friends:", err));
+                }
+
+            } catch (error) {
+                console.error('Ошибка загрузки:', error);
                 setLoading(false);
-            });
+            }
+        };
+
+        fetchAll();
 
         return () => {
             if (loadTimerRef.current) clearTimeout(loadTimerRef.current);
-            gsap.set([".animate-stagger"], { clearProps: "all" });
         };
     }, []);
 
-    // 2. ЕДИНАЯ АНИМАЦИЯ ПОЯВЛЕНИЯ
-    useEffect(() => {
-        if (!loading && animations) {
-            let ctx = gsap.context(() => {
-                gsap.fromTo(".animate-stagger",
-                    { y: 20, opacity: 0 },
-                    {
-                        y: 0,
-                        opacity: 1,
-                        duration: 1.2,
-                        stagger: 0.08,
-                        ease: "power4.out",
-                        delay: 0.1
-                    }
-                );
-            });
-            return () => ctx.revert();
+    const description = useMemo(() => {
+        if (CMS_CONFIG.USE_NOTION && contactData.length > 0) {
+            const row = contactData.find(c =>
+                (c.title && c.title.toLowerCase().includes('контакт')) ||
+                (!c.title && c.description)
+            );
+            if (row) return row.description;
         }
-    }, [loading, animations]);
+        return "Мы любим создавать вещи на стыке разных форматов — от цифровых 3D-инсталляций до лимитированных дропов из серебра и арт-игрушек. Если у вас есть идея для совместного проекта или смелой коллаборации, пишите нам в Telegram. Всегда рады новым лицам!";
+    }, [contactData]);
+
+    const socials = useMemo(() => {
+        let items: any[] = [];
+        if (CMS_CONFIG.USE_NOTION && contactData.length > 0) {
+            items = contactData.filter(c => c.url && !(c.title && c.title.toLowerCase().includes('контакт')));
+        }
+        if (items.length > 0) return items;
+        return [
+            { id: 'ig', title: 'Instagram', url: 'https://www.instagram.com/gardennuclear/' },
+            { id: 'tg', title: 'Telegram', url: 'https://t.me/mynuclear' }
+        ];
+    }, [contactData]);
+
+    // Анимация появления контента
+    useEffect(() => {
+        // Ждем пока загрузятся хотя бы быстрые JSON-данные
+        if (loading || !containerRef.current) return;
+
+        requestAnimationFrame(() => {
+            // Собираем все элементы с классом анимации
+            const allTargets = Array.from(containerRef.current!.querySelectorAll(".animate-stagger"));
+
+            // ФИЛЬТРАЦИЯ: Берем только те элементы, которые GSAP еще не анимировал.
+            // После анимации GSAP оставляет inline-стиль (opacity: 1). 
+            // Если его нет — значит это свежая карточка, только что пришедшая из Notion.
+            const newTargets = allTargets.filter(el => {
+                const htmlEl = el as HTMLElement;
+                return !htmlEl.style.opacity;
+            });
+
+            if (newTargets.length === 0) return;
+
+            gsap.context(() => {
+                gsap.to(newTargets, {
+                    y: 0,
+                    opacity: 1,
+                    duration: 1,
+                    stagger: 0.1,
+                    ease: "power4.out",
+                    overwrite: true
+                });
+            }, containerRef);
+        });
+
+        // ВАЖНО: добавили contactData и friendsData в зависимости. 
+        // Теперь хук сработает снова, когда Notion отдаст данные.
+    }, [loading, contactData, friendsData]);
 
     return (
-        <main className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] overflow-hidden z-[60]">
+        <main ref={containerRef} className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] overflow-hidden z-[60]">
             <div className="absolute top-0 left-0 w-full h-[100dvh] pointer-events-none z-30 flex flex-col lg:flex-row">
                 <div className="pointer-events-auto w-full h-full lg:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 pt-[16vh] md:pt-[20vh] lg:pt-[28vh] box-border">
                     <div className="w-full">
-
-                        {/* НАША НОВАЯ МНОГОСЛОЙНАЯ АНИМАЦИЯ */}
                         {animations && (
                             <InteractiveRelax
                                 dataGirl={animations.girl}
@@ -124,26 +196,69 @@ export default function ContactPage() {
                             />
                         )}
 
-                        <p className="animate-stagger opacity-0 text-[20px] md:text-[24px] lg:text-[28px] lg:text-[1.2vw] font-medium leading-[1.6] text-[#111] opacity-90 mb-12 md:mb-16 lg:mb-12 max-w-[500px] lg:max-w-[750px] lg:max-w-[500px]">
-                            Мы любим создавать вещи на стыке разных форматов — от цифровых 3D-инсталляций до лимитированных дропов из серебра и арт-игрушек. Если у вас есть идея для совместного проекта или смелой коллаборации, пишите нам в Telegram. Всегда рады новым лицам!
+                        <p className="animate-stagger opacity-0 translate-y-5 text-[20px] md:text-[24px] lg:text-[28px] lg:text-[1.2vw] font-medium leading-[1.6] text-[#111]/90 mb-10 md:mb-16 lg:mb-12 max-w-[500px]">
+                            {description}
                         </p>
 
-                        <div className="flex flex-col gap-1 mb-8 lg:mb-12 lg:mb-8">
-                            <span className="animate-stagger opacity-0 text-[11px] md:text-[13px] lg:text-[14px] lg:text-[11px] font-bold tracking-widest text-[#111] opacity-40 uppercase mb-2">
-                                Contact Details
-                            </span>
-                            <a href="mailto:hello@kesa.today" className="animate-stagger opacity-0 text-[18px] md:text-[22px] lg:text-[26px] lg:text-[1.5vw] font-bold text-[#111] opacity-80 hover:opacity-100 transition-opacity no-underline w-max">
-                                hello@kesa.today
-                            </a>
-                            <a href="tel:+1234567890" className="animate-stagger opacity-0 text-[18px] md:text-[22px] lg:text-[26px] lg:text-[1.5vw] font-bold text-[#111] opacity-80 hover:opacity-100 transition-opacity no-underline w-max mt-2">
-                                +1 (234) 567-890
-                            </a>
+                        <div className="flex flex-row items-end gap-[20px] md:gap-[40px] mb-8 lg:mb-12">
+                            <div className="xl:hidden animate-stagger opacity-0 translate-y-5 shrink-0 z-[100] relative">
+                                <TransitionLink
+                                    href="/friends"
+                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-white hover:bg-[#ff6d6d] no-underline pointer-events-auto"
+                                >
+                                    <img src="/icons/Fire.svg" alt="fire" className="w-[18px] h-auto pointer-events-none" />
+                                    <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>Друзья</span>
+                                </TransitionLink>
+                            </div>
                         </div>
 
-                        <MagneticSocials />
+                        <MagneticSocials items={socials} />
                     </div>
                 </div>
-                <div className="hidden lg:block lg:w-[55%] h-full pointer-events-none"></div>
+
+                <div className="hidden xl:flex xl:w-[55%] h-full flex-col justify-center pl-[4vw]">
+                    <div className="w-full max-w-[650px]">
+                        <h2 className="animate-stagger opacity-0 translate-y-5 text-[1.8vw] font-bold mb-6 text-[#111]/60">Друзья</h2>
+                        <div className="grid grid-cols-3 w-full gap-6">
+                            {friendsData.length > 0 ? (
+                                friendsData.map((friend) => {
+                                    const lowerName = friend.name.toLowerCase();
+                                    let imageSrc = friend.image;
+
+                                    if (!imageSrc) {
+                                        if (lowerName.includes('books')) imageSrc = '/logos/books.svg';
+                                        else if (lowerName.includes('gutenberg')) imageSrc = '/logos/gutenberg.svg';
+                                    }
+
+                                    return (
+                                        <div key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] transition-all duration-300 hover:scale-105 group">
+                                            <div className="w-full h-full relative">
+                                                {imageSrc ? (
+                                                    <img
+                                                        src={imageSrc}
+                                                        alt={friend.name}
+                                                        className="w-full h-full object-contain transition-all duration-300 grayscale brightness-[0.2] group-hover:brightness-[0.5]"
+                                                    />
+                                                ) : (
+                                                    <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase">NO IMG</div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    );
+                                })
+                            ) : (
+                                [
+                                    { src: '/logos/books.svg', alt: 'Books' },
+                                    { src: '/logos/gutenberg.svg', alt: 'Gutenberg' }
+                                ].map((logo, i) => (
+                                    <div key={i} className="animate-stagger opacity-0 translate-y-5 aspect-square flex items-center justify-center p-[15%] transition-all duration-300 hover:scale-105">
+                                        <img src={logo.src} alt={logo.alt} className="w-full h-full object-contain" style={{ filter: 'grayscale(1) brightness(0.2)' }} />
+                                    </div>
+                                ))
+                            )}
+                        </div>
+                    </div>
+                </div>
             </div>
         </main>
     );

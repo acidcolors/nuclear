@@ -41,19 +41,6 @@ export const products: Product[] = [
         material: 'Бумага',
         role: 'UI/UX Design',
         tags: ['Открытки'] // <-- Добавили теги
-    },
-    {
-        id: 'prj_03',
-        folderId: 'prod_03',
-        title: 'Приведение',
-        price: 'SOLD',
-        description: 'Описание',
-        galleryImagesCount: 4,
-        year: '2024',
-        size: '20х30 см',
-        material: 'Керамика',
-        role: 'Sculpture',
-        tags: ['Картины', 'Игрушки', 'Серебро'] // <-- Добавили теги
     }
 ];
 
@@ -64,7 +51,7 @@ export const getProductById = (id: string) => {
 
 // Хелпер для получения пути к главному фото (для карточки)
 export const getPreviewImagePath = (folderId: string) => {
-    return `/product/${folderId}/main_${folderId}.png`;
+    return `/product/${folderId}/main_${folderId}.jpg`;
 };
 
 // Хелпер для получения путей ко всем картинкам галереи
@@ -74,7 +61,7 @@ export const getPreviewImagePath = (folderId: string) => {
 export const getGalleryImagePaths = (folderId: string, count: number) => {
     const paths = [];
     for (let i = 1; i <= count; i++) {
-        paths.push(`/product/${folderId}/image${i}.png`);
+        paths.push(`/product/${folderId}/image${i}.jpg`);
     }
     return paths;
 };

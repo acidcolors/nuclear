@@ -15,8 +15,8 @@ export const metadata: Metadata = {
   title: 'Nuclear Garden',
   description: 'Welcome to my Nuclear Garden',
   icons: {
-    icon: '/fav3.ico', 
-    apple: '/fav3.ico', 
+    icon: '/fav3.ico',
+    apple: '/fav3.ico',
   },
 };
 

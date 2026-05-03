@@ -23,6 +23,8 @@ export function TextPressure({
     animateMode = 'none'
 }: TextPressureProps) {
     const containerRef = useRef<HTMLDivElement>(null);
+    const charDataRef = useRef<{ x: number; y: number }[]>([]);
+    const timeoutsRef = useRef<NodeJS.Timeout[]>([]);
 
     useEffect(() => {
         const container = containerRef.current;
@@ -31,14 +33,31 @@ export function TextPressure({
         const spans = container.querySelectorAll('.pressure-char');
         const isMobile = typeof window !== 'undefined' && window.innerWidth < 1441;
 
+        // Кэшируем позиции один раз, чтобы не вызывать getBoundingClientRect в циклах
+        const updateCache = () => {
+            charDataRef.current = Array.from(spans).map((span) => {
+                const rect = span.getBoundingClientRect();
+                return {
+                    x: rect.left + rect.width / 2,
+                    y: rect.top + rect.height / 2,
+                };
+            });
+        };
+
+        // Небольшая задержка, чтобы шрифты успели отрендериться
+        const timer = setTimeout(updateCache, 100);
+        window.addEventListener('resize', updateCache);
+
         // --- ЛОГИКА ДЛЯ МЫШКИ (Десктоп) ---
         const handleMouseMove = (e: MouseEvent) => {
             if (isMobile && animateMode !== 'none') return; // На мобилках используем авто-анимацию
 
-            spans.forEach((span) => {
-                const rect = span.getBoundingClientRect();
-                const charCenterX = rect.left + rect.width / 2;
-                const charCenterY = rect.top + rect.height / 2;
+            spans.forEach((span, i) => {
+                const data = charDataRef.current[i];
+                if (!data) return;
+
+                const charCenterX = data.x;
+                const charCenterY = data.y;
                 const distX = e.clientX - charCenterX;
                 const distY = e.clientY - charCenterY;
                 const distance = Math.sqrt(distX * distX + distY * distY);
@@ -46,7 +65,6 @@ export function TextPressure({
                 const influence = Math.max(0, 1 - distance / maxDist);
                 const weight = weightInactive + (weightActive - weightInactive) * influence;
                 
-                // Наклон в обе стороны: если мышка справа (distX > 0), наклоняем влево, и наоборот
                 const skewDirection = distX > 0 ? 1 : -1;
                 const skew = (skewActive * influence) * skewDirection;
 
@@ -55,6 +73,7 @@ export function TextPressure({
                     skewX: skew,
                     duration: 0.3,
                     ease: 'power2.out',
+                    overwrite: 'auto'
                 });
             });
         };
@@ -65,6 +84,7 @@ export function TextPressure({
                 skewX: 0,
                 duration: 0.6,
                 ease: 'power2.out',
+                overwrite: 'auto'
             });
         };
 
@@ -77,7 +97,7 @@ export function TextPressure({
                 const triggerRandom = () => {
                     const centerIndex = Math.floor(Math.random() * spans.length);
                     const radius = 3; 
-                    const randomDirection = Math.random() > 0.5 ? 1 : -1; // Рандомный наклон для всей волны
+                    const randomDirection = Math.random() > 0.5 ? 1 : -1;
 
                     for (let i = centerIndex - radius; i <= centerIndex + radius; i++) {
                         if (i >= 0 && i < spans.length) {
@@ -95,25 +115,30 @@ export function TextPressure({
                                 yoyo: true,
                                 repeat: 1,
                                 ease: "power2.inOut",
+                                overwrite: 'auto'
                             });
                         }
                     }
 
-                    setTimeout(triggerRandom, Math.random() * 2000 + 1000);
+                    const nextTimeout = setTimeout(triggerRandom, Math.random() * 2000 + 1000);
+                    timeoutsRef.current.push(nextTimeout);
                 };
 
-                setTimeout(triggerRandom, 500);
-                setTimeout(triggerRandom, 1500);
+                const t1 = setTimeout(triggerRandom, 500);
+                const t2 = setTimeout(triggerRandom, 1500);
+                timeoutsRef.current.push(t1, t2);
 
             } else if (animateMode === 'v-cursor' && isMobile) {
                 // ВАРИАНТ 3: Виртуальный курсор (только для мобилок/планшетов)
                 const vCursor = { x: window.innerWidth / 2, y: window.innerHeight / 2 };
 
                 const updateByVCursor = () => {
-                    spans.forEach((span) => {
-                        const rect = span.getBoundingClientRect();
-                        const charCenterX = rect.left + rect.width / 2;
-                        const charCenterY = rect.top + rect.height / 2;
+                    spans.forEach((span, i) => {
+                        const data = charDataRef.current[i];
+                        if (!data) return;
+
+                        const charCenterX = data.x;
+                        const charCenterY = data.y;
                         const distX = vCursor.x - charCenterX;
                         const distY = vCursor.y - charCenterY;
                         const distance = Math.sqrt(distX * distX + distY * distY);
@@ -129,6 +154,7 @@ export function TextPressure({
                             skewX: skew,
                             duration: 0.5,
                             ease: 'power2.out',
+                            overwrite: 'auto'
                         });
                     });
                 };
@@ -154,6 +180,10 @@ export function TextPressure({
         }
 
         return () => {
+            clearTimeout(timer);
+            timeoutsRef.current.forEach(clearTimeout);
+            timeoutsRef.current = [];
+            window.removeEventListener('resize', updateCache);
             window.removeEventListener('mousemove', handleMouseMove);
             document.removeEventListener('mouseleave', handleMouseLeave);
             if (vCursorTween) vCursorTween.kill();
@@ -171,7 +201,10 @@ export function TextPressure({
                         <span
                             key={charIndex}
                             className="pressure-char inline-block text-[inherit]"
-                            style={{ fontVariationSettings: `"wght" ${weightInactive}, "slnt" 0` }}
+                            style={{ 
+                                fontVariationSettings: `"wght" ${weightInactive}, "slnt" 0`,
+                                willChange: 'font-variation-settings'
+                            }}
                         >
                             {char === ' ' ? '\u00A0' : char}
                         </span>
