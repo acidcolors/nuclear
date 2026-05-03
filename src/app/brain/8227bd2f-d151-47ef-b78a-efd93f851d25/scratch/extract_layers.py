@@ -1,5 +1,5 @@
 import json
-with open('d:/web/golden/public/relax.json', 'r') as f:
+with open('d:/web/nuclear/public/relax.json', 'r') as f:
     data = json.load(f)
 
 def find_layers(obj):

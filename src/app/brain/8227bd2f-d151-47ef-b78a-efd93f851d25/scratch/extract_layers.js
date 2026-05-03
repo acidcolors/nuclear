@@ -1,5 +1,5 @@
 const fs = require('fs');
-const data = JSON.parse(fs.readFileSync('d:/web/golden/public/relax.json', 'utf8'));
+const data = JSON.parse(fs.readFileSync('d:/web/nuclear/public/relax.json', 'utf8'));
 
 function findLayers(obj) {
     let layers = [];

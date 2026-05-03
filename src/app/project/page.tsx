@@ -10,7 +10,7 @@ import { CMS_CONFIG } from '@/config/cmsSwitch';
 
 // Функция для получения пути к заглавному изображению
 const getPreviewImagePath = (folderId: string) => {
-    return `/product/${folderId}/main_${folderId}.png`;
+    return `/product/${folderId}/main_${folderId}.jpg`;
 };
 
 export default function ProjectPage() {
