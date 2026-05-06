@@ -105,7 +105,7 @@ export default function Home() {
         onComplete={() => setLoading(false)}
       />
 
-      <InteractivePhysicsBackground />
+      {viewMode === 'mobile' && <InteractivePhysicsBackground />}
 
       <div className="absolute inset-0 w-full h-full overflow-hidden">
 

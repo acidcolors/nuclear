@@ -1,6 +1,7 @@
 'use client';
 
 import { useState, useEffect, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import gsap from 'gsap';
 import { Volume2, VolumeX } from 'lucide-react';
 import { Preloader } from '@/components/Preloader';
@@ -21,6 +22,10 @@ export default function SpacePage() {
 
     const lastVolumeRef = useRef(0.5);
     const videoRef = useRef<HTMLVideoElement>(null);
+
+    // Громкость выносим в Портал, чтобы она была выше всех слоев (курсора, хедера и т.д.)
+    const [mounted, setMounted] = useState(false);
+    useEffect(() => { setMounted(true); }, []);
 
     // Устанавливаем рандомное видео при монтировании компонента
     useEffect(() => {
@@ -65,7 +70,7 @@ export default function SpacePage() {
             videoRef.current.volume = volume;
             videoRef.current.muted = volume === 0;
         }
-    }, [volume]);
+    }, [volume, videoSrc]);
 
     const muteVolume = () => {
         if (volume > 0) {
@@ -81,11 +86,46 @@ export default function SpacePage() {
     };
 
     const handleVolumeChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        setVolume(parseFloat(e.target.value));
+        const val = parseFloat(e.target.value);
+        console.log("Volume changed to:", val);
+        setVolume(val);
     };
+
+    const volumeInterface = (
+        <div className="custom-vol pointer-events-auto flex items-center gap-4 animate-up opacity-0 fixed top-[120px] lg:top-[40px] left-[6vw] lg:left-1/2 lg:-translate-x-1/2 z-[2000000] bg-transparent">
+            <button 
+                onClick={muteVolume} 
+                className="bg-transparent border-none text-[#ebebeb] hover:text-[#ebebeb]/70 transition-colors cursor-pointer outline-none flex items-center justify-center p-2 z-[1000] pointer-events-auto"
+                style={{ pointerEvents: 'auto' }}
+            >
+                {volume === 0 ? <VolumeX size={20} /> : <Volume2 size={20} />}
+            </button>
+
+            <input
+                type="range"
+                min="0"
+                max="1"
+                step="0.01"
+                value={volume}
+                onChange={handleVolumeChange}
+                className="w-20 md:w-32 cursor-pointer accent-[#ebebeb] z-[1000] pointer-events-auto"
+                style={{ pointerEvents: 'auto' }}
+            />
+
+            <button 
+                onClick={increaseVolume} 
+                className="bg-transparent border-none text-[#ebebeb] hover:text-[#ebebeb]/70 transition-colors cursor-pointer outline-none flex items-center justify-center p-2 z-[1000] pointer-events-auto"
+                style={{ pointerEvents: 'auto' }}
+            >
+                <Volume2 size={20} />
+            </button>
+        </div>
+    );
 
     return (
         <main className="fixed inset-0 w-full h-[100dvh] bg-[#111] text-[#ebebeb] overflow-hidden z-[60]">
+
+            {mounted && typeof document !== 'undefined' && createPortal(volumeInterface, document.body)}
 
             {/* ====== ЭКРАН ЗАГРУЗКИ ====== */}
             <Preloader
@@ -95,7 +135,6 @@ export default function SpacePage() {
             />
 
             {/* ВИДЕО БЭКГРАУНД */}
-            {/* Убрали opacity-0 и space-fade из классов */}
             {videoSrc && (
                 <video
                     ref={videoRef}
@@ -109,28 +148,7 @@ export default function SpacePage() {
             )}
 
             {/* ИНТЕРФЕЙС ПОВЕРХ ВИДЕО */}
-            <div className="absolute top-0 left-0 w-full h-full z-20 pointer-events-none blend-exclusion">
-
-                {/* БЕГУНОК ГРОМКОСТИ */}
-                <div className="custom-vol pointer-events-auto flex items-center gap-4 animate-up opacity-0 absolute top-3/4 left-[6vw] -translate-y-1/2">
-                    <button onClick={muteVolume} className="bg-transparent border-none text-[#ebebeb] hover:text-[#ebebeb]/70 transition-colors cursor-pointer outline-none flex items-center justify-center p-2">
-                        <VolumeX size={18} />
-                    </button>
-
-                    <input
-                        type="range"
-                        min="0"
-                        max="1"
-                        step="0.01"
-                        value={volume}
-                        onChange={handleVolumeChange}
-                        className="w-16 md:w-24 cursor-pointer accent-[#ebebeb]"
-                    />
-
-                    <button onClick={increaseVolume} className="bg-transparent border-none text-[#ebebeb] hover:text-[#ebebeb]/70 transition-colors cursor-pointer outline-none flex items-center justify-center p-2">
-                        <Volume2 size={18} />
-                    </button>
-                </div>
+            <div className="absolute top-0 left-0 w-full h-full pointer-events-none blend-exclusion">
 
                 {/* СОЦИАЛЬНЫЕ СЕТИ */}
                 <div className="custom-insta pointer-events-auto animate-up opacity-0">

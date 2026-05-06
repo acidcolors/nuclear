@@ -4,13 +4,49 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import gsap from 'gsap';
+import Lottie from 'lottie-react';
+import backAnimationData from '@/data/back.json';
 // Импортируем нашу обновленную базу и хелперы
-import { products, getProductById, getGalleryImagePaths } from '../../../data/products';
-import { TransitionLink } from '../../../components/TransitionLink';
-import { Lightbox } from '../../../components/ui/Lightbox';
-import { ShareModal } from '../../../components/ui/ShareModal';
-import { getNotionProducts } from '../../../lib/notion';
-import { CMS_CONFIG } from '../../../config/cmsSwitch';
+import { products, getProductById, getGalleryImagePaths } from '@/data/products';
+import { TransitionLink } from '@/components/TransitionLink';
+import { Lightbox } from '@/components/ui/Lightbox';
+import { ShareModal } from '@/components/ui/ShareModal';
+import { getNotionProducts } from '@/lib/notion';
+import { CMS_CONFIG } from '@/config/cmsSwitch';
+
+const BackAnimation = () => {
+    const lottieRef = useRef<any>(null);
+
+    // Защита: если данных нет, показываем обычную картинку
+    if (!backAnimationData || !backAnimationData.layers) {
+        return <img src="/label_03.svg" alt="Back" className="w-[180px] h-auto" />;
+    }
+
+    return (
+        <div 
+            className="w-[180px] h-auto cursor-pointer"
+            onMouseEnter={() => {
+                if (lottieRef.current) {
+                    lottieRef.current.setDirection(1);
+                    lottieRef.current.play();
+                }
+            }}
+            onMouseLeave={() => {
+                if (lottieRef.current) {
+                    lottieRef.current.setDirection(-1);
+                    lottieRef.current.play();
+                }
+            }}
+        >
+            <Lottie 
+                lottieRef={lottieRef}
+                animationData={backAnimationData} 
+                loop={false}
+                autoplay={false}
+            />
+        </div>
+    );
+};
 
 export default function ProductPage() {
     const params = useParams<{ id: string }>();
@@ -19,6 +55,7 @@ export default function ProductPage() {
 
     const [notionData, setNotionData] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [hoveredBtnIndex, setHoveredBtnIndex] = useState<number | null>(null);
 
     useEffect(() => {
         if (!CMS_CONFIG.USE_NOTION) {
@@ -43,11 +80,13 @@ export default function ProductPage() {
 
     // В режиме Notion мы доверяем ТОЛЬКО данным из таблицы.
     // В статичном режиме — только локальному файлу.
-    const product = CMS_CONFIG.USE_NOTION ? (notionData ? {
-        ...notionData,
-        // Если в Notion не указан folderId, используем заглушку
-        folderId: notionData.folderId || 'notion_fallback'
-    } : undefined) : baseProduct;
+    const product = useMemo(() => {
+        return CMS_CONFIG.USE_NOTION ? (notionData ? {
+            ...notionData,
+            // Если в Notion не указан folderId, используем заглушку
+            folderId: notionData.folderId || 'notion_fallback'
+        } : undefined) : baseProduct;
+    }, [notionData, baseProduct]);
 
     // Генерируем массив путей к картинкам
     const galleryPhotos = useMemo(() => {
@@ -71,6 +110,7 @@ export default function ProductPage() {
     const cursorPos = useRef({ x: 0, y: 0 });
     const isDesktopRef = useRef(false);
     const [isDesktop, setIsDesktop] = useState(false);
+    const hasAnimatedRef = useRef(false);
 
     // Порог для кастомного скролла (>1440px)
     useEffect(() => {
@@ -103,13 +143,16 @@ export default function ProductPage() {
         let renderTick: () => void;
 
         let ctx = gsap.context(() => {
-            const staggerEls = document.querySelectorAll('.animate-stagger');
-            if (staggerEls.length > 0) {
-                gsap.fromTo(
-                    Array.from(staggerEls),
-                    { y: 15, opacity: 0 },
-                    { y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power3.out' }
-                );
+            if (!hasAnimatedRef.current) {
+                const staggerEls = document.querySelectorAll('.animate-stagger');
+                if (staggerEls.length > 0) {
+                    gsap.fromTo(
+                        Array.from(staggerEls),
+                        { y: 15, opacity: 0 },
+                        { y: 0, opacity: 1, duration: 1, stagger: 0.1, ease: 'power3.out' }
+                    );
+                    hasAnimatedRef.current = true;
+                }
             }
 
             renderTick = () => {
@@ -160,7 +203,7 @@ export default function ProductPage() {
             window.removeEventListener('mousemove', handleMouseMove);
             resizeObserver.disconnect();
         };
-    }, []);
+    }, [product, isDesktop]);
 
     // Предотвращаем рендер, если продукт почему-то не найден
     if (!product) return null;
@@ -223,43 +266,60 @@ export default function ProductPage() {
                             {product.role && <span className="text-[14px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>}
                         </div>
 
-                        <div className="flex items-center gap-[15px] w-full">
+                        <div
+                            className="flex items-center gap-[15px] w-full"
+                            onMouseLeave={() => setHoveredBtnIndex(null)}
+                        >
                             {/* Новая кнопка "Написать" */}
-                            <a
-                                href="https://t.me/ВАША_ГРУППА" // <-- Вставьте сюда ссылку на вашу группу
-                                target="_blank"
-                                rel="noopener noreferrer"
-                                className="flex items-center justify-center gap-[10px] w-auto px-[24px] h-[55px] rounded-[16px] text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ff6d6d] no-underline"
+                            <div
+                                style={{
+                                    transform: hoveredBtnIndex === 1 ? 'translateX(-10px) scale(0.98)' : hoveredBtnIndex === 0 ? 'scale(1.05)' : 'none',
+                                    opacity: hoveredBtnIndex === 1 ? 0.5 : 1,
+                                    transition: 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
+                                }}
+                                onMouseEnter={() => setHoveredBtnIndex(0)}
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <line x1="22" y1="2" x2="11" y2="13"></line>
-                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                                <span style={{ transform: 'translateY(1px)' }}>Написать</span>
-                            </a>
+                                <a
+                                    href="https://t.me/gardennuclear"
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="flex items-center justify-center gap-[10px] w-auto px-[24px] h-[55px] rounded-[16px] text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff] no-underline"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <line x1="22" y1="2" x2="11" y2="13"></line>
+                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                    </svg>
+                                    <span style={{ transform: 'translateY(1px)' }}>Написать</span>
+                                </a>
+                            </div>
 
                             {/* Ваша оригинальная кнопка "Поделиться" */}
-                            <button
-                                onClick={() => setIsShareModalOpen(true)}
-                                className="flex items-center justify-center gap-[10px] w-auto px-[24px] h-[55px] rounded-[16px] text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ff6d6d]"
+                            <div
+                                style={{
+                                    transform: hoveredBtnIndex === 0 ? 'translateX(10px) scale(0.98)' : hoveredBtnIndex === 1 ? 'scale(1.05)' : 'none',
+                                    opacity: hoveredBtnIndex === 0 ? 0.5 : 1,
+                                    transition: 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
+                                }}
+                                onMouseEnter={() => setHoveredBtnIndex(1)}
                             >
-                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                    <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
-                                    <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
-                                </svg>
-                                <span style={{ transform: 'translateY(1px)' }}>Поделиться</span>
-                            </button>
+                                <button
+                                    onClick={() => setIsShareModalOpen(true)}
+                                    className="flex items-center justify-center gap-[10px] w-auto px-[24px] h-[55px] rounded-[16px] text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff]"
+                                >
+                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                        <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+                                        <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+                                    </svg>
+                                    <span style={{ transform: 'translateY(1px)' }}>Поделиться</span>
+                                </button>
+                            </div>
                         </div>
 
                         <TransitionLink
                             href="/project"
-                            className="hidden lg:block opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[60px] z-10"
+                            className="hidden lg:block opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[10px] z-10"
                         >
-                            <img
-                                src="/label_03.svg"
-                                alt="Back to projects"
-                                className="block w-[180px] h-auto object-contain"
-                            />
+                            <BackAnimation />
                         </TransitionLink>
 
                     </div>
@@ -288,13 +348,9 @@ export default function ProductPage() {
                         {/* Кнопка Back для мобилок и айпадов (появляется ПОСЛЕ фото) */}
                         <TransitionLink
                             href="/project"
-                            className="block lg:hidden opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[60px] mb-[60px] z-[10]"
+                            className="block lg:hidden opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[10px] mb-[60px] z-[10]"
                         >
-                            <img
-                                src="/label_03.svg"
-                                alt="Back to projects"
-                                className="block w-[180px] h-auto object-contain"
-                            />
+                            <BackAnimation />
                         </TransitionLink>
                     </div>
                 </div>

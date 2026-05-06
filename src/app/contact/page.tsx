@@ -64,7 +64,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                             <div style={commonStyle}>
                                 <TransitionLink
                                     href="/friends"
-                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-white hover:bg-[#ff6d6d] no-underline pointer-events-auto"
+                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-white hover:bg-[#ffffff] no-underline pointer-events-auto"
                                 >
                                     <img src="/icons/Fire.svg" alt="fire" className="w-[18px] h-auto pointer-events-none" />
                                     <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>Друзья</span>
@@ -83,7 +83,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                     iconColor = '/icons/instagram_color.svg';
                 }
                 const isTelegram = lowerName.includes('telegram') || (!lowerName.includes('instagram'));
-                
+
                 if (hoveredIndex === index && !isTelegram) {
                     currentIcon = iconColor;
                 }
@@ -93,7 +93,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                     : {};
 
                 return (
-                    <div 
+                    <div
                         key={item.id}
                         className="animate-stagger opacity-0 translate-y-5"
                         onMouseEnter={() => setHoveredIndex(index)}
@@ -106,10 +106,10 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                             className="outline-none cursor-pointer block shrink-0 p-[10px] will-change-[opacity,transform]"
                         >
                             <div className="w-[32px] h-[32px] md:w-[40px] md:h-[40px] lg:w-[48px] lg:h-[48px] xl:w-[32px] xl:h-[32px]">
-                                <img 
-                                    src={currentIcon} 
-                                    alt={item.title} 
-                                    className="w-full h-full object-contain pointer-events-none transition-all duration-300" 
+                                <img
+                                    src={currentIcon}
+                                    alt={item.title}
+                                    className="w-full h-full object-contain pointer-events-none transition-all duration-300"
                                     style={iconStyle}
                                 />
                             </div>
@@ -239,7 +239,7 @@ export default function ContactPage() {
     return (
         <main ref={containerRef} className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] overflow-hidden z-[60]">
             <div className="absolute top-0 left-0 w-full h-[100dvh] pointer-events-none z-30 flex flex-col lg:flex-row">
-                <div 
+                <div
                     className="pointer-events-auto w-full h-full lg:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 box-border"
                     style={{ paddingTop: isMobile ? '10vh' : '22vh' }}
                 >

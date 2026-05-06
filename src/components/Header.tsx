@@ -5,6 +5,103 @@ import { usePathname } from 'next/navigation';
 import { TransitionLink } from './TransitionLink';
 import gsap from 'gsap';
 import lottie from 'lottie-web';
+import Lottie from 'lottie-react';
+import logoAnimationData from '@/data/logo_t.json';
+
+// ==========================================================
+// 1.5. КОМПОНЕНТ ЛОГОТИПА
+// ==========================================================
+const LogoAnimation = ({ color }: { color: string }) => {
+    const lottieRef = useRef<any>(null);
+    const [screenState, setScreenState] = useState({ isDesktop: false, isLarge: false });
+    const timerRef = useRef<NodeJS.Timeout | null>(null);
+
+    useEffect(() => {
+        const check = () => {
+            const w = window.innerWidth;
+            setScreenState({ isDesktop: w >= 1024, isLarge: w >= 1441 });
+        };
+        check();
+        window.addEventListener('resize', check);
+        return () => {
+            window.removeEventListener('resize', check);
+            if (timerRef.current) clearTimeout(timerRef.current);
+        };
+    }, []);
+
+    // Логика авто-проигрывания для < 1440px
+    useEffect(() => {
+        if (!screenState.isLarge && lottieRef.current) {
+            // Запускаем первый раз
+            lottieRef.current.play();
+        } else if (lottieRef.current) {
+            // Если экран стал большим, останавливаем цикл
+            lottieRef.current.stop();
+            if (timerRef.current) clearTimeout(timerRef.current);
+        }
+    }, [screenState.isLarge]);
+
+    const handleComplete = () => {
+        if (!screenState.isLarge) {
+            if (timerRef.current) clearTimeout(timerRef.current);
+            timerRef.current = setTimeout(() => {
+                if (lottieRef.current) {
+                    lottieRef.current.goToAndPlay(0);
+                }
+            }, 3000); // Ждем 3 секунды
+        }
+    };
+
+    const width = screenState.isDesktop ? '200px' : '158px';
+    const height = screenState.isDesktop ? '62px' : '48px';
+
+    // Защита: если данных нет, показываем обычную картинку
+    if (!logoAnimationData || !logoAnimationData.layers) {
+        return (
+            <div
+                className="[-webkit-mask-position:right_center] lg:[-webkit-mask-position:left_center] [mask-position:right_center] lg:[mask-position:left_center]"
+                style={{
+                    width, height,
+                    backgroundColor: color,
+                    WebkitMaskImage: 'url(/logo_right.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat',
+                    maskImage: 'url(/logo_right.svg)', maskSize: 'contain', maskRepeat: 'no-repeat',
+                }}
+            />
+        );
+    }
+
+    return (
+        <div 
+            className="flex items-center justify-center cursor-pointer [&_path]:!fill-[var(--lottie-color)]"
+            style={{ 
+                width, height,
+                '--lottie-color': color 
+            } as React.CSSProperties}
+            onMouseEnter={() => {
+                if (lottieRef.current) {
+                    lottieRef.current.setDirection(1);
+                    lottieRef.current.play();
+                    if (timerRef.current) clearTimeout(timerRef.current);
+                }
+            }}
+            onMouseLeave={() => {
+                if (lottieRef.current) {
+                    lottieRef.current.setDirection(-1);
+                    lottieRef.current.play();
+                }
+            }}
+        >
+            <Lottie 
+                lottieRef={lottieRef}
+                animationData={logoAnimationData} 
+                loop={false}
+                autoplay={false}
+                className="w-full h-full"
+                onComplete={handleComplete}
+            />
+        </div>
+    );
+};
 
 // ==========================================================
 // 1. КОМПОНЕНТ ПУНКТА МЕНЮ
@@ -169,27 +266,19 @@ export const Header = () => {
                 </button>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
-                    <div className="absolute top-[4vh] right-[10vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[150] pointer-events-auto h-[44px]">
+                    <div className="absolute top-[5vh] right-[4vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[150] pointer-events-auto h-[44px] lg:h-[70px]">
                         <div className={`transition-all duration-300 flex items-center z-[10] origin-right min-[1441px]:origin-left lg:!delay-0
                             ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}
                             lg:!opacity-100 lg:!scale-100 lg:!pointer-events-auto
                         `}>
                             <TransitionLink href="/">
-                                <div
-                                    className="[-webkit-mask-position:right_center] lg:[-webkit-mask-position:left_center] [mask-position:right_center] lg:[mask-position:left_center]"
-                                    style={{
-                                        width: '130px', height: '40px',
-                                        backgroundColor: themeColor,
-                                        WebkitMaskImage: 'url(/logo_right.svg)', WebkitMaskSize: 'contain', WebkitMaskRepeat: 'no-repeat',
-                                        maskImage: 'url(/logo_right.svg)', maskSize: 'contain', maskRepeat: 'no-repeat',
-                                    }}
-                                />
+                                <LogoAnimation color={themeColor} />
                             </TransitionLink>
                         </div>
                     </div>
 
                     <div className="absolute top-[4.2vh] right-[20vw] lg:top-[40px] lg:right-[220px] min-[1441px]:right-[40px] flex items-center justify-end z-[150] pointer-events-auto h-[44px]">
-                        <nav className={`lg:hidden flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] absolute right-[26vw] origin-right z-[10]
+                        <nav className={`lg:hidden flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] absolute right-[16vw] origin-right z-[10]
                             ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto' : 'duration-200 opacity-0 translate-x-8 pointer-events-none'}
                         `}>
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />

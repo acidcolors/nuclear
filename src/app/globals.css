@@ -110,7 +110,7 @@ input[type="range"]::-moz-range-thumb {
 /* Мобильные экраны (по умолчанию) */
 .custom-vol {
   position: absolute;
-  bottom: 30px;
+  top: 20vh;
   left: 6vw;
 }
 

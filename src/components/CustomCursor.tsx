@@ -71,7 +71,7 @@ export default function CustomCursor() {
 
         const handleMouseOver = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const interactiveEl = target.closest('[data-cursor], a, button, .group, [role="button"]');
+            const interactiveEl = target.closest('[data-cursor], a, button, .group, [role="button"], input, label, svg, path');
 
             if (interactiveEl) {
                 const cursorType = interactiveEl.getAttribute('data-cursor') || 'pointer';
@@ -94,7 +94,7 @@ export default function CustomCursor() {
 
         const handleMouseOut = (e: MouseEvent) => {
             const target = e.target as HTMLElement;
-            const interactiveEl = target.closest('[data-cursor], a, button, .group, [role="button"]');
+            const interactiveEl = target.closest('[data-cursor], a, button, .group, [role="button"], input, label, svg, path');
 
             if (interactiveEl) {
                 gsap.to(dot, {
