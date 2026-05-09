@@ -179,7 +179,22 @@ export const Header = () => {
     const lottieContainerRef = useRef<HTMLDivElement>(null);
     const animationInstanceRef = useRef<any>(null);
     const isFirstMount = useRef(true);
+    const [mounted, setMounted] = useState(false);
     const cartCount = totalItems();
+    const cartBadgeRef = useRef<HTMLSpanElement>(null);
+
+    useEffect(() => {
+        setMounted(true);
+    }, []);
+
+    useEffect(() => {
+        if (mounted && cartCount > 0 && cartBadgeRef.current) {
+            gsap.fromTo(cartBadgeRef.current,
+                { scale: 0, opacity: 0 },
+                { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }
+            );
+        }
+    }, [cartCount, mounted]);
 
     useEffect(() => {
         if (lottieContainerRef.current && !animationInstanceRef.current) {
@@ -284,14 +299,15 @@ export const Header = () => {
 
                     <button 
                         onClick={() => setIsOpen(true)}
-                        className="relative flex items-center justify-center ml-2"
+                        className={`relative flex items-center justify-center bg-transparent border-none outline-none translate-y-[2px] translate-x-[15px] transition-all duration-300 ${isMenuOpen ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}
                         style={{ color: themeColor }}
                     >
                         <ShoppingBag size={24} />
-                        {cartCount > 0 && (
+                        {mounted && cartCount > 0 && (
                             <span 
-                                className="absolute -top-1 -right-1 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center"
-                                style={{ backgroundColor: themeColor, color: isDarkTheme ? '#fff' : '#111' }}
+                                ref={cartBadgeRef}
+                                className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full"
+                                style={{ color: themeColor, marginLeft: '10px', width: '22px', height: '22px' }}
                             >
                                 {cartCount}
                             </span>
@@ -322,7 +338,7 @@ export const Header = () => {
                         <nav className="hidden lg:flex flex-row items-center z-[10] gap-1 pointer-events-auto">
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                             <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
-                            <NavItem text={`Cart(${cartCount})`} color={themeColor} onClick={() => setIsOpen(true)} />
+                            <NavItem text={mounted ? `Cart(${cartCount})` : "Cart(0)"} color={themeColor} onClick={() => setIsOpen(true)} />
                         </nav>
                     </div>
                 </div>
