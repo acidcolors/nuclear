@@ -169,6 +169,7 @@ export const Header = () => {
     const { totalItems, setIsOpen } = useCart();
     const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
     const isHomePage = pathname === '/';
+    const isRightSideLogo = !['/', '/contact', '/space'].includes(pathname);
 
     const isDarkTheme = isProjectActive;
     const themeColor = isDarkTheme ? '#1a1a1a' : '#ebebeb';
@@ -176,11 +177,23 @@ export const Header = () => {
     const bigStarRef = useRef<HTMLDivElement>(null);
     const rotationTween = useRef<gsap.core.Tween | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
-
     const lottieContainerRef = useRef<HTMLDivElement>(null);
     const animationInstanceRef = useRef<any>(null);
     const isFirstMount = useRef(true);
     const [mounted, setMounted] = useState(false);
+    
+    // Состояние для бленд-мода с задержкой (чтобы звезда успела исчезнуть)
+    const [delayedBlend, setDelayedBlend] = useState(!isDarkTheme);
+
+    useEffect(() => {
+        if (!isDarkTheme) {
+            setDelayedBlend(true);
+        } else {
+            const timer = setTimeout(() => setDelayedBlend(false), 500);
+            return () => clearTimeout(timer);
+        }
+    }, [isDarkTheme]);
+
     const cartCount = totalItems();
     const cartBadgeRef = useRef<HTMLSpanElement>(null);
 
@@ -264,11 +277,48 @@ export const Header = () => {
 
     return (
         <>
-            <div className="fixed top-0 left-0 w-full h-[100px] z-[90] pointer-events-none">
-                <div className="absolute top-[10vh] right-[4vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[50] pointer-events-none h-[44px]">
-                    <div className="absolute top-[-55px] right-[-80px] md:right-[-160px] lg:right-[-80px] min-[1441px]:right-auto lg:left-auto min-[1441px]:left-[120px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
+            <div className="fixed top-0 left-0 w-full h-[100px] z-[50] pointer-events-none">
+                {/* BIG PINK STAR - MOBILE */}
+                <div className={`lg:hidden absolute top-[10vh] right-[4vw] flex items-center z-[50] pointer-events-none h-[44px] transition-all duration-500
+                    ${isHomePage ? 'opacity-100' : 'opacity-0'} scale-100
+                `}>
+                    <div className="absolute top-[-55px] right-[-80px] md:right-[-160px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
                         <div
-                            ref={bigStarRef}
+                            ref={isHomePage && typeof window !== 'undefined' && window.innerWidth < 1024 ? bigStarRef : null}
+                            className="w-full h-full will-change-transform flex items-center justify-center"
+                            style={{ color: '#f5b3ffff' }}
+                        >
+                            <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
+                                <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                {/* BIG PINK STAR - DESKTOP LEFT */}
+                <div className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[50] pointer-events-none h-[44px] transition-all duration-500
+                    ${isHomePage && !isRightSideLogo ? 'opacity-100' : 'opacity-0'} scale-100
+                `}>
+                    <div className="absolute top-[-55px] left-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
+                        <div
+                            ref={isHomePage && !isRightSideLogo && typeof window !== 'undefined' && window.innerWidth >= 1024 ? bigStarRef : null}
+                            className="w-full h-full will-change-transform flex items-center justify-center"
+                            style={{ color: '#f5b3ffff' }}
+                        >
+                            <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
+                                <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                            </svg>
+                        </div>
+                    </div>
+                </div>
+
+                {/* BIG PINK STAR - DESKTOP RIGHT */}
+                <div className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[50] pointer-events-none h-[44px] transition-all duration-500
+                    ${isHomePage && isRightSideLogo ? 'opacity-100' : 'opacity-0'} scale-100
+                `}>
+                    <div className="absolute top-[-55px] right-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
+                        <div
+                            ref={isHomePage && isRightSideLogo && typeof window !== 'undefined' && window.innerWidth >= 1024 ? bigStarRef : null}
                             className="w-full h-full will-change-transform flex items-center justify-center"
                             style={{ color: '#f5b3ffff' }}
                         >
@@ -280,7 +330,7 @@ export const Header = () => {
                 </div>
             </div>
 
-            <header className={`fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none ${isDarkTheme ? '' : 'blend-exclusion'}`}>
+            <header className={`fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none ${delayedBlend ? 'blend-exclusion' : ''}`}>
                 {/* Burger & Cart Icon Group */}
                 <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-6 z-[200] pointer-events-none">
                     <button
@@ -321,13 +371,36 @@ export const Header = () => {
                 </div>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
-                    <div className="absolute top-[5vh] right-[4vw] lg:top-[40px] lg:left-[40px] lg:right-auto flex items-center z-[150] pointer-events-none h-[44px] lg:h-[70px]">
-                        <div className={`transition-all duration-300 flex items-center z-[10] origin-right lg:origin-left lg:!delay-0 pointer-events-auto
+                    {/* MOBILE LOGO - ALWAYS STABLE */}
+                    <div className="lg:hidden absolute top-[5vh] right-[4vw] flex items-center z-[150] pointer-events-none h-[44px]">
+                        <div className={`transition-all duration-300 flex items-center z-[10] origin-right pointer-events-auto
                             ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}
-                            lg:!opacity-100 lg:!scale-100 lg:!pointer-events-auto
                         `}>
-                            <TransitionLink href="/">
-                                <LogoAnimation color={themeColor} />
+                            <TransitionLink href="/" className="pointer-events-auto">
+                                <LogoAnimation color={themeColor} isRightSide={true} />
+                            </TransitionLink>
+                        </div>
+                    </div>
+
+                    {/* DESKTOP LOGO - LEFT */}
+                    <div className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[150] pointer-events-none h-[70px] transition-all duration-500
+                        ${!isRightSideLogo ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-50 pointer-events-none'}
+                    `}>
+                        <div className="flex items-center z-[10] origin-left pointer-events-auto">
+                            <TransitionLink href="/" className="pointer-events-auto">
+                                <LogoAnimation color={themeColor} isRightSide={false} />
+                            </TransitionLink>
+                        </div>
+                    </div>
+
+                    {/* DESKTOP LOGO - RIGHT */}
+                    <div className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[150] pointer-events-none h-[70px] transition-all duration-500
+                        ${isRightSideLogo ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-50 pointer-events-none'}
+                    `}>
+                        <div className="flex items-center z-[10] origin-right pointer-events-auto"
+                             style={{ filter: isRightSideLogo ? 'drop-shadow(0px 0px 0.5px rgba(0,0,0,0.3))' : 'none' }}>
+                            <TransitionLink href="/" className="pointer-events-auto">
+                                <LogoAnimation color={themeColor} isRightSide={true} />
                             </TransitionLink>
                         </div>
                     </div>
@@ -343,7 +416,9 @@ export const Header = () => {
                     </div>
 
                     {/* Desktop Nav Container */}
-                    <nav className="hidden lg:flex absolute top-[40px] right-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto">
+                    <nav className={`hidden lg:flex absolute top-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto transition-all duration-500
+                        ${isRightSideLogo ? 'right-[200px]' : 'right-[40px]'}
+                    `}>
                         <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                         <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
                         <NavItem
