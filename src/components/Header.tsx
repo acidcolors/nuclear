@@ -108,7 +108,7 @@ const LogoAnimation = ({ color }: { color: string }) => {
 // ==========================================================
 // 1. КОМПОНЕНТ ПУНКТА МЕНЮ
 // ==========================================================
-const NavItem = ({ href, text, isActive, color, onClick }: { href?: string; text: string; isActive?: boolean; color: string; onClick?: () => void }) => {
+const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: string; text: string; isActive?: boolean; color: string; onClick?: () => void; badge?: React.ReactNode }) => {
     const star1Ref = useRef<HTMLSpanElement>(null);
     const star2Ref = useRef<HTMLSpanElement>(null);
 
@@ -131,7 +131,7 @@ const NavItem = ({ href, text, isActive, color, onClick }: { href?: string; text
     }, [isActive]);
 
     const content = (
-        <div className="py-[10px] px-[2vw] lg:py-[20px] lg:px-[15px]">
+        <div className="py-[15px] px-[2vw] lg:py-[20px] lg:px-[15px] lg:h-full lg:flex lg:items-center">
             <div className="overflow-hidden relative h-[20px] block flex-shrink-0">
                 <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
                     <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
@@ -142,6 +142,7 @@ const NavItem = ({ href, text, isActive, color, onClick }: { href?: string; text
                     </span>
                 </div>
             </div>
+            {badge && <div className="flex items-center justify-center lg:flex" style={{ marginLeft: '8px' }}>{badge}</div>}
         </div>
     );
 
@@ -154,7 +155,7 @@ const NavItem = ({ href, text, isActive, color, onClick }: { href?: string; text
     }
 
     return (
-        <TransitionLink href={href || '/'} className="group relative block no-underline outline-none cursor-pointer">
+        <TransitionLink href={href || '/'} className="group relative block no-underline outline-none cursor-pointer pointer-events-auto">
             {content}
         </TransitionLink>
     );
@@ -279,9 +280,9 @@ export const Header = () => {
                 </div>
             </div>
 
-            <header className={`fixed top-0 left-0 w-full h-[100px] z-[100] pointer-events-none ${isDarkTheme ? '' : 'blend-exclusion'}`}>
+            <header className={`fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none ${isDarkTheme ? '' : 'blend-exclusion'}`}>
                 {/* Burger & Cart Icon Group */}
-                <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-4 pointer-events-auto z-[200]">
+                <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-8 pointer-events-auto z-[200]">
                     <button
                         className="w-[44px] h-[44px] border-none !border-0 outline-none flex items-center justify-center bg-transparent"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
@@ -297,27 +298,33 @@ export const Header = () => {
                         />
                     </button>
 
-                    <button 
-                        onClick={() => setIsOpen(true)}
-                        className={`relative flex items-center justify-center bg-transparent border-none outline-none translate-y-[2px] translate-x-[15px] transition-all duration-300 ${isMenuOpen ? 'opacity-0 scale-90 pointer-events-none' : 'opacity-100 scale-100'}`}
-                        style={{ color: themeColor }}
-                    >
-                        <ShoppingBag size={24} />
-                        {mounted && cartCount > 0 && (
-                            <span 
-                                ref={cartBadgeRef}
-                                className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full"
-                                style={{ color: themeColor, marginLeft: '10px', width: '22px', height: '22px' }}
-                            >
-                                {cartCount}
-                            </span>
-                        )}
-                    </button>
+                    {!isMenuOpen && (
+                        <button 
+                            onClick={() => setIsOpen(true)}
+                            className="relative flex items-center bg-transparent border-none outline-none translate-y-[2px] transition-all duration-300"
+                            style={{ color: themeColor }}
+                        >
+                            <ShoppingBag size={24} />
+                            {mounted && cartCount > 0 && (
+                                <span 
+                                    ref={cartBadgeRef}
+                                    className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full shrink-0"
+                                    style={{ 
+                                        width: '22px', 
+                                        height: '22px',
+                                        marginLeft: '7px'
+                                    }}
+                                >
+                                    {cartCount}
+                                </span>
+                            )}
+                        </button>
+                    )}
                 </div>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
-                    <div className="absolute top-[5vh] right-[4vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[150] pointer-events-auto h-[44px] lg:h-[70px]">
-                        <div className={`transition-all duration-300 flex items-center z-[10] origin-right min-[1441px]:origin-left lg:!delay-0
+                    <div className="absolute top-[5vh] right-[4vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[150] pointer-events-none h-[44px] lg:h-[70px]">
+                        <div className={`transition-all duration-300 flex items-center z-[10] origin-right min-[1441px]:origin-left lg:!delay-0 pointer-events-auto
                             ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}
                             lg:!opacity-100 lg:!scale-100 lg:!pointer-events-auto
                         `}>
@@ -327,8 +334,8 @@ export const Header = () => {
                         </div>
                     </div>
 
-                    <div className="absolute top-[4.2vh] right-[20vw] lg:top-[40px] lg:right-[220px] min-[1441px]:right-[40px] flex items-center justify-end z-[150] pointer-events-auto h-[44px]">
-                        <nav className={`lg:hidden flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] absolute right-[16vw] origin-right z-[10]
+                    <div className="absolute top-[4.2vh] left-[24vw] lg:left-auto lg:top-[40px] lg:right-[220px] min-[1441px]:right-[40px] flex items-center justify-start lg:justify-end z-[150] pointer-events-none h-[44px]">
+                        <nav className={`lg:hidden flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
                             ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto' : 'duration-200 opacity-0 translate-x-8 pointer-events-none'}
                         `}>
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
@@ -338,7 +345,23 @@ export const Header = () => {
                         <nav className="hidden lg:flex flex-row items-center z-[10] gap-1 pointer-events-auto">
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                             <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
-                            <NavItem text={mounted ? `Cart(${cartCount})` : "Cart(0)"} color={themeColor} onClick={() => setIsOpen(true)} />
+                            <NavItem 
+                                text="Корзина" 
+                                color={themeColor} 
+                                onClick={() => setIsOpen(true)}
+                                badge={mounted && cartCount > 0 ? (
+                                    <span 
+                                        className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full transition-transform duration-300"
+                                        style={{ 
+                                            color: themeColor, 
+                                            width: '22px', 
+                                            height: '22px'
+                                        }}
+                                    >
+                                        {cartCount}
+                                    </span>
+                                ) : null}
+                            />
                         </nav>
                     </div>
                 </div>
