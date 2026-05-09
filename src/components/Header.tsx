@@ -373,7 +373,7 @@ export const Header = () => {
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
                     {/* MOBILE LOGO - ALWAYS STABLE */}
-                    <div className="lg:hidden absolute top-[5vh] right-[4vw] flex items-center z-[150] pointer-events-none h-[44px]">
+                    <div className="lg:hidden absolute top-[5vh] right-[2vw] flex items-center z-[150] pointer-events-none h-[44px]">
                         <div className={`transition-all duration-300 flex items-center z-[10] origin-right pointer-events-auto
                             ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}
                         `}>

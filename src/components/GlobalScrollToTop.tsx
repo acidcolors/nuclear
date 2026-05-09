@@ -95,6 +95,21 @@ export const GlobalScrollToTop = () => {
 
     const lottieRef = useRef<any>(null);
 
+    useEffect(() => {
+        if (window.innerWidth >= 1441) return;
+
+        let direction = 1;
+        const interval = setInterval(() => {
+            if (lottieRef.current) {
+                lottieRef.current.setDirection(direction);
+                lottieRef.current.play();
+                direction = direction === 1 ? -1 : 1;
+            }
+        }, 1500);
+
+        return () => clearInterval(interval);
+    }, []);
+
     // Защита: если данных нет, показываем обычную картинку
     if (!upAnimationData || !upAnimationData.layers) {
         return (
@@ -122,13 +137,13 @@ export const GlobalScrollToTop = () => {
             className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[200] cursor-pointer opacity-0 translate-y-[30px] hidden"
             style={{ pointerEvents: 'none' }}
             onMouseEnter={() => {
-                if (lottieRef.current) {
+                if (lottieRef.current && window.innerWidth >= 1441) {
                     lottieRef.current.setDirection(1);
                     lottieRef.current.play();
                 }
             }}
             onMouseLeave={() => {
-                if (lottieRef.current) {
+                if (lottieRef.current && window.innerWidth >= 1441) {
                     lottieRef.current.setDirection(-1);
                     lottieRef.current.play();
                 }

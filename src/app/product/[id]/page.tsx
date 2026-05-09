@@ -19,6 +19,22 @@ import { ShoppingBag, Check } from 'lucide-react';
 const BackAnimation = () => {
     const lottieRef = useRef<any>(null);
 
+    useEffect(() => {
+        // Цикличная анимация только для экранов меньше 1441px
+        if (window.innerWidth >= 1441) return;
+
+        let direction = 1;
+        const interval = setInterval(() => {
+            if (lottieRef.current) {
+                lottieRef.current.setDirection(direction);
+                lottieRef.current.play();
+                direction = direction === 1 ? -1 : 1;
+            }
+        }, 1500);
+
+        return () => clearInterval(interval);
+    }, []);
+
     // Защита: если данных нет, показываем обычную картинку
     if (!backAnimationData || !backAnimationData.layers) {
         return <img src="/label_03.svg" alt="Back" className="w-[180px] h-auto" />;
@@ -28,13 +44,13 @@ const BackAnimation = () => {
         <div 
             className="w-[180px] h-auto cursor-pointer"
             onMouseEnter={() => {
-                if (lottieRef.current) {
+                if (lottieRef.current && window.innerWidth >= 1441) {
                     lottieRef.current.setDirection(1);
                     lottieRef.current.play();
                 }
             }}
             onMouseLeave={() => {
-                if (lottieRef.current) {
+                if (lottieRef.current && window.innerWidth >= 1441) {
                     lottieRef.current.setDirection(-1);
                     lottieRef.current.play();
                 }
