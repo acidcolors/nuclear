@@ -1,0 +1,8 @@
+'use client';
+
+import React, { useEffect, useRef, useState } from 'react';
+import { usePathname } from 'next/navigation';
+import { TransitionLink } from './TransitionLink';
+import { ShoppingBag } from 'lucide-react';
+import { useCart } from '@/app/s
+<truncated 7777 bytes>

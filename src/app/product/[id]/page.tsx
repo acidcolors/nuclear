@@ -13,6 +13,8 @@ import { Lightbox } from '@/components/ui/Lightbox';
 import { ShareModal } from '@/components/ui/ShareModal';
 import { getNotionProducts } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
+import { useCart } from '@/app/store/useCart';
+import { ShoppingBag, Check } from 'lucide-react';
 
 const BackAnimation = () => {
     const lottieRef = useRef<any>(null);
@@ -56,6 +58,11 @@ export default function ProductPage() {
     const [notionData, setNotionData] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [hoveredBtnIndex, setHoveredBtnIndex] = useState<number | null>(null);
+    const { addItem, setIsOpen, items } = useCart();
+    
+    // Button states
+    const [isAddedRecently, setIsAddedRecently] = useState(false);
+    const buttonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
         if (!CMS_CONFIG.USE_NOTION) {
@@ -87,6 +94,31 @@ export default function ProductPage() {
             folderId: notionData.folderId || 'notion_fallback'
         } : undefined) : baseProduct;
     }, [notionData, baseProduct]);
+
+    const isInCart = items.some(item => item.id === product?.id);
+
+    // GSAP Animation for Button State
+    useEffect(() => {
+        if (!buttonRef.current) return;
+        
+        let bgColor = '#dddddd';
+        let textColor = '#111111';
+
+        if (isAddedRecently) {
+            bgColor = 'transparent'; 
+            textColor = '#111111';
+        } else if (isInCart) {
+            bgColor = '#dcfce7'; // Светло-зеленый (green-100)
+            textColor = '#166534'; // Темно-зеленый текст для контраста
+        }
+
+        gsap.to(buttonRef.current, {
+            backgroundColor: bgColor,
+            color: textColor,
+            duration: 0.3,
+            ease: "power2.inOut"
+        });
+    }, [isAddedRecently, isInCart]);
 
     // Генерируем массив путей к картинкам
     const galleryPhotos = useMemo(() => {
@@ -270,43 +302,86 @@ export default function ProductPage() {
                             className="flex items-center gap-[15px] w-full"
                             onMouseLeave={() => setHoveredBtnIndex(null)}
                         >
-                            {/* Новая кнопка "Написать" */}
+                            {/* Кнопка "В корзину" (вместо "Написать") */}
                             <div
+                                className="flex-1"
                                 style={{
-                                    transform: hoveredBtnIndex === 1 ? 'translateX(-10px) scale(0.98)' : hoveredBtnIndex === 0 ? 'scale(1.05)' : 'none',
-                                    opacity: hoveredBtnIndex === 1 ? 0.5 : 1,
+                                    opacity: hoveredBtnIndex === 1 ? 0.6 : 1,
                                     transition: 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
                                 }}
                                 onMouseEnter={() => setHoveredBtnIndex(0)}
+                                onMouseLeave={() => setHoveredBtnIndex(null)}
                             >
-                                <a
-                                    href="https://t.me/gardennuclear"
-                                    target="_blank"
-                                    rel="noopener noreferrer"
-                                    className="flex items-center justify-center gap-[10px] w-auto px-[24px] h-[55px] rounded-[16px] text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff] no-underline"
+                                <button
+                                    ref={buttonRef}
+                                    style={{ 
+                                        backgroundColor: isAddedRecently ? 'transparent' : (isInCart ? '#dcfce7' : '#dddddd'),
+                                        color: (isInCart && !isAddedRecently) ? '#166534' : '#111111'
+                                    }}
+                                    onClick={() => {
+                                        if (!isInCart) {
+                                            addItem({
+                                                id: product.id,
+                                                title: product.title,
+                                                price: product.price,
+                                                quantity: 1,
+                                                image: galleryPhotos[0]
+                                            });
+                                            setIsAddedRecently(true);
+                                            setTimeout(() => setIsAddedRecently(false), 1500);
+                                        } else {
+                                            setIsOpen(true);
+                                        }
+                                    }}
+                                    className="relative flex items-center justify-center w-full h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer no-underline whitespace-nowrap shadow-sm active:scale-[0.95] overflow-hidden"
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                        <line x1="22" y1="2" x2="11" y2="13"></line>
-                                        <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                    </svg>
-                                    <span style={{ transform: 'translateY(1px)' }}>Написать</span>
-                                </a>
+                                    {/* Layer 1: Default */}
+                                    <div 
+                                        className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                            ${!isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
+                                        `}
+                                    >
+                                        <ShoppingBag size={18} />
+                                        <span style={{ transform: 'translateY(1px)' }}>В корзину</span>
+                                    </div>
+
+                                    {/* Layer 2: Added Recently (Transparent state) */}
+                                    <div 
+                                        className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                            ${isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
+                                        `}
+                                    >
+                                        <Check size={18} />
+                                        <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
+                                    </div>
+
+                                    {/* Layer 3: In Cart (Green state) */}
+                                    <div 
+                                        className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                            ${isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
+                                        `}
+                                    >
+                                        <ShoppingBag size={18} />
+                                        <span style={{ transform: 'translateY(1px)' }}>В корзине</span>
+                                    </div>
+                                </button>
                             </div>
 
                             {/* Ваша оригинальная кнопка "Поделиться" */}
                             <div
+                                className="flex-1"
                                 style={{
-                                    transform: hoveredBtnIndex === 0 ? 'translateX(10px) scale(0.98)' : hoveredBtnIndex === 1 ? 'scale(1.05)' : 'none',
-                                    opacity: hoveredBtnIndex === 0 ? 0.5 : 1,
+                                    opacity: hoveredBtnIndex === 0 ? 0.6 : 1,
                                     transition: 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)'
                                 }}
                                 onMouseEnter={() => setHoveredBtnIndex(1)}
+                                onMouseLeave={() => setHoveredBtnIndex(null)}
                             >
                                 <button
                                     onClick={() => setIsShareModalOpen(true)}
-                                    className="flex items-center justify-center gap-[10px] w-auto px-[24px] h-[55px] rounded-[16px] text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff]"
+                                    className="flex items-center justify-center gap-[8px] w-full px-[10px] h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff] whitespace-nowrap active:scale-[0.95]"
                                 >
-                                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                     </svg>

@@ -105,12 +105,12 @@ export default function Home() {
         onComplete={() => setLoading(false)}
       />
 
-      {viewMode === 'mobile' && <InteractivePhysicsBackground />}
+      {/* {viewMode === 'mobile' && <InteractivePhysicsBackground />} */}
 
       <div className="absolute inset-0 w-full h-full overflow-hidden">
 
-        {/* 1. ФОНОВЫЙ ЗАГОЛОВОК (Отцентрирован по вашим правкам) */}
-        {viewMode !== 'mobile' && (
+        {/* 1. ФОНОВЫЙ ЗАГОЛОВОК (Отключен по просьбе пользователя) */}
+        {/* {viewMode !== 'mobile' && (
           <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none z-0">
             <div className="w-[150vw] opacity-[0.02] text-center">
               <TextPressure
@@ -122,7 +122,7 @@ export default function Home() {
               />
             </div>
           </div>
-        )}
+        )} */}
 
         <div className="absolute top-0 left-0 w-full h-full z-[95] pointer-events-none blend-exclusion">
 

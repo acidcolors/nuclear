@@ -29,7 +29,6 @@ body {
   padding: 0;
   overflow: hidden;
   background-color: #ebebeb;
-  /* Или #ebebeb, если хочешь светлую подложку */
   color: #ebebeb;
 }
 
@@ -50,8 +49,6 @@ body {
     display: none !important;
   }
 }
-
-/* Easter Egg: управляется из JS — здесь ничего не нужно */
 
 /* Фикс моргания GSAP */
 .animate-up {
@@ -116,24 +113,19 @@ input[type="range"]::-moz-range-thumb {
 
 .custom-nav {
   position: absolute;
-
   left: 6vw;
-
 }
 
 .custom-insta {
   position: absolute;
   bottom: 15vh;
-  /* ПОДНИМАЕМ ИНСТАГРАМ: меняй эту цифру (было 80px) */
   left: 6vw;
 }
 
 .custom-tg {
   position: absolute;
   bottom: 15vh;
-  /* ПОДНИМАЕМ ТЕЛЕГРАМ: делай цифру как у инсты */
   left: 35vw;
-  /* СДВИГАЕМ ВЛЕВО: мы убрали right, и добавили left. Уменьшай цифру (например 25vw), чтобы придвинуть ближе к инсте */
 }
 
 .custom-behance {
@@ -153,25 +145,19 @@ input[type="range"]::-moz-range-thumb {
     left: 50% !important;
     transform: translateX(-50%) !important;
   }
-
   .custom-nav {
-
     left: auto !important;
     right: 40px !important;
-
   }
-
   .custom-insta {
     bottom: 40px !important;
     left: 22.2vw !important;
   }
-
   .custom-tg {
     bottom: 40px !important;
     right: auto !important;
     left: 66.6vw !important;
   }
-
   .custom-behance {
     display: block !important;
     top: 50vh !important;
@@ -181,316 +167,125 @@ input[type="range"]::-moz-range-thumb {
   }
 }
 
-/* ============================================================
-   ПРИНУДИТЕЛЬНЫЙ АДАПТИВ ТЕКСТА (ГЛАВНАЯ СТРАНИЦА)
-   ============================================================ */
-
-/* Планшеты (от 768px) */
+/* ПРИНУДИТЕЛЬНЫЙ АДАПТИВ ТЕКСТА (ГЛАВНАЯ СТРАНИЦА) */
 @media (min-width: 768px) {
-  .md\:w-\[55vw\] {
-    width: 55vw !important;
-  }
-
-  .md\:top-\[auto\] {
-    top: auto !important;
-  }
-
-  .md\:bottom-\[32vh\] {
-    bottom: 32vh !important;
-  }
-
-  .md\:left-\[22vw\] {
-    left: 22vw !important;
-  }
+  .md\:w-\[55vw\] { width: 55vw !important; }
+  .md\:top-\[auto\] { top: auto !important; }
+  .md\:bottom-\[32vh\] { bottom: 32vh !important; }
+  .md\:left-\[22vw\] { left: 22vw !important; }
 }
 
-/* Десктопы (от 1024px) */
 @media (min-width: 1024px) {
-  .lg\:w-\[50vw\] {
-    width: 50vw !important;
-  }
-
-  .lg\:w-\[40vw\] {
-    width: 40vw !important;
-  }
-
-  .lg\:w-\[12vw\] {
-    width: 12vw !important;
-  }
-
-  .lg\:top-\[22vh\] {
-    top: 22vh !important;
-  }
-
-  .lg\:top-\[50vh\] {
-    top: 44.4vh !important;
-  }
-
-  .lg\:top-\[40px\] {
-    top: 40px !important;
-  }
-
-  .lg\:left-\[22\.2vw\] {
-    left: 22.2vw !important;
-  }
-
-  .lg\:left-\[30vw\] {
-    left: 30vw !important;
-  }
-
-  .lg\:left-\[40px\] {
-    left: 40px !important;
-  }
-
-  .lg\:bottom-auto {
-    bottom: auto !important;
-  }
-
-  .lg\:-translate-y-1\/2 {
-    transform: translateY(-50%) !important;
-  }
-
-  .lg\:-translate-x-1\/2 {
-    transform: translateX(-50%) !important;
-  }
-
-  .lg\:gap-\[30px\] {
-    gap: 30px !important;
-  }
-
-  .lg\:right-\[40px\] {
-    right: 40px !important;
-  }
-
-  .lg\:right-auto {
-    right: auto !important;
-  }
+  .lg\:w-\[50vw\] { width: 50vw !important; }
+  .lg\:w-\[40vw\] { width: 40vw !important; }
+  .lg\:w-\[12vw\] { width: 12vw !important; }
+  .lg\:top-\[22vh\] { top: 22vh !important; }
+  .lg\:top-\[50vh\] { top: 44.4vh !important; }
+  .lg\:top-\[40px\] { top: 40px !important; }
+  .lg\:left-\[22\.2vw\] { left: 22.2vw !important; }
+  .lg\:left-\[30vw\] { left: 30vw !important; }
+  .lg\:left-\[40px\] { left: 40px !important; }
+  .lg\:bottom-auto { bottom: auto !important; }
+  .lg\:-translate-y-1\/2 { transform: translateY(-50%) !important; }
+  .lg\:-translate-x-1\/2 { transform: translateX(-50%) !important; }
+  .lg\:gap-\[30px\] { gap: 30px !important; }
+  .lg\:right-\[40px\] { right: 40px !important; }
+  .lg\:right-auto { right: auto !important; }
 }
 
-/* ============================================================
-   ПРИНУДИТЕЛЬНЫЙ АДАПТИВ ДЛЯ PROJECT PAGE 
-   ============================================================ */
-
-/* ИСПРАВЛЕНО: Планшеты (от 768px) */
+/* ПРИНУДИТЕЛЬНЫЙ АДАПТИВ ДЛЯ PROJECT PAGE */
 @media (min-width: 768px) {
-  .md\:grid-cols-2 {
-    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
-  }
-
-  .md\:px-\[60px\] {
-    padding-left: 60px !important;
-    padding-right: 60px !important;
-  }
+  .md\:grid-cols-2 { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+  .md\:px-\[60px\] { padding-left: 60px !important; padding-right: 60px !important; }
 }
 
-/* Десктопы и Ноутбуки (от 1024px) */
 @media (min-width: 1024px) {
-  .lg\:fixed {
-    position: fixed !important;
-  }
-
-  .lg\:absolute {
-    position: absolute !important;
-  }
-
-  .lg\:top-0 {
-    top: 0 !important;
-  }
-
-  .lg\:left-0 {
-    left: 0 !important;
-  }
-
-  .lg\:w-\[35\%\] {
-    width: 35% !important;
-  }
-
-  .lg\:w-\[65\%\] {
-    width: 65% !important;
-  }
-
-  .lg\:h-\[100dvh\] {
-    height: 100dvh !important;
-  }
-
-  .lg\:top-\[150px\] {
-    top: 150px !important;
-  }
-
-  .lg\:left-\[35\%\] {
-    left: 35% !important;
-  }
-
-  .lg\:p-\[4vw\] {
-    padding: 4vw !important;
-  }
-
-  .lg\:pt-0 {
-    padding-top: 0 !important;
-  }
-
-  .lg\:py-\[6vh\] {
-    padding-top: 6vh !important;
-    padding-bottom: 6vh !important;
-  }
-
-  .lg\:px-\[4vw\] {
-    padding-left: 4vw !important;
-    padding-right: 4vw !important;
-  }
-
-  .lg\:flex {
-    display: flex !important;
-  }
-
-  .lg\:hidden {
-    display: none !important;
-  }
-
-  .lg\:block {
-    display: block !important;
-  }
+  .lg\:fixed { position: fixed !important; }
+  .lg\:absolute { position: absolute !important; }
+  .lg\:top-0 { top: 0 !important; }
+  .lg\:left-0 { left: 0 !important; }
+  .lg\:w-\[35\%\] { width: 35% !important; }
+  .lg\:w-\[65\%\] { width: 65% !important; }
+  .lg\:h-\[100dvh\] { height: 100dvh !important; }
+  .lg\:top-\[150px\] { top: 150px !important; }
+  .lg\:left-\[35\%\] { left: 35% !important; }
+  .lg\:p-\[4vw\] { padding: 4vw !important; }
+  .lg\:pt-0 { padding-top: 0 !important; }
+  .lg\:py-\[6vh\] { padding-top: 6vh !important; padding-bottom: 6vh !important; }
+  .lg\:px-\[4vw\] { padding-left: 4vw !important; padding-right: 4vw !important; }
+  .lg\:flex { display: flex !important; }
+  .lg\:hidden { display: none !important; }
+  .lg\:block { display: block !important; }
 }
 
-/* Большие мониторы (от 1280px) */
 @media (min-width: 1280px) {
-  .xl\:grid-cols-3 {
-    grid-template-columns: repeat(3, minmax(0, 1fr)) !important;
-  }
+  .xl\:grid-cols-3 { grid-template-columns: repeat(3, minmax(0, 1fr)) !important; }
 }
 
-/* ============================================================
-   КНОПКА ДОМОЙ (В ОВЕРЛЕЯХ)
-   ============================================================ */
 .custom-home-btn {
   position: absolute;
-
   right: 6vw;
-  /* На мобилке справа */
   z-index: 50;
 }
 
-/* ИСПРАВЛЕНО: Планшеты (от 768px) */
-@media (min-width: 1024px) {
-  .custom-home-btn {
-
-    left: 60px !important;
-    /* Выравниваем по левому краю текста */
-    right: auto !important;
-    /* Отрываем от правого края */
-  }
-}
-
-/* Десктопы (от 1024px) */
 @media (min-width: 1024px) {
   .custom-home-btn {
     left: 4vw !important;
-    /* Идеальный отступ для больших экранов */
+    right: auto !important;
   }
 }
 
-/* --- СТИЛИ ДЛЯ ЛАЙТБОКСА --- */
-
-/* Фон лайтбокса - непрозрачный, чтобы скрыть контент за ним */
+/* Фон лайтбокса */
 .custom-lightbox-bg {
   background-color: #ebebeb !important;
-  /* Наш теплый серый фон */
 }
 
-/* Стилизация стрелок и крестика */
 .custom-lightbox-control {
   background-color: rgba(17, 17, 17, 0.1);
-  /* Полупрозрачный черный для фона кнопки */
   border-radius: 50%;
-  /* Круглая форма */
   color: #111;
-  /* Цвет иконки */
   transition: all 0.3s ease;
-  /* Плавные переходы */
 }
 
 .custom-lightbox-control:hover {
   background-color: rgba(17, 17, 17, 0.3);
-  /* Ярче при наведении */
   transform: scale(1.1);
-  /* Немного увеличиваем */
 }
 
-/* Плавное появление фото */
 @keyframes fadeInProduct {
-  from {
-    opacity: 0;
-    transform: scale(0.95);
-  }
-
-  to {
-    opacity: 1;
-    transform: scale(1);
-  }
+  from { opacity: 0; transform: scale(0.95); }
+  to { opacity: 1; transform: scale(1); }
 }
 
 .animate-fadeInProduct {
   animation: fadeInProduct 0.4s forwards ease-out;
 }
 
-/* === ПЛАН Б: Скрытие глобального меню при открытом лайтбоксе === */
-
-/* Базовый класс — анимация работает и туда, и обратно */
-.global-menu-wrapper {
-  transition: opacity 0.3s ease-out !important;
-}
-
-/* Когда лайтбокс открыт — делаем невидимым */
-.lightbox-is-open .global-menu-wrapper {
-  opacity: 0 !important;
-  pointer-events: none !important;
-}
-
-/* Прячем элементы хедера, чтобы они не мелькали под лоадером */
-.custom-home-btn,
-.custom-nav {}
-
-/* Добавь это, чтобы гарантировать порядок слоев */
-header,
-.global-menu-wrapper {
-  z-index: 100 !important;
-  isolation: auto !important;
-}
-
-/* Лоадер ВСЕГДА должен быть выше */
-.loader-wrapper {
-  position: fixed !important;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  z-index: 99999 !important;
-  /* Больше чем у хедера */
-  background-color: #ebebeb;
-  /* Убедись, что фон непрозрачный */
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  pointer-events: auto;
-}
-
-/* Прячем стандартный курсор на десктопах */
+/* --- КУРСОР --- */
 @media (min-width: 1024px) {
-  * {
-    cursor: none !important;
-  }
+  * { cursor: none !important; }
 }
 
-/* --- ФИКС ДЛЯ IPAD PRO (1024x1366) --- */
-@media (width: 1024px) and (height: 1366px) {
-  .custom-thank-you {
-    bottom: 20vh !important;
-    /* Опускаем ниже основного текста */
-  }
-
-  .custom-behance {
-    top: 75vh !important;
-    /* Смещаем Behance ниже центра, чтобы не зарезал текст */
-    transform: rotate(90deg) !important;
-  }
+/* ============================================================
+   СТИЛИ ДЛЯ КОРЗИНЫ
+   ============================================================ */
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
 }
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(17, 17, 17, 0.15);
+  border-radius: 10px;
+}
+.custom-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: rgba(17, 17, 17, 0.3);
+}
+
+@keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+@keyframes zoomIn { from { transform: scale(0.95); opacity: 0; } to { transform: scale(1); opacity: 1; } }
+
+.animate-in { animation-duration: 300ms; animation-fill-mode: forwards; }
+.fade-in { animation-name: fadeIn; }
+.zoom-in { animation-name: zoomIn; }

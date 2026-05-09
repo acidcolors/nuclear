@@ -7,6 +7,8 @@ import gsap from 'gsap';
 import lottie from 'lottie-web';
 import Lottie from 'lottie-react';
 import logoAnimationData from '@/data/logo_t.json';
+import { useCart } from '@/app/store/useCart';
+import { ShoppingBag } from 'lucide-react';
 
 // ==========================================================
 // 1.5. КОМПОНЕНТ ЛОГОТИПА
@@ -106,7 +108,7 @@ const LogoAnimation = ({ color }: { color: string }) => {
 // ==========================================================
 // 1. КОМПОНЕНТ ПУНКТА МЕНЮ
 // ==========================================================
-const NavItem = ({ href, text, isActive, color }: { href: string; text: string; isActive?: boolean; color: string }) => {
+const NavItem = ({ href, text, isActive, color, onClick }: { href?: string; text: string; isActive?: boolean; color: string; onClick?: () => void }) => {
     const star1Ref = useRef<HTMLSpanElement>(null);
     const star2Ref = useRef<HTMLSpanElement>(null);
 
@@ -128,20 +130,32 @@ const NavItem = ({ href, text, isActive, color }: { href: string; text: string; 
         };
     }, [isActive]);
 
-    return (
-        <TransitionLink href={href} className="group relative block no-underline outline-none cursor-pointer">
-            <div className="py-[10px] px-[2vw] lg:py-[20px] lg:px-[15px]">
-                <div className="overflow-hidden relative h-[20px] block flex-shrink-0">
-                    <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                        <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
-                            {text} <span ref={star1Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
-                        </span>
-                        <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
-                            {text} <span ref={star2Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
-                        </span>
-                    </div>
+    const content = (
+        <div className="py-[10px] px-[2vw] lg:py-[20px] lg:px-[15px]">
+            <div className="overflow-hidden relative h-[20px] block flex-shrink-0">
+                <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                    <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
+                        {text} <span ref={star1Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
+                    </span>
+                    <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
+                        {text} <span ref={star2Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
+                    </span>
                 </div>
             </div>
+        </div>
+    );
+
+    if (onClick) {
+        return (
+            <button onClick={onClick} className="group relative block no-underline outline-none cursor-pointer bg-transparent border-none p-0">
+                {content}
+            </button>
+        );
+    }
+
+    return (
+        <TransitionLink href={href || '/'} className="group relative block no-underline outline-none cursor-pointer">
+            {content}
         </TransitionLink>
     );
 };
@@ -151,6 +165,7 @@ const NavItem = ({ href, text, isActive, color }: { href: string; text: string; 
 // ==========================================================
 export const Header = () => {
     const pathname = usePathname();
+    const { totalItems, setIsOpen } = useCart();
     const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
     const isHomePage = pathname === '/';
 
@@ -164,6 +179,7 @@ export const Header = () => {
     const lottieContainerRef = useRef<HTMLDivElement>(null);
     const animationInstanceRef = useRef<any>(null);
     const isFirstMount = useRef(true);
+    const cartCount = totalItems();
 
     useEffect(() => {
         if (lottieContainerRef.current && !animationInstanceRef.current) {
@@ -249,21 +265,39 @@ export const Header = () => {
             </div>
 
             <header className={`fixed top-0 left-0 w-full h-[100px] z-[100] pointer-events-none ${isDarkTheme ? '' : 'blend-exclusion'}`}>
-                <button
-                    className="lg:hidden absolute top-[4vh] left-[6vw] w-[44px] h-[44px] border-none !border-0 outline-none pointer-events-auto z-[200] flex items-center justify-center bg-transparent"
-                    style={{ border: 'none', background: 'transparent', transform: 'translateZ(0)' }}
-                    onClick={() => setIsMenuOpen(!isMenuOpen)}
-                    aria-label="Toggle menu"
-                >
-                    <div
-                        ref={lottieContainerRef}
-                        className="header-lottie-icon absolute w-[120px] h-[120px] scale-[1.3] flex items-center justify-center pointer-events-none [&_path]:!fill-[var(--lottie-color)] [&_path]:!stroke-[var(--lottie-color)]"
-                        style={{
-                            color: themeColor,
-                            '--lottie-color': themeColor
-                        } as React.CSSProperties}
-                    />
-                </button>
+                {/* Burger & Cart Icon Group */}
+                <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-4 pointer-events-auto z-[200]">
+                    <button
+                        className="w-[44px] h-[44px] border-none !border-0 outline-none flex items-center justify-center bg-transparent"
+                        onClick={() => setIsMenuOpen(!isMenuOpen)}
+                        aria-label="Toggle menu"
+                    >
+                        <div
+                            ref={lottieContainerRef}
+                            className="header-lottie-icon absolute w-[120px] h-[120px] scale-[1.3] flex items-center justify-center pointer-events-none [&_path]:!fill-[var(--lottie-color)] [&_path]:!stroke-[var(--lottie-color)]"
+                            style={{
+                                color: themeColor,
+                                '--lottie-color': themeColor
+                            } as React.CSSProperties}
+                        />
+                    </button>
+
+                    <button 
+                        onClick={() => setIsOpen(true)}
+                        className="relative flex items-center justify-center ml-2"
+                        style={{ color: themeColor }}
+                    >
+                        <ShoppingBag size={24} />
+                        {cartCount > 0 && (
+                            <span 
+                                className="absolute -top-1 -right-1 text-[10px] font-black w-4 h-4 rounded-full flex items-center justify-center"
+                                style={{ backgroundColor: themeColor, color: isDarkTheme ? '#fff' : '#111' }}
+                            >
+                                {cartCount}
+                            </span>
+                        )}
+                    </button>
+                </div>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
                     <div className="absolute top-[5vh] right-[4vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[150] pointer-events-auto h-[44px] lg:h-[70px]">
@@ -288,6 +322,7 @@ export const Header = () => {
                         <nav className="hidden lg:flex flex-row items-center z-[10] gap-1 pointer-events-auto">
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                             <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
+                            <NavItem text={`Cart(${cartCount})`} color={themeColor} onClick={() => setIsOpen(true)} />
                         </nav>
                     </div>
                 </div>

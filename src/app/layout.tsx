@@ -4,6 +4,7 @@ import './globals.css';
 import { Header } from '../components/Header';
 import CustomCursor from '../components/CustomCursor';
 import { GlobalScrollToTop } from '../components/GlobalScrollToTop';
+import { CartDrawer } from '../components/CartDrawer';
 
 // Настройка шрифта
 const inter = Inter({
@@ -34,6 +35,9 @@ export default function RootLayout({
 
         {/* Шапка теперь зафиксирована на уровне всего приложения */}
         <Header />
+
+        {/* Корзина */}
+        <CartDrawer />
 
         {/* Глобальная кнопка "Вверх" */}
         <GlobalScrollToTop />
