@@ -73,11 +73,11 @@ const LogoAnimation = ({ color }: { color: string }) => {
     }
 
     return (
-        <div 
+        <div
             className="flex items-center justify-center cursor-pointer [&_path]:!fill-[var(--lottie-color)]"
-            style={{ 
+            style={{
                 width, height,
-                '--lottie-color': color 
+                '--lottie-color': color
             } as React.CSSProperties}
             onMouseEnter={() => {
                 if (lottieRef.current) {
@@ -93,9 +93,9 @@ const LogoAnimation = ({ color }: { color: string }) => {
                 }
             }}
         >
-            <Lottie 
+            <Lottie
                 lottieRef={lottieRef}
-                animationData={logoAnimationData} 
+                animationData={logoAnimationData}
                 loop={false}
                 autoplay={false}
                 className="w-full h-full"
@@ -236,7 +236,7 @@ export const Header = () => {
     useEffect(() => {
         if (isHomePage && bigStarRef.current) {
             gsap.set(bigStarRef.current, { display: 'flex', opacity: 1, scale: 1 });
-            
+
             if (!rotationTween.current) {
                 rotationTween.current = gsap.to(bigStarRef.current, {
                     rotation: 360,
@@ -253,7 +253,7 @@ export const Header = () => {
                 rotationTween.current = null;
             }
         }
-        
+
         return () => {
             if (rotationTween.current) {
                 rotationTween.current.kill();
@@ -282,9 +282,9 @@ export const Header = () => {
 
             <header className={`fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none ${isDarkTheme ? '' : 'blend-exclusion'}`}>
                 {/* Burger & Cart Icon Group */}
-                <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-8 pointer-events-auto z-[200]">
+                <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-6 z-[200] pointer-events-none">
                     <button
-                        className="w-[44px] h-[44px] border-none !border-0 outline-none flex items-center justify-center bg-transparent"
+                        className="w-[44px] h-[44px] border-none !border-0 outline-none flex items-center justify-center bg-transparent pointer-events-auto"
                         onClick={() => setIsMenuOpen(!isMenuOpen)}
                         aria-label="Toggle menu"
                     >
@@ -298,28 +298,26 @@ export const Header = () => {
                         />
                     </button>
 
-                    {!isMenuOpen && (
-                        <button 
-                            onClick={() => setIsOpen(true)}
-                            className="relative flex items-center bg-transparent border-none outline-none translate-y-[2px] transition-all duration-300"
-                            style={{ color: themeColor }}
-                        >
-                            <ShoppingBag size={24} />
-                            {mounted && cartCount > 0 && (
-                                <span 
-                                    ref={cartBadgeRef}
-                                    className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full shrink-0"
-                                    style={{ 
-                                        width: '22px', 
-                                        height: '22px',
-                                        marginLeft: '7px'
-                                    }}
-                                >
-                                    {cartCount}
-                                </span>
-                            )}
-                        </button>
-                    )}
+                    <button
+                        onClick={() => setIsOpen(true)}
+                        className={`relative flex items-center gap-2 bg-transparent border-none outline-none translate-y-[2px] transition-all duration-300 ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}`}
+                        style={{ color: themeColor }}
+                    >
+                        <ShoppingBag size={24} />
+                        {mounted && cartCount > 0 && (
+                            <span
+                                ref={cartBadgeRef}
+                                className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full shrink-0"
+                                style={{
+                                    width: '22px',
+                                    height: '22px',
+                                    marginLeft: '7px'
+                                }}
+                            >
+                                {cartCount}
+                            </span>
+                        )}
+                    </button>
                 </div>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
@@ -345,16 +343,16 @@ export const Header = () => {
                         <nav className="hidden lg:flex flex-row items-center z-[10] gap-1 pointer-events-auto">
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                             <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
-                            <NavItem 
-                                text="Корзина" 
-                                color={themeColor} 
+                            <NavItem
+                                text="Корзина"
+                                color={themeColor}
                                 onClick={() => setIsOpen(true)}
                                 badge={mounted && cartCount > 0 ? (
-                                    <span 
+                                    <span
                                         className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full transition-transform duration-300"
-                                        style={{ 
-                                            color: themeColor, 
-                                            width: '22px', 
+                                        style={{
+                                            color: themeColor,
+                                            width: '22px',
                                             height: '22px'
                                         }}
                                     >
