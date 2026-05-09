@@ -97,7 +97,7 @@ export const ScrollToTop = ({ scrollContainerId, isDesktop }: ScrollToTopProps) 
         <div 
             ref={btnRef}
             onClick={handleBackToTop}
-            className="fixed bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[150] cursor-pointer opacity-0 translate-y-[30px] hidden"
+            className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[150] cursor-pointer opacity-0 translate-y-[30px] hidden"
             style={{ pointerEvents: 'none' }}
         >
             <div className="relative group transition-transform duration-300 hover:scale-110 active:scale-95">
