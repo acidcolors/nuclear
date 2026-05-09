@@ -58,19 +58,19 @@ export const CartDrawer = () => {
 
     useEffect(() => {
         if (orderStatus === 'success' && successRef.current) {
-            // Entry animation
-            gsap.fromTo(successRef.current, 
+            gsap.fromTo(successRef.current,
                 { scale: 0.95, opacity: 0 },
                 { scale: 1, opacity: 1, duration: 0.8, ease: 'expo.out' }
             );
         }
     }, [orderStatus]);
 
+    // АНИМАЦИЯ: Возвращаем логичные 100%, так как позиция теперь правильная!
     useEffect(() => {
         if (isOpen) {
             document.body.style.overflow = 'hidden';
             gsap.to(overlayRef.current, { opacity: 1, duration: 0.5, pointerEvents: 'auto', ease: 'power2.out' });
-            gsap.to(drawerRef.current, { x: 0, duration: 0.6, ease: 'expo.out' });
+            gsap.to(drawerRef.current, { x: '0%', duration: 0.6, ease: 'expo.out' });
         } else {
             document.body.style.overflow = '';
             gsap.to(overlayRef.current, { opacity: 0, duration: 0.4, pointerEvents: 'none', ease: 'power2.in' });
@@ -99,10 +99,8 @@ export const CartDrawer = () => {
 
             if (response.ok) {
                 setOrderStatus('success');
-                // Start closing after 1.5s
                 setTimeout(() => {
                     setIsOpen(false);
-                    // Reset state only after drawer is fully closed (500ms transition)
                     setTimeout(() => {
                         clearCart();
                         setOrderStatus('idle');
@@ -136,10 +134,14 @@ export const CartDrawer = () => {
             {/* Drawer */}
             <div
                 ref={drawerRef}
-                className="fixed top-0 right-0 h-screen w-full md:w-[460px] lg:w-full bg-[#f2f2f2] z-[999] shadow-2xl translate-x-full flex flex-col rounded-l-[20px] lg:rounded-none"
+                // МАГИЯ ЗДЕСЬ: Добавлен `ml-auto`, который прижимает корзину к правому краю!
+                // Ширина умная: мобилка 100%, на десктопе тянется до 30vw, но зажата в рамках 400px - 550px.
+                className="fixed top-0 right-0 h-screen w-full lg:w-[30vw] lg:min-w-[400px] lg:max-w-[550px] ml-auto bg-[#f2f2f2] z-[999] shadow-2xl flex flex-col rounded-l-[20px]"
+                // Жестко прячем за экран при загрузке
+                style={{ transform: 'translateX(100%)' }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-[8vw] md:px-[40px] lg:px-[400px] pt-[10px] pb-1 min-h-[60px]">
+                <div className="flex items-center justify-between px-[8vw] lg:px-[40px] pt-[10px] pb-1 min-h-[60px]">
                     {orderStatus !== 'success' && (
                         <>
                             <h2 className="text-[32px] font-bold tracking-tight text-[#111]">
@@ -156,9 +158,9 @@ export const CartDrawer = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-[8vw] md:px-[40px] lg:px-[400px] pt-0 pb-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-[8vw] lg:px-[40px] pt-0 pb-8">
                     {orderStatus === 'success' ? (
-                        <div 
+                        <div
                             ref={successRef}
                             className="h-full flex flex-col items-center justify-center text-center px-10"
                             style={{ marginTop: '-60px' }}
@@ -167,7 +169,7 @@ export const CartDrawer = () => {
                             <p className="text-sm font-medium text-[#111] opacity-60">Мы скоро свяжемся с вами для подтверждения.</p>
                         </div>
                     ) : items.length === 0 ? (
-                        <div 
+                        <div
                             ref={emptyCartRef}
                             className="h-full flex flex-col items-center justify-center text-center text-[#111] opacity-20"
                             style={{ marginTop: '-60px' }}
@@ -177,18 +179,18 @@ export const CartDrawer = () => {
                             <p className="text-[16px]">Время что-нибудь добавить</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col gap-8 pb-10">
+                        <div className="flex flex-col !gap-8 pb-10">
                             {items.map((item) => (
-                                <div 
-                                    key={item.id} 
+                                <div
+                                    key={item.id}
                                     id={`cart-item-${item.id}`}
-                                    className="flex items-center gap-4 group"
+                                    className="flex items-center gap-4 group my-[10px]"
                                 >
                                     {/* Thumbnail */}
                                     <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
                                         {item.image && (
                                             <Image
-                                                src={item.image}
+                                                src={item.image as string}
                                                 alt={item.title}
                                                 fill
                                                 className="object-cover"
@@ -248,7 +250,7 @@ export const CartDrawer = () => {
                                     <span className="text-[13px] font-medium text-[#111] opacity-30 pr-4">
                                         Итог
                                     </span>
-                                    <div 
+                                    <div
                                         className="bg-[#e5e5e5] px-[20px] py-[10px] rounded-[10px] text-[22px] font-bold text-[#111] shadow-sm tabular-nums"
                                         style={{ marginTop: '10px' }}
                                     >
@@ -256,7 +258,7 @@ export const CartDrawer = () => {
                                     </div>
                                 </div>
 
-                                {/* Footer Controls inside scrollable */}
+                                {/* Footer Controls */}
                                 <div className="pb-12 pt-0 flex flex-col gap-10">
                                     <input
                                         type="text"
