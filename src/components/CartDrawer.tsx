@@ -136,10 +136,10 @@ export const CartDrawer = () => {
             {/* Drawer */}
             <div
                 ref={drawerRef}
-                className="fixed top-0 right-0 h-screen w-full md:w-[460px] bg-[#f2f2f2] z-[999] shadow-2xl translate-x-full flex flex-col rounded-l-[20px]"
+                className="fixed top-0 right-0 h-screen w-full md:w-[460px] lg:w-full bg-[#f2f2f2] z-[999] shadow-2xl translate-x-full flex flex-col rounded-l-[20px] lg:rounded-none"
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-[8vw] md:px-[40px] pt-[10px] pb-1 min-h-[60px]">
+                <div className="flex items-center justify-between px-[8vw] md:px-[40px] lg:px-[400px] pt-[10px] pb-1 min-h-[60px]">
                     {orderStatus !== 'success' && (
                         <>
                             <h2 className="text-[32px] font-bold tracking-tight text-[#111]">
@@ -156,7 +156,7 @@ export const CartDrawer = () => {
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-[8vw] md:px-[40px] pt-0 pb-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-[8vw] md:px-[40px] lg:px-[400px] pt-0 pb-8">
                     {orderStatus === 'success' ? (
                         <div 
                             ref={successRef}

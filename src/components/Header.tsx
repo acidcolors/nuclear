@@ -13,7 +13,8 @@ import { ShoppingBag } from 'lucide-react';
 // ==========================================================
 // 1.5. КОМПОНЕНТ ЛОГОТИПА
 // ==========================================================
-const LogoAnimation = ({ color }: { color: string }) => {
+// Добавляем проп isRightSide для правильного позиционирования маски
+const LogoAnimation = ({ color, isRightSide = false }: { color: string; isRightSide?: boolean }) => {
     const lottieRef = useRef<any>(null);
     const [screenState, setScreenState] = useState({ isDesktop: false, isLarge: false });
     const timerRef = useRef<NodeJS.Timeout | null>(null);
@@ -61,7 +62,7 @@ const LogoAnimation = ({ color }: { color: string }) => {
     if (!logoAnimationData || !logoAnimationData.layers) {
         return (
             <div
-                className="[-webkit-mask-position:right_center] lg:[-webkit-mask-position:left_center] [mask-position:right_center] lg:[mask-position:left_center]"
+                className={`${isRightSide ? '[mask-position:right_center] [-webkit-mask-position:right_center]' : '[mask-position:left_center] [-webkit-mask-position:left_center]'}`}
                 style={{
                     width, height,
                     backgroundColor: color,
@@ -351,7 +352,7 @@ export const Header = () => {
                     <button
                         onClick={() => setIsOpen(true)}
                         className={`relative flex items-center gap-2 bg-transparent border-none outline-none translate-y-[2px] transition-all duration-300 ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}`}
-                        style={{ color: themeColor }}
+                        style={{ color: themeColor, marginLeft: '25px' }}
                     >
                         <ShoppingBag size={24} />
                         {mounted && cartCount > 0 && (
@@ -417,7 +418,7 @@ export const Header = () => {
 
                     {/* Desktop Nav Container */}
                     <nav className={`hidden lg:flex absolute top-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto transition-all duration-500
-                        ${isRightSideLogo ? 'right-[200px]' : 'right-[40px]'}
+                        ${isRightSideLogo ? 'right-[240px]' : 'right-[80px]'}
                     `}>
                         <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                         <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
@@ -431,7 +432,8 @@ export const Header = () => {
                                     style={{
                                         color: themeColor,
                                         width: '22px',
-                                        height: '22px'
+                                        height: '22px',
+                                        transform: 'translateY(-4px)'
                                     }}
                                 >
                                     {cartCount}
