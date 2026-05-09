@@ -5,7 +5,6 @@ import { gsap } from 'gsap';
 import { Preloader } from '@/components/Preloader';
 import { Typewriter } from '@/components/ui/Typewriter';
 import { TextPressure } from '@/components/ui/TextPressure';
-import InteractivePhysicsBackground from '@/components/InteractivePhysicsBackground';
 import { getNotionHomePageMain, getNotionHomePageLinks } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
 
@@ -13,6 +12,7 @@ export default function Home() {
   const [loading, setLoading] = useState(true);
   const [isFetchingData, setIsFetchingData] = useState(true);
   const [viewMode, setViewMode] = useState<'mobile' | 'adaptive' | 'desktop'>('mobile');
+  const [startPressure, setStartPressure] = useState(false);
   
   const [homeMain, setHomeMain] = useState<{ title: string; description: string } | null>(null);
   const [homeLinks, setHomeLinks] = useState<any[]>([]);
@@ -52,6 +52,16 @@ export default function Home() {
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // 1.1 ЗАДЕРЖКА ДЛЯ ТЯЖЕЛЫХ АНИМАЦИЙ
+  useEffect(() => {
+    if (!loading && !isFetchingData) {
+      const timer = setTimeout(() => {
+        setStartPressure(true);
+      }, 800);
+      return () => clearTimeout(timer);
+    }
+  }, [loading, isFetchingData]);
 
   // 2. АНИМАЦИЯ ПОЯВЛЕНИЯ (GSAP)
   useEffect(() => {
@@ -105,8 +115,6 @@ export default function Home() {
         onComplete={() => setLoading(false)}
       />
 
-      {/* {viewMode === 'mobile' && <InteractivePhysicsBackground />} */}
-
       <div className="absolute inset-0 w-full h-full overflow-hidden">
 
         {/* 1. ФОНОВЫЙ ЗАГОЛОВОК (Отключен по просьбе пользователя) */}
@@ -143,7 +151,7 @@ export default function Home() {
             <TextPressure
               text={titles.fg}
               className="text-[length:var(--title-size)] leading-[0.95] lg:leading-[0.9] tracking-tighter text-[#ebebeb]"
-              animateMode="random"
+              animateMode={startPressure ? 'random' : 'none'}
             />
           </div>
 
