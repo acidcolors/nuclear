@@ -321,8 +321,8 @@ export const Header = () => {
                 </div>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
-                    <div className="absolute top-[5vh] right-[4vw] lg:top-[40px] lg:right-[40px] lg:left-auto min-[1441px]:left-[40px] min-[1441px]:right-auto flex items-center z-[150] pointer-events-none h-[44px] lg:h-[70px]">
-                        <div className={`transition-all duration-300 flex items-center z-[10] origin-right min-[1441px]:origin-left lg:!delay-0 pointer-events-auto
+                    <div className="absolute top-[5vh] right-[4vw] lg:top-[40px] lg:left-[40px] lg:right-auto flex items-center z-[150] pointer-events-none h-[44px] lg:h-[70px]">
+                        <div className={`transition-all duration-300 flex items-center z-[10] origin-right lg:origin-left lg:!delay-0 pointer-events-auto
                             ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}
                             lg:!opacity-100 lg:!scale-100 lg:!pointer-events-auto
                         `}>
@@ -332,36 +332,38 @@ export const Header = () => {
                         </div>
                     </div>
 
-                    <div className="absolute top-[4.2vh] left-[24vw] lg:left-auto lg:top-[40px] lg:right-[220px] min-[1441px]:right-[40px] flex items-center justify-start lg:justify-end z-[150] pointer-events-none h-[44px]">
-                        <nav className={`lg:hidden flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
+                    {/* Mobile Nav Container */}
+                    <div className="absolute top-[4.2vh] left-[24vw] lg:hidden flex items-center justify-start z-[150] pointer-events-none h-[44px]">
+                        <nav className={`flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
                             ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto' : 'duration-200 opacity-0 translate-x-8 pointer-events-none'}
                         `}>
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                             <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
                         </nav>
-
-                        <nav className="hidden lg:flex flex-row items-center z-[10] gap-1 pointer-events-auto">
-                            <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
-                            <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
-                            <NavItem
-                                text="Корзина"
-                                color={themeColor}
-                                onClick={() => setIsOpen(true)}
-                                badge={mounted && cartCount > 0 ? (
-                                    <span
-                                        className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full transition-transform duration-300"
-                                        style={{
-                                            color: themeColor,
-                                            width: '22px',
-                                            height: '22px'
-                                        }}
-                                    >
-                                        {cartCount}
-                                    </span>
-                                ) : null}
-                            />
-                        </nav>
                     </div>
+
+                    {/* Desktop Nav Container */}
+                    <nav className="hidden lg:flex absolute top-[40px] right-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto">
+                        <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
+                        <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
+                        <NavItem
+                            text="Корзина"
+                            color={themeColor}
+                            onClick={() => setIsOpen(true)}
+                            badge={mounted && cartCount > 0 ? (
+                                <span
+                                    className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full transition-transform duration-300"
+                                    style={{
+                                        color: themeColor,
+                                        width: '22px',
+                                        height: '22px'
+                                    }}
+                                >
+                                    {cartCount}
+                                </span>
+                            ) : null}
+                        />
+                    </nav>
                 </div>
             </header>
         </>
