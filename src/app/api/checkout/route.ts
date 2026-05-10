@@ -8,13 +8,16 @@ async function sendTelegramMessage(items: any[], totalPrice: number, customerInf
         throw new Error('Telegram credentials not configured');
     }
 
+    // Генерируем случайный 5-значный номер заказа
+    const orderNumber = Math.floor(10000 + Math.random() * 90000);
+
     const message = `
-🚨 <b>Новый заказ!</b>
+— <b>Новый заказ #${orderNumber}</b>
 
-👤 Контакт: ${customerInfo}
-💰 Итог: ${totalPrice} ₽
+Контакт: ${customerInfo}
+Итог: ${totalPrice} ₽
 
-🛒 <b>Товары:</b>
+<b>Товары:</b>
 ${items.map((item: any) => `— ${item.title} (x${item.quantity})`).join('\n')}
     `.trim();
 
