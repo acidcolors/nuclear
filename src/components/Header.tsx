@@ -200,7 +200,7 @@ export const Header = () => {
     const cartCount = totalItems();
     const mobileCartBadgeRef = useRef<HTMLSpanElement>(null);
     const desktopCartBadgeRef = useRef<HTMLSpanElement>(null);
-    const prevCount = useRef(cartCount);
+    const prevCount = useRef(0);
 
     useEffect(() => {
         setMounted(true);
@@ -265,6 +265,9 @@ export const Header = () => {
         animateBadge(desktopCartBadgeRef, true);
         prevCount.current = cartCount;
     }, [cartCount, mounted]);
+
+    // Значение счетчика с защитой от гидратации
+    const displayCount = mounted ? cartCount : 0;
 
     useEffect(() => {
         if (lottieContainerRef.current && !animationInstanceRef.current) {
@@ -420,8 +423,8 @@ export const Header = () => {
                                 display: 'none'
                             }}
                         >
-                            <span key={cartCount} className="animate-in fade-in zoom-in duration-300">
-                                {cartCount}
+                            <span key={displayCount} className="animate-in fade-in zoom-in duration-300">
+                                {displayCount}
                             </span>
                         </span>
                     </button>
@@ -494,8 +497,8 @@ export const Header = () => {
                                         position: 'relative'
                                     }}
                                 >
-                                    <span key={cartCount} className="animate-in fade-in zoom-in duration-300">
-                                        {cartCount}
+                                    <span key={displayCount} className="animate-in fade-in zoom-in duration-300">
+                                        {displayCount}
                                     </span>
                                 </span>
                             }
