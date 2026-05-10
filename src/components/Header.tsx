@@ -75,7 +75,8 @@ const LogoAnimation = ({ color, isRightSide = false }: { color: string; isRightS
 
     return (
         <div
-            className="flex items-center justify-center cursor-pointer [&_path]:!fill-[var(--lottie-color)]"
+            // МАГИЯ ЗДЕСЬ: добавили класс isolate
+            className="flex items-center justify-center cursor-pointer isolate [&_path]:!fill-[var(--lottie-color)]"
             style={{
                 width, height,
                 '--lottie-color': color
@@ -172,9 +173,10 @@ export const Header = () => {
     const isHomePage = pathname === '/';
     const isRightSideLogo = !['/', '/contact', '/space'].includes(pathname);
 
-    const isDarkTheme = isProjectActive;
-    const themeColor = isDarkTheme ? '#1a1a1a' : '#ebebeb';
+    {/* const isDarkTheme = isProjectActive; */ }
+    {/* const themeColor = isDarkTheme ? '#1a1a1a' : '#ebebeb'; */ }
 
+    const themeColor = '#ebebeb';
     const bigStarRef = useRef<HTMLDivElement>(null);
     const rotationTween = useRef<gsap.core.Tween | null>(null);
     const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -182,9 +184,9 @@ export const Header = () => {
     const animationInstanceRef = useRef<any>(null);
     const isFirstMount = useRef(true);
     const [mounted, setMounted] = useState(false);
-    
+
     // Состояние для бленд-мода с задержкой (чтобы звезда успела исчезнуть)
-    const [delayedBlend, setDelayedBlend] = useState(!isDarkTheme);
+    {/* const [delayedBlend, setDelayedBlend] = useState(!isDarkTheme);
 
     useEffect(() => {
         if (!isDarkTheme) {
@@ -193,7 +195,7 @@ export const Header = () => {
             const timer = setTimeout(() => setDelayedBlend(false), 500);
             return () => clearTimeout(timer);
         }
-    }, [isDarkTheme]);
+    }, [isDarkTheme]); */}
 
     const cartCount = totalItems();
     const mobileCartBadgeRef = useRef<HTMLSpanElement>(null);
@@ -212,32 +214,32 @@ export const Header = () => {
             if (cartCount > 0) {
                 if (prevCount.current === 0) {
                     gsap.fromTo(ref.current,
-                        { 
-                            scale: 0, 
-                            opacity: 0, 
+                        {
+                            scale: 0,
+                            opacity: 0,
                             width: isDesktopBadge ? 0 : 22,
-                            marginLeft: isDesktopBadge ? 0 : 7 
+                            marginLeft: isDesktopBadge ? 0 : 7
                         },
-                        { 
-                            scale: 1, 
-                            opacity: 1, 
+                        {
+                            scale: 1,
+                            opacity: 1,
                             width: 22,
                             marginLeft: isDesktopBadge ? 8 : 7,
-                            duration: 0.6, 
-                            ease: "back.out(1.5)", 
+                            duration: 0.6,
+                            ease: "back.out(1.5)",
                             display: 'flex',
                             transformOrigin: "center center"
                         }
                     );
-                } 
+                }
                 else if (cartCount !== prevCount.current) {
                     gsap.fromTo(ref.current,
                         { scale: 1 },
-                        { 
-                            scale: 1.3, 
-                            duration: 0.2, 
-                            yoyo: true, 
-                            repeat: 1, 
+                        {
+                            scale: 1.3,
+                            duration: 0.2,
+                            yoyo: true,
+                            repeat: 1,
                             ease: "power2.out",
                             transformOrigin: "center center"
                         }
@@ -384,7 +386,7 @@ export const Header = () => {
                 </div>
             </div>
 
-            <header className={`fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none ${delayedBlend ? 'blend-exclusion' : ''}`}>
+            <header className="fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none blend-exclusion">
                 {/* Burger & Cart Icon Group */}
                 <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-6 z-[200] pointer-events-none">
                     <button
@@ -452,8 +454,7 @@ export const Header = () => {
                     <div className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[150] pointer-events-none h-[70px] transition-all duration-500
                         ${isRightSideLogo ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-50 pointer-events-none'}
                     `}>
-                        <div className="flex items-center z-[10] origin-right pointer-events-auto"
-                             style={{ filter: isRightSideLogo ? 'drop-shadow(0px 0px 0.5px rgba(0,0,0,0.3))' : 'none' }}>
+                        <div className="flex items-center z-[10] origin-right pointer-events-auto">
                             <TransitionLink href="/" className="pointer-events-auto">
                                 <LogoAnimation color={themeColor} isRightSide={true} />
                             </TransitionLink>
