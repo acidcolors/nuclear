@@ -52,11 +52,15 @@ export const CartDrawerDesktop = ({
             {/* Drawer */}
             <div
                 ref={drawerRef}
-                className="fixed top-0 right-0 h-screen w-full lg:w-[30vw] lg:min-w-[400px] lg:max-w-[550px] ml-auto bg-[#f2f2f2] z-[999] shadow-2xl flex flex-col rounded-l-[20px]"
-                style={{ transform: 'translateX(100%)' }}
+                className="fixed top-0 right-0 h-screen w-[40%] ml-auto bg-[#f2f2f2] z-[999] shadow-2xl flex flex-col rounded-l-[0px]"
+                style={{
+                    right: 0,
+                    left: 'auto',
+                    transform: 'translateX(100%)'
+                }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-[8vw] pt-[10px] pb-1 min-h-[60px]">
+                <div className="flex items-center justify-between px-[100px] pt-[10px] pb-1 min-h-[60px]">
                     {orderStatus !== 'success' && (
                         <>
                             <h2 className="text-[32px] font-bold tracking-tight text-[#111]">
@@ -73,7 +77,7 @@ export const CartDrawerDesktop = ({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-[8vw] pt-0 pb-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-[100px] pt-0 pb-8">
                     {orderStatus === 'success' ? (
                         <div
                             ref={successRef}
@@ -180,18 +184,18 @@ export const CartDrawerDesktop = ({
                                         value={customerInfo}
                                         onChange={(e) => setCustomerInfo(e.target.value)}
                                         placeholder="@telegram или телефон"
-                                        className="w-[90%] h-[50px] bg-white border-none rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
+                                        className="w-[95%] h-[50px] bg-white border-none rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
                                         style={{ paddingLeft: '30px' }}
                                     />
 
                                     <button
                                         onClick={handleCheckout}
                                         disabled={isSubmitting || !customerInfo.trim()}
-                                        className="flex items-center justify-center gap-[8px] w-[55%] h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:bg-[#ffffff] hover:text-black whitespace-nowrap active:scale-[0.95] shadow-sm disabled:opacity-50 self-start group"
+                                        className="flex items-center justify-center gap-[8px] w-[35%] h-[65px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:bg-[#ffffff] hover:text-black whitespace-nowrap active:scale-[0.95] shadow-sm disabled:opacity-50 self-start group"
                                         style={{ marginTop: '20px' }}
                                     >
                                         <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                                        <span style={{ transform: 'translateY(1px)' }}>Оформить</span>
+                                        <span style={{ transform: 'translateY(1px)' }}>Отправить</span>
                                     </button>
                                 </div>
                             </div>

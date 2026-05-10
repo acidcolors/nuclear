@@ -108,6 +108,7 @@ export const CartDrawer = () => {
                 body: JSON.stringify({
                     items,
                     total: totalPrice(),
+                    totalPrice: totalPrice(),
                     customerInfo
                 }),
             });
