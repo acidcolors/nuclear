@@ -14,6 +14,7 @@ import { ShareModal } from '@/components/ui/ShareModal';
 import { getNotionProducts } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
 import { useCart } from '@/app/store/useCart';
+import { useSupport } from '@/app/store/useSupport';
 import { ShoppingBag, Check } from 'lucide-react';
 
 const BackAnimation = () => {
@@ -75,6 +76,7 @@ export default function ProductPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [hoveredBtnIndex, setHoveredBtnIndex] = useState<number | null>(null);
     const { addItem, setIsOpen, items } = useCart();
+    const { addItem: addSupportItem, setIsOpen: setIsSupportOpen } = useSupport();
     
     // Button states
     const [isAddedRecently, setIsAddedRecently] = useState(false);
@@ -110,6 +112,11 @@ export default function ProductPage() {
             folderId: notionData.folderId || 'notion_fallback'
         } : undefined) : baseProduct;
     }, [notionData, baseProduct]);
+
+    const isSoldOut = useMemo(() => {
+        if (!product) return false;
+        return product.price === 'SOLD' || product.price === 'Распродано';
+    }, [product]);
 
     const isInCart = items.some(item => item.id === product?.id);
 
@@ -335,6 +342,18 @@ export default function ProductPage() {
                                         color: (isInCart && !isAddedRecently) ? '#166534' : '#111111'
                                     }}
                                     onClick={() => {
+                                        if (isSoldOut) {
+                                            addSupportItem({
+                                                id: product.id,
+                                                title: product.title,
+                                                price: product.price,
+                                                image: galleryPhotos[0],
+                                                quantity: 1
+                                            });
+                                            setIsSupportOpen(true);
+                                            return;
+                                        }
+
                                         if (!isInCart) {
                                             addItem({
                                                 id: product.id,
@@ -351,35 +370,44 @@ export default function ProductPage() {
                                     }}
                                     className="relative flex items-center justify-center w-full h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer no-underline whitespace-nowrap shadow-sm active:scale-[0.95] overflow-hidden"
                                 >
-                                    {/* Layer 1: Default */}
-                                    <div 
-                                        className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
-                                            ${!isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
-                                        `}
-                                    >
-                                        <ShoppingBag size={18} />
-                                        <span style={{ transform: 'translateY(1px)' }}>В корзину</span>
-                                    </div>
+                                    {isSoldOut ? (
+                                        <div className="flex items-center justify-center gap-[10px] opacity-100 translate-y-0">
+                                            <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5" />
+                                            <span style={{ transform: 'translateY(1px)' }}>Уведомить</span>
+                                        </div>
+                                    ) : (
+                                        <>
+                                            {/* Layer 1: Default */}
+                                            <div 
+                                                className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                                    ${!isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
+                                                `}
+                                            >
+                                                <ShoppingBag size={18} />
+                                                <span style={{ transform: 'translateY(1px)' }}>В корзину</span>
+                                            </div>
 
-                                    {/* Layer 2: Added Recently (Transparent state) */}
-                                    <div 
-                                        className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
-                                            ${isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
-                                        `}
-                                    >
-                                        <Check size={18} />
-                                        <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
-                                    </div>
+                                            {/* Layer 2: Added Recently (Transparent state) */}
+                                            <div 
+                                                className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                                    ${isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
+                                                `}
+                                            >
+                                                <Check size={18} />
+                                                <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
+                                            </div>
 
-                                    {/* Layer 3: In Cart (Green state) */}
-                                    <div 
-                                        className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
-                                            ${isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
-                                        `}
-                                    >
-                                        <ShoppingBag size={18} />
-                                        <span style={{ transform: 'translateY(1px)' }}>В корзине</span>
-                                    </div>
+                                            {/* Layer 3: In Cart (Green state) */}
+                                            <div 
+                                                className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                                    ${isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
+                                                `}
+                                            >
+                                                <ShoppingBag size={18} />
+                                                <span style={{ transform: 'translateY(1px)' }}>В корзине</span>
+                                            </div>
+                                        </>
+                                    )}
                                 </button>
                             </div>
 

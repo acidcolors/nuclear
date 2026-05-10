@@ -8,6 +8,7 @@ import lottie from 'lottie-web';
 import Lottie from 'lottie-react';
 import logoAnimationData from '@/data/logo_t.json';
 import { useCart } from '@/app/store/useCart';
+import { useSupport } from '@/app/store/useSupport';
 import { ShoppingBag } from 'lucide-react';
 
 // ==========================================================
@@ -169,6 +170,7 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
 export const Header = () => {
     const pathname = usePathname();
     const { totalItems, setIsOpen } = useCart();
+    const { setIsOpen: setIsSupportOpen } = useSupport();
     const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
     const isHomePage = pathname === '/';
     const isRightSideLogo = !['/', '/contact', '/space'].includes(pathname);
@@ -428,6 +430,19 @@ export const Header = () => {
                             </span>
                         </span>
                     </button>
+
+                    <button
+                        onClick={() => setIsSupportOpen(true)}
+                        className={`relative flex items-center justify-center bg-transparent border-none outline-none translate-y-[2px] transition-all duration-300 ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[250ms]'}`}
+                        style={{ color: themeColor, marginLeft: '20px' }}
+                    >
+                        <img 
+                            src="/chat_support.svg" 
+                            alt="Support"
+                            className="w-6 h-6 brightness-0 invert"
+                            style={{ opacity: 0.9 }}
+                        />
+                    </button>
                 </div>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
@@ -478,6 +493,23 @@ export const Header = () => {
                     <nav className={`hidden lg:flex absolute top-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto transition-all duration-500
                         ${isRightSideLogo ? 'right-[240px]' : 'right-[80px]'}
                     `}>
+                        <button
+                            onClick={() => setIsSupportOpen(true)}
+                            className="p-[15px] hover:scale-110 active:scale-95 transition-all duration-300 outline-none border-none bg-transparent cursor-pointer flex items-center justify-center"
+                        >
+                            <div 
+                                className="w-[22px] h-[22px]"
+                                style={{ 
+                                    backgroundColor: themeColor,
+                                    WebkitMaskImage: 'url(/chat_support.svg)', 
+                                    WebkitMaskSize: 'contain', 
+                                    WebkitMaskRepeat: 'no-repeat',
+                                    maskImage: 'url(/chat_support.svg)', 
+                                    maskSize: 'contain', 
+                                    maskRepeat: 'no-repeat'
+                                }}
+                            />
+                        </button>
                         <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                         <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
                         <NavItem

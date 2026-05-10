@@ -5,6 +5,7 @@ import { Header } from '../components/Header';
 import CustomCursor from '../components/CustomCursor';
 import { GlobalScrollToTop } from '../components/GlobalScrollToTop';
 import { CartDrawer } from '../components/CartDrawer';
+import { SupportDrawer } from '../components/SupportDrawer';
 
 // Настройка шрифта
 const inter = Inter({
@@ -38,6 +39,9 @@ export default function RootLayout({
 
         {/* Корзина */}
         <CartDrawer />
+
+        {/* Поддержка / Уведомления */}
+        <SupportDrawer />
 
         {/* Глобальная кнопка "Вверх" */}
         <GlobalScrollToTop />

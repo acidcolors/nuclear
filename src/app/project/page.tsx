@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { products, getAllTags } from '@/data/products';
 import { TransitionLink } from '@/components/TransitionLink';
 import { useCart } from '@/app/store/useCart';
+import { useSupport } from '@/app/store/useSupport';
 import { ShoppingBag, Plus, Minus } from 'lucide-react';
 import { getNotionProducts, getNotionMainPageData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
@@ -22,6 +23,7 @@ export default function ProjectPage() {
     const [contentHeight, setContentHeight] = useState(0);
     const [isDesktop, setIsDesktop] = useState(false);
     const { items, addItem, removeItem, setIsOpen: setIsCartOpen } = useCart();
+    const { items: supportItems, addItem: addSupportItem, setIsOpen: setIsSupportOpen } = useSupport();
 
     // Состояние фильтрации
     const [activeFilter, setActiveFilter] = useState('All');
@@ -360,64 +362,87 @@ export default function ProjectPage() {
                                                 </h3>
                                             )}
 
-                                            <button 
-                                                onClick={(e) => {
-                                                    e.preventDefault();
-                                                    e.stopPropagation();
-                                                    
-                                                    const isInCart = items.some(item => item.id === product.id);
-                                                    
-                                                    if (isInCart) {
-                                                        removeItem(product.id);
-                                                        setAddedStatus(prev => ({ ...prev, [product.id]: 'removed' }));
-                                                    } else {
-                                                        addItem({
-                                                            id: product.id,
-                                                            title: product.title,
-                                                            price: typeof product.price === 'string' ? parseInt(product.price.replace(/\s/g, '')) : product.price,
-                                                            image: previewImage,
-                                                            quantity: 1
-                                                        });
-                                                        setAddedStatus(prev => ({ ...prev, [product.id]: 'added' }));
-                                                    }
+                                            {(() => {
+                                                const isSoldOut = product.price === 'SOLD' || product.price === 'Распродано';
+                                                const isInCart = items.some(item => item.id === product.id);
+                                                
+                                                return (
+                                                    <button 
+                                                        onClick={(e) => {
+                                                            e.preventDefault();
+                                                            e.stopPropagation();
+                                                            
+                                                            if (isSoldOut) {
+                                                                addSupportItem({
+                                                                    id: product.id,
+                                                                    title: product.title,
+                                                                    price: product.price,
+                                                                    image: previewImage,
+                                                                    quantity: 1
+                                                                });
+                                                                setIsSupportOpen(true);
+                                                                return;
+                                                            }
+                                                            
+                                                            if (isInCart) {
+                                                                removeItem(product.id);
+                                                                setAddedStatus(prev => ({ ...prev, [product.id]: 'removed' }));
+                                                            } else {
+                                                                addItem({
+                                                                    id: product.id,
+                                                                    title: product.title,
+                                                                    price: typeof product.price === 'string' ? parseInt(product.price.replace(/\s/g, '')) : product.price,
+                                                                    image: previewImage,
+                                                                    quantity: 1
+                                                                });
+                                                                setAddedStatus(prev => ({ ...prev, [product.id]: 'added' }));
+                                                            }
 
-                                                    setTimeout(() => {
-                                                        setAddedStatus(prev => ({ ...prev, [product.id]: null }));
-                                                    }, 2000);
-                                                }}
-                                                className={`h-[40px] w-[40px] rounded-[8px] flex items-center justify-center text-[#111] shadow-sm transition-all duration-500 pointer-events-auto border-none cursor-pointer group/cart active:scale-95 relative overflow-hidden ${
-                                                    (addedStatus[product.id] === 'added' || (items.some(item => item.id === product.id) && addedStatus[product.id] !== 'removed'))
-                                                    ? 'bg-[#4ade80]' 
-                                                    : 'bg-[#f4f4f4] hover:bg-[#ffffff]'
-                                                }`}
-                                            >
-                                                <div className="relative w-5 h-5 flex items-center justify-center">
-                                                    <Plus 
-                                                        size={20} 
-                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                                                            addedStatus[product.id] === 'added'
-                                                            ? 'opacity-100 scale-100 rotate-0' 
-                                                            : 'opacity-0 scale-50 rotate-90'
-                                                        }`} 
-                                                    />
-                                                    <Minus 
-                                                        size={20} 
-                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                                                            addedStatus[product.id] === 'removed'
-                                                            ? 'opacity-100 scale-100 rotate-0' 
-                                                            : 'opacity-0 scale-50 rotate-90'
-                                                        }`} 
-                                                    />
-                                                    <ShoppingBag 
-                                                        size={20} 
-                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
-                                                            addedStatus[product.id] 
-                                                            ? 'opacity-0 scale-50' 
-                                                            : 'opacity-100 scale-100 group-hover/cart:scale-110'
-                                                        }`} 
-                                                    />
-                                                </div>
-                                            </button>
+                                                            setTimeout(() => {
+                                                                setAddedStatus(prev => ({ ...prev, [product.id]: null }));
+                                                            }, 2000);
+                                                        }}
+                                                        className={`h-[40px] w-[40px] rounded-[8px] flex items-center justify-center text-[#111] shadow-sm transition-all duration-500 pointer-events-auto border-none cursor-pointer group/cart active:scale-95 relative overflow-hidden ${
+                                                            !isSoldOut && (addedStatus[product.id] === 'added' || (isInCart && addedStatus[product.id] !== 'removed'))
+                                                            ? 'bg-[#4ade80]' 
+                                                            : 'bg-[#f4f4f4] hover:bg-[#ffffff]'
+                                                        }`}
+                                                    >
+                                                        <div className="relative w-5 h-5 flex items-center justify-center">
+                                                            {isSoldOut ? (
+                                                                <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5 transition-transform group-hover/cart:scale-110" />
+                                                            ) : (
+                                                                <>
+                                                                    <Plus 
+                                                                        size={20} 
+                                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                                                                            addedStatus[product.id] === 'added'
+                                                                            ? 'opacity-100 scale-100 rotate-0' 
+                                                                            : 'opacity-0 scale-50 rotate-90'
+                                                                        }`} 
+                                                                    />
+                                                                    <Minus 
+                                                                        size={20} 
+                                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                                                                            addedStatus[product.id] === 'removed'
+                                                                            ? 'opacity-100 scale-100 rotate-0' 
+                                                                            : 'opacity-0 scale-50 rotate-90'
+                                                                        }`} 
+                                                                    />
+                                                                    <ShoppingBag 
+                                                                        size={20} 
+                                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                                                                            addedStatus[product.id] 
+                                                                            ? 'opacity-0 scale-50' 
+                                                                            : 'opacity-100 scale-100 group-hover/cart:scale-110'
+                                                                        }`} 
+                                                                    />
+                                                                </>
+                                                            )}
+                                                        </div>
+                                                    </button>
+                                                );
+                                            })()}
                                         </div>
 
                                         <div className="relative w-full h-full overflow-hidden transition-transform duration-700 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:scale-[1.1]">

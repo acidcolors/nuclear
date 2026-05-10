@@ -1,16 +1,14 @@
-'use client';
-
 import React from 'react';
-import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
+import { X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
+import { SupportItem } from '@/app/store/useSupport';
 
-interface CartDrawerProps {
-    items: any[];
+interface SupportDrawerProps {
+    items: SupportItem[];
     isOpen: boolean;
     setIsOpen: (open: boolean) => void;
     handleRemoveItem: (id: string) => void;
     updateQuantity: (id: string, quantity: number) => void;
-    totalPrice: () => number;
     formatPrice: (price: number) => string;
     handleCheckout: () => Promise<void>;
     isSubmitting: boolean;
@@ -20,15 +18,13 @@ interface CartDrawerProps {
     drawerRef: React.RefObject<HTMLDivElement | null>;
     overlayRef: React.RefObject<HTMLDivElement | null>;
     successRef: React.RefObject<HTMLDivElement | null>;
-    emptyCartRef: React.RefObject<HTMLDivElement | null>;
 }
 
-export const CartDrawerDesktop = ({
+export const SupportDrawerMobile = ({
     items,
     setIsOpen,
     handleRemoveItem,
     updateQuantity,
-    totalPrice,
     formatPrice,
     handleCheckout,
     isSubmitting,
@@ -38,8 +34,7 @@ export const CartDrawerDesktop = ({
     drawerRef,
     overlayRef,
     successRef,
-    emptyCartRef
-}: CartDrawerProps) => {
+}: SupportDrawerProps) => {
     return (
         <>
             {/* Overlay */}
@@ -52,19 +47,15 @@ export const CartDrawerDesktop = ({
             {/* Drawer */}
             <div
                 ref={drawerRef}
-                className="fixed top-0 right-0 h-screen w-[40%] ml-auto bg-[#f2f2f2] z-[999] shadow-2xl flex flex-col rounded-l-[0px]"
-                style={{
-                    right: 0,
-                    left: 'auto',
-                    transform: 'translateX(100%)'
-                }}
+                className="fixed top-0 right-0 h-screen w-full bg-[#f2f2f2] z-[999] shadow-2xl flex flex-col rounded-l-[20px]"
+                style={{ transform: 'translateX(100%)' }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-[100px] pt-[10px] pb-1 min-h-[60px]">
+                <div className="flex items-center justify-between px-[8vw] pt-[10px] pb-1 min-h-[60px]">
                     {orderStatus !== 'success' && (
                         <>
                             <h2 className="text-[32px] font-bold tracking-tight text-[#111]">
-                                Корзина
+                                Поддержка
                             </h2>
                             <button
                                 onClick={() => setIsOpen(false)}
@@ -77,58 +68,53 @@ export const CartDrawerDesktop = ({
                 </div>
 
                 {/* Content */}
-                <div className="flex-1 overflow-y-auto custom-scrollbar px-[100px] pt-0 pb-8">
+                <div className="flex-1 overflow-y-auto custom-scrollbar px-[8vw] pt-0 pb-8">
                     {orderStatus === 'success' ? (
                         <div
                             ref={successRef}
                             className="h-full flex flex-col items-center justify-center text-center px-10"
                             style={{ marginTop: '-60px' }}
                         >
-                            <h3 className="text-2xl font-black tracking-tighter text-[#111] uppercase mb-2">Заказ принят!</h3>
+                            <h3 className="text-2xl font-black tracking-tighter text-[#111] uppercase mb-2">Запрос отправлен!</h3>
                             <p className="text-sm font-medium text-[#111] opacity-60">Мы скоро свяжемся с вами для подтверждения.</p>
-                        </div>
-                    ) : items.length === 0 ? (
-                        <div
-                            ref={emptyCartRef}
-                            className="h-full flex flex-col items-center justify-center text-center text-[#111] opacity-20"
-                            style={{ marginTop: '-60px' }}
-                        >
-                            <ShoppingBag size={80} strokeWidth={1} className="mb-6" />
-                            <p className="text-[20px] font-medium mb-2">Корзина пуста</p>
-                            <p className="text-[16px]">Время что-нибудь добавить</p>
                         </div>
                     ) : (
                         <div className="flex flex-col !gap-8 pb-10">
+                            {/* Product List - EXACTLY AS IN CART */}
                             {items.map((item) => (
                                 <div
                                     key={item.id}
-                                    id={`cart-item-${item.id}`}
+                                    id={`support-item-${item.id}`}
                                     className="flex items-center gap-4 group my-[10px]"
                                 >
                                     {/* Thumbnail */}
                                     <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
-                                        {item.image && (
+                                        {item.image ? (
                                             <Image
-                                                src={item.image as string}
+                                                src={item.image}
                                                 alt={item.title}
                                                 fill
                                                 className="object-cover"
                                                 sizes="80px"
                                             />
+                                        ) : (
+                                            <div className="w-full h-full flex items-center justify-center opacity-20">
+                                                <Image src="/edit_chat.svg" alt="Support" width={32} height={32} />
+                                            </div>
                                         )}
                                     </div>
 
                                     {/* Info */}
                                     <div className="flex-1 min-w-0 pl-[10px]">
+                                        <div className="bg-[#111] px-2 py-0.5 rounded-[6px] inline-block font-black text-[9px] text-white uppercase tracking-wider mb-1">
+                                            SOLD
+                                        </div>
                                         <p
                                             className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
                                             style={{ margin: 0, marginBottom: '4px' }}
                                         >
                                             {item.title}
                                         </p>
-                                        <div className="bg-[#f2f2f2] px-3.5 py-1.5 rounded-[12px] inline-block font-bold text-[14px] text-[#111]">
-                                            {typeof item.price === 'number' ? formatPrice(item.price) : item.price} ₽
-                                        </div>
                                     </div>
 
                                     {/* Controls Group */}
@@ -160,44 +146,32 @@ export const CartDrawerDesktop = ({
                                 </div>
                             ))}
 
-                            <div id="cart-footer-controls">
-                                {/* Total Section */}
-                                <div
-                                    className="flex flex-col items-end gap-1.5"
-                                    style={{ marginTop: '40px', marginBottom: '40px' }}
+                            <div className="pt-4 flex flex-col gap-10">
+                                <p className="text-[16px] font-medium text-[#111] opacity-30 leading-relaxed pr-[10%]">
+                                    {items.length > 0 
+                                        ? "Вы выбрали товары для уведомления. Мы сообщим вам о пополнении."
+                                        : "Есть вопрос или предложение? Оставьте свои контакты, и мы свяжемся с вами."
+                                    }
+                                </p>
+
+                                <input
+                                    type="text"
+                                    value={customerInfo}
+                                    onChange={(e) => setCustomerInfo(e.target.value)}
+                                    placeholder="@telegram или телефон"
+                                    className="w-[90%] h-[50px] bg-white border-none rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
+                                    style={{ paddingLeft: '30px' }}
+                                />
+
+                                <button
+                                    onClick={handleCheckout}
+                                    disabled={isSubmitting || !customerInfo.trim()}
+                                    className="flex items-center justify-center gap-[8px] w-[55%] h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:bg-[#ffffff] hover:text-black whitespace-nowrap active:scale-[0.95] shadow-sm disabled:opacity-50 self-start group"
+                                    style={{ marginTop: '10px' }}
                                 >
-                                    <span className="text-[13px] font-medium text-[#111] opacity-30 pr-4">
-                                        Итог
-                                    </span>
-                                    <div
-                                        className="bg-[#e5e5e5] px-[20px] py-[10px] rounded-[10px] text-[22px] font-bold text-[#111] shadow-sm tabular-nums"
-                                        style={{ marginTop: '10px' }}
-                                    >
-                                        {formatPrice(totalPrice())} ₽
-                                    </div>
-                                </div>
-
-                                {/* Footer Controls */}
-                                <div className="pb-12 pt-0 flex flex-col gap-10">
-                                    <input
-                                        type="text"
-                                        value={customerInfo}
-                                        onChange={(e) => setCustomerInfo(e.target.value)}
-                                        placeholder="@telegram или телефон"
-                                        className="w-[95%] h-[50px] bg-white border-none rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
-                                        style={{ paddingLeft: '30px' }}
-                                    />
-
-                                    <button
-                                        onClick={handleCheckout}
-                                        disabled={isSubmitting || !customerInfo.trim()}
-                                        className="flex items-center justify-center gap-[8px] w-[45%] h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:bg-[#ffffff] hover:text-black whitespace-nowrap active:scale-[0.95] shadow-sm disabled:opacity-50 self-start group"
-                                        style={{ marginTop: '20px' }}
-                                    >
-                                        <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                                        <span style={{ transform: 'translateY(1px)' }}>Отправить</span>
-                                    </button>
-                                </div>
+                                    <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
+                                    <span style={{ transform: 'translateY(1px)' }}>Отправить запрос</span>
+                                </button>
                             </div>
                         </div>
                     )}
