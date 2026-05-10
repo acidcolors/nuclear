@@ -143,7 +143,7 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
                     </span>
                 </div>
             </div>
-            {badge && <div className="flex items-center justify-center lg:flex" style={{ marginLeft: '8px' }}>{badge}</div>}
+            {badge && <div className="flex items-center justify-center lg:flex h-[20px]">{badge}</div>}
         </div>
     );
 
@@ -196,19 +196,72 @@ export const Header = () => {
     }, [isDarkTheme]);
 
     const cartCount = totalItems();
-    const cartBadgeRef = useRef<HTMLSpanElement>(null);
+    const mobileCartBadgeRef = useRef<HTMLSpanElement>(null);
+    const desktopCartBadgeRef = useRef<HTMLSpanElement>(null);
+    const prevCount = useRef(cartCount);
 
     useEffect(() => {
         setMounted(true);
     }, []);
 
     useEffect(() => {
-        if (mounted && cartCount > 0 && cartBadgeRef.current) {
-            gsap.fromTo(cartBadgeRef.current,
-                { scale: 0, opacity: 0 },
-                { scale: 1, opacity: 1, duration: 0.5, ease: "back.out(2)" }
-            );
-        }
+        if (!mounted) return;
+
+        const animateBadge = (ref: React.RefObject<HTMLSpanElement | null>, isDesktopBadge: boolean) => {
+            if (!ref.current) return;
+            if (cartCount > 0) {
+                if (prevCount.current === 0) {
+                    gsap.fromTo(ref.current,
+                        { 
+                            scale: 0, 
+                            opacity: 0, 
+                            width: isDesktopBadge ? 0 : 22,
+                            marginLeft: isDesktopBadge ? 0 : 7 
+                        },
+                        { 
+                            scale: 1, 
+                            opacity: 1, 
+                            width: 22,
+                            marginLeft: isDesktopBadge ? 8 : 7,
+                            duration: 0.6, 
+                            ease: "back.out(1.5)", 
+                            display: 'flex',
+                            transformOrigin: "center center"
+                        }
+                    );
+                } 
+                else if (cartCount !== prevCount.current) {
+                    gsap.fromTo(ref.current,
+                        { scale: 1 },
+                        { 
+                            scale: 1.3, 
+                            duration: 0.2, 
+                            yoyo: true, 
+                            repeat: 1, 
+                            ease: "power2.out",
+                            transformOrigin: "center center"
+                        }
+                    );
+                }
+            } else {
+                gsap.to(ref.current, {
+                    scale: 0,
+                    opacity: 0,
+                    width: isDesktopBadge ? 0 : 22,
+                    marginLeft: isDesktopBadge ? 0 : 7,
+                    duration: 0.4,
+                    ease: "power2.in",
+                    transformOrigin: "center center",
+                    onComplete: () => {
+                        if (ref.current) gsap.set(ref.current, { display: 'none' });
+                    }
+                });
+            }
+        };
+
+        animateBadge(mobileCartBadgeRef, false);
+        animateBadge(desktopCartBadgeRef, true);
+        prevCount.current = cartCount;
     }, [cartCount, mounted]);
 
     useEffect(() => {
@@ -355,19 +408,20 @@ export const Header = () => {
                         style={{ color: themeColor, marginLeft: '25px' }}
                     >
                         <ShoppingBag size={24} />
-                        {mounted && cartCount > 0 && (
-                            <span
-                                ref={cartBadgeRef}
-                                className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full shrink-0"
-                                style={{
-                                    width: '22px',
-                                    height: '22px',
-                                    marginLeft: '7px'
-                                }}
-                            >
+                        <span
+                            ref={mobileCartBadgeRef}
+                            className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full shrink-0"
+                            style={{
+                                width: '22px',
+                                height: '22px',
+                                marginLeft: '7px',
+                                display: 'none'
+                            }}
+                        >
+                            <span key={cartCount} className="animate-in fade-in zoom-in duration-300">
                                 {cartCount}
                             </span>
-                        )}
+                        </span>
                     </button>
                 </div>
 
@@ -426,19 +480,24 @@ export const Header = () => {
                             text="Корзина"
                             color={themeColor}
                             onClick={() => setIsOpen(true)}
-                            badge={mounted && cartCount > 0 ? (
+                            badge={
                                 <span
-                                    className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full transition-transform duration-300"
+                                    ref={desktopCartBadgeRef}
+                                    className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full overflow-hidden"
                                     style={{
                                         color: themeColor,
                                         width: '22px',
                                         height: '22px',
-                                        transform: 'translateY(-4px)'
+                                        marginLeft: '8px',
+                                        display: 'none',
+                                        position: 'relative'
                                     }}
                                 >
-                                    {cartCount}
+                                    <span key={cartCount} className="animate-in fade-in zoom-in duration-300">
+                                        {cartCount}
+                                    </span>
                                 </span>
-                            ) : null}
+                            }
                         />
                     </nav>
                 </div>
