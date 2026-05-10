@@ -68,37 +68,45 @@ export default function ProjectPage() {
     }, []);
 
     // ПОЛУЧАЕМ ВСЕ ТЕГИ
-    const filters = useMemo(() => {
-        let rawTags: string[] = [];
-        if (CMS_CONFIG.USE_NOTION && headerData?.tags && headerData.tags.length > 0) {
-            rawTags = headerData.tags;
-        } else {
-            rawTags = getAllTags();
-        }
-        
-        const uniqueTags = Array.from(new Set(rawTags.filter(t => t !== 'All' && t !== 'Все')));
-        return ['All', ...uniqueTags];
-    }, [headerData]);
-
-    const headerTitle = (CMS_CONFIG.USE_NOTION && headerData?.title) ? headerData.title : "Проекты";
-    const headerDescription = (CMS_CONFIG.USE_NOTION && headerData?.description) ? headerData.description : "Здесь собраны все наши проекты: актуальные вещи в наличии и архивные работы. По любым вопросам — пишите в директ.";
-
-    // Отфильтрованные продукты
-    const filteredProducts = useMemo(() => {
-        let allProducts = CMS_CONFIG.USE_NOTION ? [] : [...products];
+    // Собираем все продукты (Notion + локальные) для извлечения тегов
+    const allProducts = useMemo(() => {
+        let items: any[] = CMS_CONFIG.USE_NOTION ? [] : [...products];
 
         if (CMS_CONFIG.USE_NOTION && notionData) {
             notionData.forEach(notionItem => {
-                allProducts.push({
+                items.push({
                     ...notionItem,
                     folderId: notionItem.folderId || 'notion_fallback' 
                 });
             });
         }
+        return items;
+    }, [notionData]);
 
+    // Динамические фильтры на основе тегов товаров
+    const filters = useMemo(() => {
+        const rawTags: string[] = [];
+        
+        allProducts.forEach(product => {
+            if (product.tags && Array.isArray(product.tags)) {
+                rawTags.push(...product.tags);
+            }
+        });
+        
+        const uniqueTags = Array.from(new Set(rawTags.filter(t => t && t !== 'All' && t !== 'Все')));
+        uniqueTags.sort((a, b) => a.localeCompare(b));
+
+        return ['All', ...uniqueTags];
+    }, [allProducts]);
+
+    const headerTitle = (CMS_CONFIG.USE_NOTION && headerData?.title) ? headerData.title : "Продукты";
+    const headerDescription = (CMS_CONFIG.USE_NOTION && headerData?.description) ? headerData.description : "Здесь собраны все наши проекты: актуальные вещи в наличии и архивные работы. По любым вопросам — пишите в директ.";
+
+    // Отфильтрованные продукты для отображения
+    const filteredProducts = useMemo(() => {
         if (activeFilter === 'All') return allProducts;
         return allProducts.filter((p: any) => p.tags && p.tags.some((tag: string) => tag === activeFilter));
-    }, [activeFilter, notionData]);
+    }, [allProducts, activeFilter]);
 
     // 2. GSAP АНИМАЦИЯ ПОЯВЛЕНИЯ С ОЧИСТКОЙ
     useEffect(() => {
