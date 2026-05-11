@@ -25,7 +25,8 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
 
     return (
         <div
-            className="flex flex-row items-center gap-[10px] md:gap-[20px] lg:gap-[30px] xl:gap-[15px] mt-[20px] md:mt-[30px] lg:mt-[40px] xl:mt-[35px] z-10 w-full flex-wrap pl-0 -ml-[10px]"
+            className="flex flex-row items-center gap-[10px] md:gap-[20px] lg:gap-[30px] xl:gap-[15px] z-10 w-full flex-wrap pl-0 -ml-[10px]"
+            style={{ marginTop: 'var(--contact-socials-mt)' }}
             onMouseLeave={() => setHoveredIndex(null)}
         >
             {allItems.map((item, index) => {
@@ -95,7 +96,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                 return (
                     <div
                         key={item.id}
-                        className="animate-stagger opacity-0 translate-y-5"
+                        className={`animate-stagger opacity-0 translate-y-5 ${isTelegram ? 'contact-tg-link' : ''}`}
                         onMouseEnter={() => setHoveredIndex(index)}
                     >
                         <a
@@ -241,18 +242,20 @@ export default function ContactPage() {
             <div className="absolute top-0 left-0 w-full h-[100dvh] pointer-events-none z-30 flex flex-col lg:flex-row">
                 <div
                     className="pointer-events-auto w-full h-full lg:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 box-border"
-                    style={{ paddingTop: isMobile ? '10vh' : '22vh' }}
+                    style={{ paddingTop: 'var(--contact-padding-top)' }}
                 >
                     <div className="w-full">
-                        {animations && (
-                            <InteractiveRelax
-                                dataGirl={animations.girl}
-                                dataCube={animations.cube}
-                                dataTriangle={animations.triangle}
-                            />
-                        )}
+                        <div className="contact-relax-wrap">
+                            {animations && (
+                                <InteractiveRelax
+                                    dataGirl={animations.girl}
+                                    dataCube={animations.cube}
+                                    dataTriangle={animations.triangle}
+                                />
+                            )}
+                        </div>
 
-                        <p className="animate-stagger opacity-0 translate-y-5 text-[20px] md:text-[24px] lg:text-[28px] lg:text-[1.2vw] font-medium leading-[1.6] text-[#111]/90 mb-10 md:mb-16 lg:mb-12 max-w-[500px]">
+                        <p className="animate-stagger opacity-0 translate-y-5 font-medium leading-[1.6] text-[#111]/90 mb-10 md:mb-16 lg:mb-12 max-w-[500px]" style={{ fontSize: 'var(--contact-desc-size)', marginTop: 'var(--contact-desc-top)' }}>
                             {description}
                         </p>
 

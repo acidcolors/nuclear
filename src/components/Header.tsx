@@ -206,18 +206,18 @@ export const Header = () => {
     useEffect(() => {
         setMounted(true);
 
-        // Инициализация Telegram Mini App
         if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp) {
             const tg = (window as any).Telegram.WebApp;
-
-            // Сообщаем, что приложение готово (убирает фризы при старте)
             tg.ready();
-
-            // Принудительно растягиваем на максимальную высоту
             tg.expand();
+
+            // ДЕТЕКТОР ПЛАТФОРМЫ
+            // Если открыли с компа - вешаем класс на body
+            if (tg.platform === 'tdesktop' || tg.platform === 'macos') {
+                document.body.classList.add('is-tg-desktop');
+            }
         }
     }, []);
-
     useEffect(() => {
         if (!mounted) return;
 

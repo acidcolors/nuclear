@@ -7,6 +7,22 @@
   --foreground: #ebebeb;
   --title-size: 60px;
   --desc-size: 16px;
+
+  /* Динамические позиции для главной */
+  --home-title-top: 14vh;
+  --home-desc-top: 37vh;
+  --home-thank-you-bottom: 26vh;
+  --home-social-bottom: 15vh;
+
+  /* Динамические позиции для контактов (Мобилки по умолчанию) */
+  --contact-padding-top: 10vh;
+  --contact-desc-size: 18px;
+  --contact-desc-top: 20px;
+  --contact-socials-mt: 30px;
+  --contact-relax-scale: 1;
+  --space-vol-top: 76vh;
+  --space-vol-left: calc(6vw - 3px);
+  --space-social-bottom: 15vh;
 }
 
 @media (min-width: 768px) {
@@ -20,7 +36,62 @@
   :root {
     --title-size: 100px;
     --desc-size: 25px;
+    --home-title-top: 20vh;
+    --home-desc-top: 50vh;
+
+    /* Контакты для десктопа */
+    --contact-padding-top: 22vh;
+    --contact-desc-size: 28px;
+    --contact-desc-top: 40px;
+    --contact-socials-mt: 40px;
+    --space-vol-top: 40px;
   }
+}
+
+/* СПЕЦИАЛЬНАЯ АДАПТАЦИЯ ПОД КОРОТКИЕ ЭКРАНЫ (TG Desktop и т.д.) */
+@media (max-height: 650px) {
+  :root {
+    --title-size: 55px !important;
+    /* Уменьшаем заголовок */
+    --desc-size: 14px !important;
+    /* Уменьшаем описание */
+
+    /* Сжимаем вертикальные отступы */
+    --home-title-top: 80px !important;
+    --home-desc-top: 260px !important;
+    --home-thank-you-bottom: 20px !important;
+    --home-social-bottom: 100px !important;
+
+    /* Контакты на коротких экранах */
+    --contact-padding-top: 90px !important;
+    --contact-desc-size: 16px !important;
+    --contact-desc-top: -64px !important;
+    --contact-socials-mt: 36px !important;
+    --contact-relax-scale: 0.7 !important;
+    --space-vol-top: 80% !important;
+    --space-vol-left: calc(6vw - 5px) !important;
+    --space-social-bottom: 40px !important;
+  }
+
+  /* Для десктопной версии в маленьком окне корректируем центрирование */
+  @media (min-width: 1024px) {
+    :root {
+      --home-desc-top: 220px !important;
+    }
+  }
+
+  /* Скрываем ссылку на телеграм в Mini App (т.к. мы уже в нем) */
+  .custom-tg,
+  .contact-tg-link {
+    display: none !important;
+  }
+}
+
+/* Обертка для иллюстрации на контактах */
+.contact-relax-wrap {
+  transform: scale(var(--contact-relax-scale));
+  transform-origin: top left;
+  transition: transform 0.7s ease;
 }
 
 body {
@@ -118,13 +189,13 @@ input[type="range"]::-moz-range-thumb {
 
 .custom-insta {
   position: absolute;
-  bottom: 15vh;
+  bottom: var(--home-social-bottom);
   left: 6vw;
 }
 
 .custom-tg {
   position: absolute;
-  bottom: 15vh;
+  bottom: var(--home-social-bottom);
   left: 35vw;
 }
 
@@ -135,6 +206,17 @@ input[type="range"]::-moz-range-thumb {
   transform: rotate(90deg);
   transform-origin: center;
   display: none;
+}
+
+/* Специфичные стили для страницы SPACE */
+.page-space .custom-insta {
+  bottom: var(--space-social-bottom);
+  left: 6vw;
+}
+
+.page-space .custom-tg {
+  bottom: var(--space-social-bottom);
+  left: 35vw;
 }
 
 /* Десктоп (от 1024px) */
@@ -444,4 +526,9 @@ input[type="range"]::-moz-range-thumb {
 
 .zoom-in {
   animation-name: zoomIn;
+}
+
+/* Фикс для конкретного класса, если он есть на body */
+body.is-tg-desktop {
+  /* Можно добавить специфичные фиксы только для TG Desktop здесь */
 }

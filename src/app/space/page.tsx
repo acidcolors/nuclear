@@ -92,9 +92,12 @@ export default function SpacePage() {
     };
 
     const volumeInterface = (
-        <div className="custom-vol pointer-events-auto flex items-center gap-4 animate-up opacity-0 fixed top-[120px] lg:top-[40px] left-[6vw] lg:left-1/2 lg:-translate-x-1/2 z-[2000000] bg-transparent">
-            <button 
-                onClick={muteVolume} 
+        <div 
+            className="custom-vol pointer-events-auto flex items-center gap-4 animate-up opacity-0 fixed lg:left-1/2 lg:-translate-x-1/2 z-[2000000] bg-transparent"
+            style={{ top: 'var(--space-vol-top)', left: 'var(--space-vol-left)' }}
+        >
+            <button
+                onClick={muteVolume}
                 className="bg-transparent border-none text-[#ebebeb] hover:text-[#ebebeb]/70 transition-colors cursor-pointer outline-none flex items-center justify-center p-2 z-[1000] pointer-events-auto"
                 style={{ pointerEvents: 'auto' }}
             >
@@ -112,8 +115,8 @@ export default function SpacePage() {
                 style={{ pointerEvents: 'auto' }}
             />
 
-            <button 
-                onClick={increaseVolume} 
+            <button
+                onClick={increaseVolume}
                 className="bg-transparent border-none text-[#ebebeb] hover:text-[#ebebeb]/70 transition-colors cursor-pointer outline-none flex items-center justify-center p-2 z-[1000] pointer-events-auto"
                 style={{ pointerEvents: 'auto' }}
             >
@@ -123,7 +126,7 @@ export default function SpacePage() {
     );
 
     return (
-        <main className="fixed inset-0 w-full h-[100dvh] bg-[#111] text-[#ebebeb] overflow-hidden z-[60]">
+        <main className="page-space fixed inset-0 w-full h-[100dvh] bg-[#111] text-[#ebebeb] overflow-hidden z-[60]">
 
             {mounted && typeof document !== 'undefined' && createPortal(volumeInterface, document.body)}
 
