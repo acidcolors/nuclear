@@ -6,8 +6,9 @@ import CustomCursor from '../components/CustomCursor';
 import { GlobalScrollToTop } from '../components/GlobalScrollToTop';
 import { CartDrawer } from '../components/CartDrawer';
 import { SupportDrawer } from '../components/SupportDrawer';
+// 1. Импортируем компонент для работы со скриптами
+import Script from 'next/script';
 
-// Настройка шрифта
 const inter = Inter({
   subsets: ['latin', 'cyrillic'],
   weight: ['400', '500', '700']
@@ -30,22 +31,18 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
+        {/* 2. Подключаем SDK Телеграма. 
+            strategy="beforeInteractive" заставит его загрузиться максимально быстро */}
+        <Script
+          src="https://telegram.org/js/telegram-web-app.js"
+          strategy="beforeInteractive"
+        />
 
-        {/* Кастомный курсор будет работать на всех страницах */}
         <CustomCursor />
-
-        {/* Шапка теперь зафиксирована на уровне всего приложения */}
         <Header />
-
-        {/* Корзина */}
         <CartDrawer />
-
-        {/* Поддержка / Уведомления */}
         <SupportDrawer />
-
-        {/* Глобальная кнопка "Вверх" */}
         <GlobalScrollToTop />
-
         {children}
       </body>
     </html>
