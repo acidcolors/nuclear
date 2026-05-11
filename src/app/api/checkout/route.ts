@@ -60,6 +60,7 @@ async function sendTelegramMessage(items: any[], totalPrice: number, customerInf
             chat_id: chatId,
             text: messageText.trim(),
             parse_mode: 'HTML',
+            disable_web_page_preview: true,
         }),
     });
 
