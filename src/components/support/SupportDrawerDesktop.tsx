@@ -1,7 +1,8 @@
 import React from 'react';
 import { X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
-import { SupportItem } from '@/app/store/useSupport';
+import { useSupport, SupportItem } from '@/app/store/useSupport';
+import gsap from 'gsap';
 
 interface SupportDrawerProps {
     items: SupportItem[];
@@ -15,6 +16,8 @@ interface SupportDrawerProps {
     orderStatus: 'idle' | 'success' | 'error';
     customerInfo: string;
     setCustomerInfo: (info: string) => void;
+    message: string;
+    setMessage: (info: string) => void;
     drawerRef: React.RefObject<HTMLDivElement | null>;
     overlayRef: React.RefObject<HTMLDivElement | null>;
     successRef: React.RefObject<HTMLDivElement | null>;
@@ -23,6 +26,32 @@ interface SupportDrawerProps {
 const SupportItemRow = ({ item, handleRemoveItem }: { item: SupportItem, handleRemoveItem: (id: string) => void }) => {
     const [imageError, setImageError] = React.useState(false);
     const [isMounted, setIsMounted] = React.useState(false);
+    const rowRef = React.useRef<HTMLDivElement>(null);
+
+    React.useLayoutEffect(() => {
+        if (rowRef.current) {
+            gsap.fromTo(rowRef.current, 
+                { opacity: 0, y: 20, scale: 0.95, height: 0, marginBottom: 0 },
+                { opacity: 1, y: 0, scale: 1, height: 'auto', marginBottom: 10, duration: 0.5, ease: "power2.out" }
+            );
+        }
+    }, []);
+
+    const handleRemoveWithAnimation = () => {
+        if (rowRef.current) {
+            gsap.to(rowRef.current, {
+                opacity: 0,
+                height: 0,
+                marginBottom: 0,
+                scale: 0.9,
+                duration: 0.4,
+                ease: "power2.inOut",
+                onComplete: () => handleRemoveItem(item.id)
+            });
+        } else {
+            handleRemoveItem(item.id);
+        }
+    };
 
     React.useEffect(() => {
         setIsMounted(true);
@@ -30,53 +59,57 @@ const SupportItemRow = ({ item, handleRemoveItem }: { item: SupportItem, handleR
 
     return (
         <div
+            ref={rowRef}
             id={`support-item-${item.id}`}
-            className="flex items-center gap-4 group my-[10px]"
+            className="flex items-center gap-4 group overflow-hidden"
         >
-            {/* Thumbnail */}
-            <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
-                {isMounted && item.image && !imageError ? (
-                    <Image
-                        src={item.image}
-                        alt={item.title || 'Product'}
-                        fill
-                        className="object-cover"
-                        sizes="80px"
-                        unoptimized
-                        onError={() => setImageError(true)}
-                    />
-                ) : (
-                    <div className="w-full h-full flex items-center justify-center opacity-20">
-                        <Image src="/edit_chat.svg" alt="Support" width={32} height={32} />
-                    </div>
-                )}
-            </div>
-
-            {/* Info */}
-            <div className="flex-1 min-w-0 pl-[10px]">
-                <div
-                    className="bg-[#ffffff] text-[#111] font-black uppercase tracking-wider mb-2 leading-none inline-flex items-center justify-center"
-                    style={{
-                        padding: '10px 14px',
-                        fontSize: '14px',
-                        borderRadius: '10px',
-                        minWidth: '50px'
-                    }}
-                >
-                    SOLD
+            {/* Clickable Area */}
+            <div 
+                className="flex items-center gap-4 flex-1 min-w-0 cursor-pointer"
+                onClick={() => window.open(`/product/${item.id}`, '_blank')}
+            >
+                {/* Thumbnail */}
+                <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
+                    {isMounted && item.image && !imageError ? (
+                        <img
+                            src={item.image}
+                            alt={item.title || 'Product'}
+                            className="w-full h-full object-cover"
+                            onError={() => setImageError(true)}
+                        />
+                    ) : (
+                        <div className="w-full h-full flex items-center justify-center opacity-20">
+                            <Image src="/edit_chat.svg" alt="Support" width={32} height={32} />
+                        </div>
+                    )}
                 </div>
-                <p
-                    className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
-                    style={{ margin: 0, marginBottom: '0px', marginTop: "6px" }}
-                >
-                    {item.title}
-                </p>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0 pl-[10px]">
+                    <div
+                        className="bg-[#ffffff] text-[#111] font-black uppercase tracking-wider mb-2 leading-none inline-flex items-center justify-center"
+                        style={{
+                            padding: '10px 14px',
+                            fontSize: '14px',
+                            borderRadius: '10px',
+                            minWidth: '50px'
+                        }}
+                    >
+                        SOLD
+                    </div>
+                    <p
+                        className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
+                        style={{ margin: 0, marginBottom: '0px', marginTop: "6px" }}
+                    >
+                        {item.title}
+                    </p>
+                </div>
             </div>
 
             {/* Controls Group */}
             <div className="flex items-center gap-4 shrink-0">
                 <button
-                    onClick={() => handleRemoveItem(item.id)}
+                    onClick={handleRemoveWithAnimation}
                     className="text-[#111] opacity-20 hover:text-red-500 hover:opacity-100 transition-all ml-1 bg-transparent border-none outline-none p-0 cursor-pointer"
                 >
                     <Trash2 size={18} strokeWidth={2} />
@@ -97,6 +130,8 @@ export const SupportDrawerDesktop = ({
     orderStatus,
     customerInfo,
     setCustomerInfo,
+    message,
+    setMessage,
     drawerRef,
     overlayRef,
     successRef,
@@ -167,14 +202,24 @@ export const SupportDrawerDesktop = ({
                                     }
                                 </p>
 
-                                <input
-                                    type="text"
-                                    value={customerInfo}
-                                    onChange={(e) => setCustomerInfo(e.target.value)}
-                                    placeholder="@telegram или телефон"
-                                    className="w-[95%] h-[50px] bg-white border-none rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
-                                    style={{ paddingLeft: '30px' }}
-                                />
+                                <div className="flex flex-col gap-[12px] w-full">
+                                    <input
+                                        type="text"
+                                        value={customerInfo}
+                                        onChange={(e) => setCustomerInfo(e.target.value)}
+                                        placeholder="@telegram или телефон"
+                                        className="w-full h-[50px] bg-white border-none rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
+                                        style={{ paddingLeft: '30px', paddingRight: '30px', boxSizing: 'border-box' }}
+                                    />
+
+                                    <textarea
+                                        value={message}
+                                        onChange={(e) => setMessage(e.target.value)}
+                                        placeholder="Сообщение"
+                                        className="w-full h-[120px] bg-white border-none rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start resize-none pt-[12px] pb-[12px]"
+                                        style={{ paddingLeft: '30px', paddingRight: '30px', boxSizing: 'border-box' }}
+                                    />
+                                </div>
 
                                 <button
                                     onClick={handleCheckout}

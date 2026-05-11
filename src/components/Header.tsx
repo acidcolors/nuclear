@@ -76,8 +76,7 @@ const LogoAnimation = ({ color, isRightSide = false }: { color: string; isRightS
 
     return (
         <div
-            // МАГИЯ ЗДЕСЬ: добавили класс isolate
-            className="flex items-center justify-center cursor-pointer isolate [&_path]:!fill-[var(--lottie-color)]"
+            className="flex items-center justify-center cursor-pointer [&_path]:!fill-[var(--lottie-color)]"
             style={{
                 width, height,
                 '--lottie-color': color
@@ -158,7 +157,7 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
     }
 
     return (
-        <TransitionLink href={href || '/'} className="group relative block no-underline outline-none cursor-pointer pointer-events-auto">
+        <TransitionLink href={href || '/'} className="group relative block no-underline outline-none cursor-pointer">
             {content}
         </TransitionLink>
     );
@@ -170,7 +169,7 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
 export const Header = () => {
     const pathname = usePathname();
     const { totalItems, setIsOpen } = useCart();
-    const { items: supportItems, setIsOpen: setIsSupportOpen } = useSupport();
+    const { setIsOpen: setIsSupportOpen } = useSupport();
     const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
     const isHomePage = pathname === '/';
     const isRightSideLogo = !['/', '/contact', '/space'].includes(pathname);
@@ -306,7 +305,7 @@ export const Header = () => {
 
     useEffect(() => { setIsMenuOpen(false); }, [pathname]);
 
-    const supportIcon = (mounted && supportItems.length > 0) ? '/chat_support.svg' : '/edit_chat.svg';
+    const supportIcon = '/edit_chat.svg';
 
     // Анимация звезды с защитой от дерганья
     useEffect(() => {
@@ -393,7 +392,7 @@ export const Header = () => {
                 </div>
             </div>
 
-            <header className="fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none blend-exclusion">
+            <header className="fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none mix-blend-exclusion">
                 {/* Burger & Cart Icon Group */}
                 <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-6 z-[200] pointer-events-none">
                     <button
@@ -438,8 +437,8 @@ export const Header = () => {
                         className={`relative flex items-center justify-center bg-transparent border-none outline-none translate-y-[2px] transition-all duration-300 ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[250ms]'}`}
                         style={{ color: themeColor, marginLeft: '20px' }}
                     >
-                        <img 
-                            src={supportIcon} 
+                        <img
+                            src={supportIcon}
                             alt="Support"
                             className="w-[30px] h-[30px] brightness-0 invert"
                             style={{ opacity: 0.9 }}
@@ -484,8 +483,8 @@ export const Header = () => {
                     {/* Mobile Nav Container */}
                     <div className="absolute top-[4.2vh] left-[24vw] lg:hidden flex items-center justify-start z-[150] pointer-events-none h-[44px]">
                         <nav className={`flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
-                            ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto' : 'duration-200 opacity-0 translate-x-8 pointer-events-none'}
-                        `}>
+    ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto visible' : 'duration-200 opacity-0 translate-x-8 pointer-events-none invisible'}
+`}>
                             <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                             <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
                         </nav>
@@ -493,25 +492,8 @@ export const Header = () => {
 
                     {/* Desktop Nav Container */}
                     <nav className={`hidden lg:flex absolute top-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto transition-all duration-500
-                        ${isRightSideLogo ? 'right-[240px]' : 'right-[80px]'}
-                    `}>
-                        <button
-                            onClick={() => setIsSupportOpen(true)}
-                            className="p-[15px] hover:scale-110 active:scale-95 transition-all duration-300 outline-none border-none bg-transparent cursor-pointer flex items-center justify-center"
-                        >
-                            <div 
-                                className="w-[30px] h-[30px]"
-                                style={{ 
-                                    backgroundColor: themeColor,
-                                    WebkitMaskImage: `url(${supportIcon})`, 
-                                    WebkitMaskSize: 'contain', 
-                                    WebkitMaskRepeat: 'no-repeat',
-                                    maskImage: `url(${supportIcon})`, 
-                                    maskSize: 'contain', 
-                                    maskRepeat: 'no-repeat'
-                                }}
-                            />
-                        </button>
+    ${isRightSideLogo ? 'right-[240px]' : 'right-[80px]'}
+`}>
                         <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                         <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
                         <NavItem
@@ -537,6 +519,23 @@ export const Header = () => {
                                 </span>
                             }
                         />
+                        <button
+                            onClick={() => setIsSupportOpen(true)}
+                            className="p-[15px] hover:scale-110 active:scale-95 transition-all duration-300 outline-none border-none bg-transparent cursor-pointer flex items-center justify-center"
+                        >
+                            <div
+                                className="w-[30px] h-[30px]"
+                                style={{
+                                    backgroundColor: themeColor,
+                                    WebkitMaskImage: `url(${supportIcon})`,
+                                    WebkitMaskSize: 'contain',
+                                    WebkitMaskRepeat: 'no-repeat',
+                                    maskImage: `url(${supportIcon})`,
+                                    maskSize: 'contain',
+                                    maskRepeat: 'no-repeat'
+                                }}
+                            />
+                        </button>
                     </nav>
                 </div>
             </header>

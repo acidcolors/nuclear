@@ -76,10 +76,11 @@ export default function ProductPage() {
     const [isLoading, setIsLoading] = useState(true);
     const [hoveredBtnIndex, setHoveredBtnIndex] = useState<number | null>(null);
     const { addItem, setIsOpen, items } = useCart();
-    const { addItem: addSupportItem, setIsOpen: setIsSupportOpen } = useSupport();
+    const { items: supportItems, addItem: addSupportItem, removeItem: removeSupportItem, setIsOpen: setIsSupportOpen } = useSupport();
     
     // Button states
     const [isAddedRecently, setIsAddedRecently] = useState(false);
+    const [isSupportAddedRecently, setIsSupportAddedRecently] = useState(false);
     const buttonRef = useRef<HTMLButtonElement>(null);
 
     useEffect(() => {
@@ -119,6 +120,7 @@ export default function ProductPage() {
     }, [product]);
 
     const isInCart = items.some(item => item.id === product?.id);
+    const isInSupport = supportItems.some(item => item.id === product?.id);
 
     // GSAP Animation for Button State
     useEffect(() => {
@@ -127,12 +129,22 @@ export default function ProductPage() {
         let bgColor = '#dddddd';
         let textColor = '#111111';
 
-        if (isAddedRecently) {
-            bgColor = 'transparent'; 
-            textColor = '#111111';
-        } else if (isInCart) {
-            bgColor = '#dcfce7'; // Светло-зеленый (green-100)
-            textColor = '#166534'; // Темно-зеленый текст для контраста
+        if (isSoldOut) {
+            if (isSupportAddedRecently) {
+                bgColor = 'transparent';
+                textColor = '#111111';
+            } else if (isInSupport) {
+                bgColor = '#dcfce7'; 
+                textColor = '#166534';
+            }
+        } else {
+            if (isAddedRecently) {
+                bgColor = 'transparent'; 
+                textColor = '#111111';
+            } else if (isInCart) {
+                bgColor = '#dcfce7'; 
+                textColor = '#166534';
+            }
         }
 
         gsap.to(buttonRef.current, {
@@ -141,7 +153,7 @@ export default function ProductPage() {
             duration: 0.3,
             ease: "power2.inOut"
         });
-    }, [isAddedRecently, isInCart]);
+    }, [isAddedRecently, isInCart, isSupportAddedRecently, isInSupport, isSoldOut]);
 
     // Генерируем массив путей к картинкам
     const galleryPhotos = useMemo(() => {
@@ -343,14 +355,20 @@ export default function ProductPage() {
                                     }}
                                     onClick={() => {
                                         if (isSoldOut) {
-                                            addSupportItem({
-                                                id: product.id,
-                                                title: product.title,
-                                                price: product.price,
-                                                image: galleryPhotos[0],
-                                                quantity: 1
-                                            });
-                                            setIsSupportOpen(true);
+                                            if (isInSupport) {
+                                                removeSupportItem(product.id);
+                                            } else {
+                                                addSupportItem({
+                                                    id: product.id,
+                                                    title: product.title,
+                                                    price: product.price,
+                                                    image: galleryPhotos[0],
+                                                    quantity: 1
+                                                });
+                                                setIsSupportAddedRecently(true);
+                                                setTimeout(() => setIsSupportAddedRecently(false), 1500);
+                                                setIsSupportOpen(true);
+                                            }
                                             return;
                                         }
 
@@ -371,10 +389,37 @@ export default function ProductPage() {
                                     className="relative flex items-center justify-center w-full h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer no-underline whitespace-nowrap shadow-sm active:scale-[0.95] overflow-hidden"
                                 >
                                     {isSoldOut ? (
-                                        <div className="flex items-center justify-center gap-[10px] opacity-100 translate-y-0">
-                                            <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5" />
-                                            <span style={{ transform: 'translateY(1px)' }}>Уведомить</span>
-                                        </div>
+                                        <>
+                                            {/* Layer 1: Default SOLD */}
+                                            <div 
+                                                className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                                    ${!isInSupport && !isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
+                                                `}
+                                            >
+                                                <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5" />
+                                                <span style={{ transform: 'translateY(1px)' }}>Уведомить</span>
+                                            </div>
+
+                                            {/* Layer 2: Added Recently SOLD */}
+                                            <div 
+                                                className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                                    ${isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
+                                                `}
+                                            >
+                                                <Check size={18} />
+                                                <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
+                                            </div>
+
+                                            {/* Layer 3: In Support List SOLD */}
+                                            <div 
+                                                className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
+                                                    ${isInSupport && !isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
+                                                `}
+                                            >
+                                                <img src="/chat_support.svg" alt="В списке" className="w-5 h-5" />
+                                                <span style={{ transform: 'translateY(1px)' }}>В списке</span>
+                                            </div>
+                                        </>
                                     ) : (
                                         <>
                                             {/* Layer 1: Default */}

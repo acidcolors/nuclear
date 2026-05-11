@@ -23,7 +23,8 @@ export default function ProjectPage() {
     const [contentHeight, setContentHeight] = useState(0);
     const [isDesktop, setIsDesktop] = useState(false);
     const { items, addItem, removeItem, setIsOpen: setIsCartOpen } = useCart();
-    const { items: supportItems, addItem: addSupportItem, setIsOpen: setIsSupportOpen } = useSupport();
+    const { items: supportItems, addItem: addSupportItem, removeItem: removeSupportItem, setIsOpen: setIsSupportOpen } = useSupport();
+    const [supportStatus, setSupportStatus] = useState<Record<string, 'added' | 'removed' | null>>({});
 
     // Состояние фильтрации
     const [activeFilter, setActiveFilter] = useState('All');
@@ -82,7 +83,10 @@ export default function ProjectPage() {
                 });
             });
         }
-        return items;
+        
+        // Гарантируем уникальность ID
+        const uniqueItems = Array.from(new Map(items.map(item => [item.id, item])).values());
+        return uniqueItems;
     }, [notionData]);
 
     // Динамические фильтры на основе тегов товаров
@@ -365,6 +369,7 @@ export default function ProjectPage() {
                                             {(() => {
                                                 const isSoldOut = product.price === 'SOLD' || product.price === 'Распродано';
                                                 const isInCart = items.some(item => item.id === product.id);
+                                                const isInSupport = supportItems.some(item => item.id === product.id);
                                                 
                                                 return (
                                                     <button 
@@ -373,14 +378,24 @@ export default function ProjectPage() {
                                                             e.stopPropagation();
                                                             
                                                             if (isSoldOut) {
-                                                                addSupportItem({
-                                                                    id: product.id,
-                                                                    title: product.title,
-                                                                    price: product.price,
-                                                                    image: previewImage,
-                                                                    quantity: 1
-                                                                });
-                                                                setIsSupportOpen(true);
+                                                                if (isInSupport) {
+                                                                    removeSupportItem(product.id);
+                                                                    setSupportStatus(prev => ({ ...prev, [product.id]: 'removed' }));
+                                                                } else {
+                                                                    addSupportItem({
+                                                                        id: product.id,
+                                                                        title: product.title,
+                                                                        price: product.price,
+                                                                        image: previewImage,
+                                                                        quantity: 1
+                                                                    });
+                                                                    setSupportStatus(prev => ({ ...prev, [product.id]: 'added' }));
+                                                                    setIsSupportOpen(true);
+                                                                }
+
+                                                                setTimeout(() => {
+                                                                    setSupportStatus(prev => ({ ...prev, [product.id]: null }));
+                                                                }, 2000);
                                                                 return;
                                                             }
                                                             
@@ -403,14 +418,40 @@ export default function ProjectPage() {
                                                             }, 2000);
                                                         }}
                                                         className={`h-[40px] w-[40px] rounded-[8px] flex items-center justify-center text-[#111] shadow-sm transition-all duration-500 pointer-events-auto border-none cursor-pointer group/cart active:scale-95 relative overflow-hidden ${
-                                                            !isSoldOut && (addedStatus[product.id] === 'added' || (isInCart && addedStatus[product.id] !== 'removed'))
-                                                            ? 'bg-[#4ade80]' 
-                                                            : 'bg-[#f4f4f4] hover:bg-[#ffffff]'
+                                                            isSoldOut 
+                                                            ? (supportStatus[product.id] === 'added' || (isInSupport && supportStatus[product.id] !== 'removed') ? 'bg-[#4ade80]' : 'bg-[#f4f4f4] hover:bg-[#ffffff]')
+                                                            : (!isSoldOut && (addedStatus[product.id] === 'added' || (isInCart && addedStatus[product.id] !== 'removed')) ? 'bg-[#4ade80]' : 'bg-[#f4f4f4] hover:bg-[#ffffff]')
                                                         }`}
                                                     >
                                                         <div className="relative w-5 h-5 flex items-center justify-center">
                                                             {isSoldOut ? (
-                                                                <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5 transition-transform group-hover/cart:scale-110" />
+                                                                <>
+                                                                    <Plus 
+                                                                        size={20} 
+                                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                                                                            supportStatus[product.id] === 'added'
+                                                                            ? 'opacity-100 scale-100 rotate-0' 
+                                                                            : 'opacity-0 scale-50 rotate-90'
+                                                                        }`} 
+                                                                    />
+                                                                    <Minus 
+                                                                        size={20} 
+                                                                        className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                                                                            supportStatus[product.id] === 'removed'
+                                                                            ? 'opacity-100 scale-100 rotate-0' 
+                                                                            : 'opacity-0 scale-50 rotate-90'
+                                                                        }`} 
+                                                                    />
+                                                                    <img 
+                                                                        src="/edit_chat.svg" 
+                                                                        alt="Уведомить" 
+                                                                        className={`w-5 h-5 absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${
+                                                                            supportStatus[product.id] 
+                                                                            ? 'opacity-0 scale-50' 
+                                                                            : 'opacity-100 scale-100 group-hover/cart:scale-110'
+                                                                        }`} 
+                                                                    />
+                                                                </>
                                                             ) : (
                                                                 <>
                                                                     <Plus 

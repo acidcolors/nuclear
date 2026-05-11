@@ -3,6 +3,7 @@
 import React from 'react';
 import { X, Plus, Minus, Trash2, ArrowRight, ShoppingBag } from 'lucide-react';
 import Image from 'next/image';
+import gsap from 'gsap';
 
 interface CartDrawerProps {
     items: any[];
@@ -22,6 +23,107 @@ interface CartDrawerProps {
     successRef: React.RefObject<HTMLDivElement | null>;
     emptyCartRef: React.RefObject<HTMLDivElement | null>;
 }
+
+const CartItemRow = ({ item, handleRemoveItem, updateQuantity, formatPrice }: { 
+    item: any, 
+    handleRemoveItem: (id: string) => void,
+    updateQuantity: (id: string, quantity: number) => void,
+    formatPrice: (price: number) => string
+}) => {
+    const rowRef = React.useRef<HTMLDivElement>(null);
+
+    React.useLayoutEffect(() => {
+        if (rowRef.current) {
+            gsap.fromTo(rowRef.current, 
+                { opacity: 0, y: 20, scale: 0.95, height: 0, marginBottom: 0 },
+                { opacity: 1, y: 0, scale: 1, height: 'auto', marginBottom: 10, duration: 0.5, ease: "power2.out" }
+            );
+        }
+    }, []);
+
+    const handleRemoveWithAnimation = () => {
+        if (rowRef.current) {
+            gsap.to(rowRef.current, {
+                opacity: 0,
+                height: 0,
+                marginBottom: 0,
+                scale: 0.9,
+                duration: 0.4,
+                ease: "power2.inOut",
+                onComplete: () => handleRemoveItem(item.id)
+            });
+        } else {
+            handleRemoveItem(item.id);
+        }
+    };
+
+    return (
+        <div
+            ref={rowRef}
+            id={`cart-item-${item.id}`}
+            className="flex items-center gap-4 group overflow-hidden"
+        >
+            {/* Clickable Area */}
+            <div 
+                className="flex items-center gap-4 flex-1 min-w-0 cursor-pointer"
+                onClick={() => window.open(`/product/${item.id}`, '_blank')}
+            >
+                {/* Thumbnail */}
+                <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
+                    {item.image && (
+                        <Image
+                            src={item.image as string}
+                            alt={item.title}
+                            fill
+                            className="object-cover"
+                            sizes="80px"
+                        />
+                    )}
+                </div>
+
+                {/* Info */}
+                <div className="flex-1 min-w-0 pl-[10px]">
+                    <p
+                        className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
+                        style={{ margin: 0, marginBottom: '4px' }}
+                    >
+                        {item.title}
+                    </p>
+                    <div className="bg-[#f2f2f2] px-3.5 py-1.5 rounded-[12px] inline-block font-bold text-[14px] text-[#111]">
+                        {typeof item.price === 'number' ? formatPrice(item.price) : item.price} ₽
+                    </div>
+                </div>
+            </div>
+
+            {/* Controls Group */}
+            <div className="flex items-center gap-4 shrink-0">
+                <div className="flex items-center gap-3 pr-[10px]">
+                    <button
+                        onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                        className="w-6 h-6 flex items-center justify-center text-[#111] opacity-30 hover:opacity-100 transition-opacity bg-transparent border-none outline-none p-0 cursor-pointer"
+                    >
+                        <Minus size={16} strokeWidth={2.5} />
+                    </button>
+                    <span className="min-w-[1rem] text-center font-bold text-[18px] tabular-nums text-[#111]">
+                        {item.quantity}
+                    </span>
+                    <button
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                        className="w-6 h-6 flex items-center justify-center text-[#111] opacity-30 hover:opacity-100 transition-opacity bg-transparent border-none outline-none p-0 cursor-pointer"
+                    >
+                        <Plus size={16} strokeWidth={2.5} />
+                    </button>
+                </div>
+                <button
+                    onClick={handleRemoveWithAnimation}
+                    className="text-[#111] opacity-20 hover:text-red-500 hover:opacity-100 transition-all ml-1 bg-transparent border-none outline-none p-0 cursor-pointer"
+                >
+                    <Trash2 size={18} strokeWidth={2} />
+                </button>
+            </div>
+        </div>
+    );
+};
 
 export const CartDrawerMobile = ({
     items,
@@ -96,64 +198,13 @@ export const CartDrawerMobile = ({
                     ) : (
                         <div className="flex flex-col !gap-8 pb-10">
                             {items.map((item) => (
-                                <div
-                                    key={item.id}
-                                    id={`cart-item-${item.id}`}
-                                    className="flex items-center gap-4 group my-[10px]"
-                                >
-                                    {/* Thumbnail */}
-                                    <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
-                                        {item.image && (
-                                            <Image
-                                                src={item.image as string}
-                                                alt={item.title}
-                                                fill
-                                                className="object-cover"
-                                                sizes="80px"
-                                            />
-                                        )}
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0 pl-[10px]">
-                                        <p
-                                            className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
-                                            style={{ margin: 0, marginBottom: '4px' }}
-                                        >
-                                            {item.title}
-                                        </p>
-                                        <div className="bg-[#f2f2f2] px-3.5 py-1.5 rounded-[12px] inline-block font-bold text-[14px] text-[#111]">
-                                            {typeof item.price === 'number' ? formatPrice(item.price) : item.price} ₽
-                                        </div>
-                                    </div>
-
-                                    {/* Controls Group */}
-                                    <div className="flex items-center gap-4 shrink-0">
-                                        <div className="flex items-center gap-3 pr-[10px]">
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                className="w-6 h-6 flex items-center justify-center text-[#111] opacity-30 hover:opacity-100 transition-opacity bg-transparent border-none outline-none p-0 cursor-pointer"
-                                            >
-                                                <Minus size={16} strokeWidth={2.5} />
-                                            </button>
-                                            <span className="min-w-[1rem] text-center font-bold text-[18px] tabular-nums text-[#111]">
-                                                {item.quantity}
-                                            </span>
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                className="w-6 h-6 flex items-center justify-center text-[#111] opacity-30 hover:opacity-100 transition-opacity bg-transparent border-none outline-none p-0 cursor-pointer"
-                                            >
-                                                <Plus size={16} strokeWidth={2.5} />
-                                            </button>
-                                        </div>
-                                        <button
-                                            onClick={() => handleRemoveItem(item.id)}
-                                            className="text-[#111] opacity-20 hover:text-red-500 hover:opacity-100 transition-all ml-1 bg-transparent border-none outline-none p-0 cursor-pointer"
-                                        >
-                                            <Trash2 size={18} strokeWidth={2} />
-                                        </button>
-                                    </div>
-                                </div>
+                                <CartItemRow 
+                                    key={item.id} 
+                                    item={item} 
+                                    handleRemoveItem={handleRemoveItem}
+                                    updateQuantity={updateQuantity}
+                                    formatPrice={formatPrice}
+                                />
                             ))}
 
                             <div id="cart-footer-controls">

@@ -15,6 +15,7 @@ export const SupportDrawer = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderStatus, setOrderStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [customerInfo, setCustomerInfo] = useState('');
+    const [message, setMessage] = useState('');
     const [isMounted, setIsMounted] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
 
@@ -81,6 +82,7 @@ export const SupportDrawer = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     customerInfo,
+                    message,
                     type: 'support',
                     subject,
                     items
@@ -95,6 +97,7 @@ export const SupportDrawer = () => {
                         clearSupport();
                         setOrderStatus('idle');
                         setCustomerInfo('');
+                        setMessage('');
                     }, 1000);
                 }, 1500);
             } else {
@@ -126,6 +129,8 @@ export const SupportDrawer = () => {
         orderStatus,
         customerInfo,
         setCustomerInfo,
+        message,
+        setMessage,
         drawerRef,
         overlayRef,
         successRef,
