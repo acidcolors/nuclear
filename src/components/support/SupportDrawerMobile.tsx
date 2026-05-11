@@ -20,6 +20,72 @@ interface SupportDrawerProps {
     successRef: React.RefObject<HTMLDivElement | null>;
 }
 
+const SupportItemRow = ({ item, handleRemoveItem }: { item: SupportItem, handleRemoveItem: (id: string) => void }) => {
+    const [imageError, setImageError] = React.useState(false);
+    const [isMounted, setIsMounted] = React.useState(false);
+
+    React.useEffect(() => {
+        setIsMounted(true);
+    }, []);
+
+    return (
+        <div
+            id={`support-item-${item.id}`}
+            className="flex items-center gap-4 group my-[10px]"
+        >
+            {/* Thumbnail */}
+            <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
+                {isMounted && item.image && !imageError ? (
+                    <Image
+                        src={item.image}
+                        alt={item.title || 'Product'}
+                        fill
+                        className="object-cover"
+                        sizes="80px"
+                        unoptimized
+                        onError={() => setImageError(true)}
+                    />
+                ) : (
+                    <div className="w-full h-full flex items-center justify-center opacity-20">
+                        <Image src="/edit_chat.svg" alt="Support" width={32} height={32} />
+                    </div>
+                )}
+            </div>
+
+            {/* Info */}
+            <div className="flex-1 min-w-0 pl-[10px]">
+                <div
+                    className="bg-[#ffffff] text-[#111] font-black uppercase tracking-wider mb-2 leading-none inline-flex items-center justify-center"
+                    style={{
+                        padding: '10px 14px',
+                        fontSize: '14px',
+                        borderRadius: '10px',
+                        minWidth: '50px'
+                    }}
+                >
+                    SOLD
+                </div>
+                <p
+                    className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
+                    style={{ margin: 0, marginBottom: '0px', marginTop: "6px" }}
+                >
+                    {item.title}
+                </p>
+            </div>
+
+            {/* Controls Group */}
+            <div className="flex items-center gap-4 shrink-0">
+                <button
+                    onClick={() => handleRemoveItem(item.id)}
+                    className="text-[#111] opacity-20 hover:text-red-500 hover:opacity-100 transition-all ml-1 bg-transparent border-none outline-none p-0 cursor-pointer"
+                >
+                    <Trash2 size={18} strokeWidth={2} />
+                </button>
+            </div>
+        </div>
+    );
+};
+
 export const SupportDrawerMobile = ({
     items,
     setIsOpen,
@@ -82,73 +148,16 @@ export const SupportDrawerMobile = ({
                         <div className="flex flex-col !gap-8 pb-10">
                             {/* Product List - EXACTLY AS IN CART */}
                             {items.map((item) => (
-                                <div
-                                    key={item.id}
-                                    id={`support-item-${item.id}`}
-                                    className="flex items-center gap-4 group my-[10px]"
-                                >
-                                    {/* Thumbnail */}
-                                    <div className="relative w-[80px] h-[80px] bg-[#f5f5f5] rounded-[18px] overflow-hidden shrink-0 shadow-sm transition-transform duration-500">
-                                        {item.image ? (
-                                            <Image
-                                                src={item.image}
-                                                alt={item.title}
-                                                fill
-                                                className="object-cover"
-                                                sizes="80px"
-                                            />
-                                        ) : (
-                                            <div className="w-full h-full flex items-center justify-center opacity-20">
-                                                <Image src="/edit_chat.svg" alt="Support" width={32} height={32} />
-                                            </div>
-                                        )}
-                                    </div>
-
-                                    {/* Info */}
-                                    <div className="flex-1 min-w-0 pl-[10px]">
-                                        <div className="bg-[#111] px-2 py-0.5 rounded-[6px] inline-block font-black text-[9px] text-white uppercase tracking-wider mb-1">
-                                            SOLD
-                                        </div>
-                                        <p
-                                            className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
-                                            style={{ margin: 0, marginBottom: '4px' }}
-                                        >
-                                            {item.title}
-                                        </p>
-                                    </div>
-
-                                    {/* Controls Group */}
-                                    <div className="flex items-center gap-4 shrink-0">
-                                        <div className="flex items-center gap-3 pr-[10px]">
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                                                className="w-6 h-6 flex items-center justify-center text-[#111] opacity-30 hover:opacity-100 transition-opacity bg-transparent border-none outline-none p-0 cursor-pointer"
-                                            >
-                                                <Minus size={16} strokeWidth={2.5} />
-                                            </button>
-                                            <span className="min-w-[1rem] text-center font-bold text-[18px] tabular-nums text-[#111]">
-                                                {item.quantity}
-                                            </span>
-                                            <button
-                                                onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                                                className="w-6 h-6 flex items-center justify-center text-[#111] opacity-30 hover:opacity-100 transition-opacity bg-transparent border-none outline-none p-0 cursor-pointer"
-                                            >
-                                                <Plus size={16} strokeWidth={2.5} />
-                                            </button>
-                                        </div>
-                                        <button
-                                            onClick={() => handleRemoveItem(item.id)}
-                                            className="text-[#111] opacity-20 hover:text-red-500 hover:opacity-100 transition-all ml-1 bg-transparent border-none outline-none p-0 cursor-pointer"
-                                        >
-                                            <Trash2 size={18} strokeWidth={2} />
-                                        </button>
-                                    </div>
-                                </div>
+                                <SupportItemRow 
+                                    key={item.id} 
+                                    item={item} 
+                                    handleRemoveItem={handleRemoveItem} 
+                                />
                             ))}
 
                             <div className="pt-4 flex flex-col gap-10">
                                 <p className="text-[16px] font-medium text-[#111] opacity-30 leading-relaxed pr-[10%]">
-                                    {items.length > 0 
+                                    {items.length > 0
                                         ? "Вы выбрали товары для уведомления. Мы сообщим вам о пополнении."
                                         : "Есть вопрос или предложение? Оставьте свои контакты, и мы свяжемся с вами."
                                     }
@@ -170,7 +179,7 @@ export const SupportDrawerMobile = ({
                                     style={{ marginTop: '10px' }}
                                 >
                                     <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                                    <span style={{ transform: 'translateY(1px)' }}>Отправить запрос</span>
+                                    <span style={{ transform: 'translateY(1px)' }}>Отправить</span>
                                 </button>
                             </div>
                         </div>

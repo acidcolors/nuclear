@@ -170,7 +170,7 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
 export const Header = () => {
     const pathname = usePathname();
     const { totalItems, setIsOpen } = useCart();
-    const { setIsOpen: setIsSupportOpen } = useSupport();
+    const { items: supportItems, setIsOpen: setIsSupportOpen } = useSupport();
     const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
     const isHomePage = pathname === '/';
     const isRightSideLogo = !['/', '/contact', '/space'].includes(pathname);
@@ -306,6 +306,8 @@ export const Header = () => {
 
     useEffect(() => { setIsMenuOpen(false); }, [pathname]);
 
+    const supportIcon = (mounted && supportItems.length > 0) ? '/chat_support.svg' : '/edit_chat.svg';
+
     // Анимация звезды с защитой от дерганья
     useEffect(() => {
         if (isHomePage && bigStarRef.current) {
@@ -437,9 +439,9 @@ export const Header = () => {
                         style={{ color: themeColor, marginLeft: '20px' }}
                     >
                         <img 
-                            src="/chat_support.svg" 
+                            src={supportIcon} 
                             alt="Support"
-                            className="w-6 h-6 brightness-0 invert"
+                            className="w-[30px] h-[30px] brightness-0 invert"
                             style={{ opacity: 0.9 }}
                         />
                     </button>
@@ -498,13 +500,13 @@ export const Header = () => {
                             className="p-[15px] hover:scale-110 active:scale-95 transition-all duration-300 outline-none border-none bg-transparent cursor-pointer flex items-center justify-center"
                         >
                             <div 
-                                className="w-[22px] h-[22px]"
+                                className="w-[30px] h-[30px]"
                                 style={{ 
                                     backgroundColor: themeColor,
-                                    WebkitMaskImage: 'url(/chat_support.svg)', 
+                                    WebkitMaskImage: `url(${supportIcon})`, 
                                     WebkitMaskSize: 'contain', 
                                     WebkitMaskRepeat: 'no-repeat',
-                                    maskImage: 'url(/chat_support.svg)', 
+                                    maskImage: `url(${supportIcon})`, 
                                     maskSize: 'contain', 
                                     maskRepeat: 'no-repeat'
                                 }}
