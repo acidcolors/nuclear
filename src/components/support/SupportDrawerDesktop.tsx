@@ -21,6 +21,8 @@ interface SupportDrawerProps {
     drawerRef: React.RefObject<HTMLDivElement | null>;
     overlayRef: React.RefObject<HTMLDivElement | null>;
     successRef: React.RefObject<HTMLDivElement | null>;
+    showContactError: boolean;
+    isPlaceholderFading: boolean;
 }
 
 const SupportItemRow = ({ item, handleRemoveItem }: { item: SupportItem, handleRemoveItem: (id: string) => void }) => {
@@ -135,6 +137,8 @@ export const SupportDrawerDesktop = ({
     drawerRef,
     overlayRef,
     successRef,
+    showContactError,
+    isPlaceholderFading,
 }: SupportDrawerProps) => {
     return (
         <>
@@ -207,8 +211,8 @@ export const SupportDrawerDesktop = ({
                                         type="text"
                                         value={customerInfo}
                                         onChange={(e) => setCustomerInfo(e.target.value)}
-                                        placeholder="@telegram или телефон"
-                                        className="w-full h-[50px] bg-white border-none rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
+                                        placeholder={showContactError ? "обязательное поле" : "@telegram или телефон"}
+                                        className={`w-full h-[50px] bg-white border border-transparent rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start contact-info-field ${showContactError ? 'shake-error' : ''} ${isPlaceholderFading ? 'placeholder-fading' : ''}`}
                                         style={{ paddingLeft: '30px', paddingRight: '30px', boxSizing: 'border-box' }}
                                     />
 
@@ -223,9 +227,9 @@ export const SupportDrawerDesktop = ({
 
                                 <button
                                     onClick={handleCheckout}
-                                    disabled={isSubmitting || !customerInfo.trim()}
+                                    disabled={isSubmitting}
                                     className="flex items-center justify-center gap-[8px] w-[45%] h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:bg-[#ffffff] hover:text-black whitespace-nowrap active:scale-[0.95] shadow-sm disabled:opacity-50 self-start group"
-                                    style={{ marginTop: '10px' }}
+                                    style={{ marginTop: '25px' }}
                                 >
                                     <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                                     <span style={{ transform: 'translateY(1px)' }}>Отправить</span>

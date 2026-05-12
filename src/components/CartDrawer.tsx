@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+import gsap from 'gsap';
 import { useCart } from '@/app/store/useCart';
 import { CartDrawerMobile } from './cart/CartDrawerMobile';
 import { CartDrawerDesktop } from './cart/CartDrawerDesktop';
@@ -16,8 +16,11 @@ export const CartDrawer = () => {
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [orderStatus, setOrderStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [customerInfo, setCustomerInfo] = useState('');
-    const [isMounted, setIsMounted] = useState(false);
+    const [message, setMessage] = useState('');
     const [isDesktop, setIsDesktop] = useState(false);
+    const [showContactError, setShowContactError] = useState(false);
+    const [isPlaceholderFading, setIsPlaceholderFading] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -95,8 +98,27 @@ export const CartDrawer = () => {
 
     const handleCheckout = async () => {
         if (items.length === 0) return;
-        if (!customerInfo.trim()) {
-            alert('Пожалуйста, укажите контактные данные (Telegram или телефон)');
+
+        // Safe Telegram WebApp user data extraction
+        let tgUser = null;
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user) {
+            tgUser = (window as any).Telegram.WebApp.initDataUnsafe.user;
+        }
+
+        if (!customerInfo.trim() && !tgUser) {
+            setIsPlaceholderFading(true);
+            setTimeout(() => {
+                setShowContactError(true);
+                setIsPlaceholderFading(false);
+            }, 200);
+
+            setTimeout(() => {
+                setIsPlaceholderFading(true);
+                setTimeout(() => {
+                    setShowContactError(false);
+                    setIsPlaceholderFading(false);
+                }, 200);
+            }, 2000);
             return;
         }
 
@@ -107,9 +129,11 @@ export const CartDrawer = () => {
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     items,
-                    total: totalPrice(),
                     totalPrice: totalPrice(),
-                    customerInfo
+                    customerInfo,
+                    message,
+                    type: 'order',
+                    ...(tgUser && { tgUser })
                 }),
             });
 
@@ -121,6 +145,7 @@ export const CartDrawer = () => {
                         clearCart();
                         setOrderStatus('idle');
                         setCustomerInfo('');
+                        setMessage('');
                     }, 1000);
                 }, 1500);
             } else {
@@ -153,10 +178,14 @@ export const CartDrawer = () => {
         orderStatus,
         customerInfo,
         setCustomerInfo,
+        message,
+        setMessage,
         drawerRef,
         overlayRef,
         successRef,
-        emptyCartRef
+        emptyCartRef,
+        showContactError,
+        isPlaceholderFading,
     };
 
     return isDesktop ? (

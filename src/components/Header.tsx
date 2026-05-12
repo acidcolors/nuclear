@@ -229,8 +229,8 @@ export const Header = () => {
                         {
                             scale: 0,
                             opacity: 0,
-                            width: isDesktopBadge ? 0 : 22,
-                            marginLeft: isDesktopBadge ? 0 : 7
+                            width: 0,
+                            marginLeft: 0
                         },
                         {
                             scale: 1,
@@ -238,7 +238,7 @@ export const Header = () => {
                             width: 22,
                             marginLeft: isDesktopBadge ? 8 : 7,
                             duration: 0.6,
-                            ease: "back.out(1.5)",
+                            ease: "power2.out",
                             display: 'flex',
                             transformOrigin: "center center"
                         }
@@ -261,8 +261,8 @@ export const Header = () => {
                 gsap.to(ref.current, {
                     scale: 0,
                     opacity: 0,
-                    width: isDesktopBadge ? 0 : 22,
-                    marginLeft: isDesktopBadge ? 0 : 7,
+                    width: 0,
+                    marginLeft: 0,
                     duration: 0.4,
                     ease: "power2.in",
                     transformOrigin: "center center",

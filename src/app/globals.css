@@ -48,6 +48,42 @@
   }
 }
 
+@keyframes shake-error {
+
+  0%,
+  100% {
+    transform: translateX(0);
+  }
+
+  20%,
+  60% {
+    transform: translateX(-2px);
+  }
+
+  40%,
+  80% {
+    transform: translateX(2px);
+  }
+}
+
+.contact-info-field {
+  transition: all 0.2s ease-in-out;
+}
+
+.contact-info-field::placeholder {
+  transition: all 0.2s ease-in-out;
+}
+
+.placeholder-fading::placeholder {
+  opacity: 0 !important;
+}
+
+.shake-error {
+  animation: shake-error 0.5s ease-in-out;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.25) !important;
+  border-color: rgba(255, 255, 255, 0.3) !important;
+}
+
 /* СПЕЦИАЛЬНАЯ АДАПТАЦИЯ ПОД КОРОТКИЕ ЭКРАНЫ (TG Desktop и т.д.) */
 @media (max-height: 650px) {
   :root {
@@ -82,7 +118,8 @@
 
   /* Скрываем ссылку на телеграм в Mini App (т.к. мы уже в нем) */
   .custom-tg,
-  .contact-tg-link {
+  .contact-tg-link,
+  .contact-info-field {
     display: none !important;
   }
 }
@@ -526,9 +563,4 @@ input[type="range"]::-moz-range-thumb {
 
 .zoom-in {
   animation-name: zoomIn;
-}
-
-/* Фикс для конкретного класса, если он есть на body */
-body.is-tg-desktop {
-  /* Можно добавить специфичные фиксы только для TG Desktop здесь */
 }

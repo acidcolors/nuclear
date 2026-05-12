@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useEffect, useRef, useState } from 'react';
-import { gsap } from 'gsap';
+import gsap from 'gsap';
 import { useSupport } from '@/app/store/useSupport';
 import { SupportDrawerMobile } from './support/SupportDrawerMobile';
 import { SupportDrawerDesktop } from './support/SupportDrawerDesktop';
@@ -16,8 +16,10 @@ export const SupportDrawer = () => {
     const [orderStatus, setOrderStatus] = useState<'idle' | 'success' | 'error'>('idle');
     const [customerInfo, setCustomerInfo] = useState('');
     const [message, setMessage] = useState('');
-    const [isMounted, setIsMounted] = useState(false);
     const [isDesktop, setIsDesktop] = useState(false);
+    const [showContactError, setShowContactError] = useState(false);
+    const [isPlaceholderFading, setIsPlaceholderFading] = useState(false);
+    const [isMounted, setIsMounted] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
@@ -66,13 +68,32 @@ export const SupportDrawer = () => {
     }, [isOpen, isMounted, isDesktop]);
 
     const handleCheckout = async () => {
-        if (!customerInfo.trim()) {
-            alert('Пожалуйста, укажите контактные данные (Telegram или телефон)');
+        // Safe Telegram WebApp user data extraction
+        let tgUser = null;
+        if (typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user) {
+            tgUser = (window as any).Telegram.WebApp.initDataUnsafe.user;
+        }
+
+        if (!customerInfo.trim() && !tgUser) {
+            setIsPlaceholderFading(true);
+            setTimeout(() => {
+                setShowContactError(true);
+                setIsPlaceholderFading(false);
+            }, 200);
+
+            setTimeout(() => {
+                setIsPlaceholderFading(true);
+                setTimeout(() => {
+                    setShowContactError(false);
+                    setIsPlaceholderFading(false);
+                }, 200);
+            }, 2000);
             return;
         }
 
         setIsSubmitting(true);
         try {
+
             const subject = items.length > 0 
                 ? `Запрос на уведомление: ${items.map(i => `${i.title} (${i.quantity})`).join(', ')}`
                 : 'Общий запрос в поддержку';
@@ -85,7 +106,8 @@ export const SupportDrawer = () => {
                     message,
                     type: 'support',
                     subject,
-                    items
+                    items,
+                    ...(tgUser && { tgUser })
                 }),
             });
 
@@ -134,6 +156,8 @@ export const SupportDrawer = () => {
         drawerRef,
         overlayRef,
         successRef,
+        showContactError,
+        isPlaceholderFading,
     };
 
     return isDesktop ? (

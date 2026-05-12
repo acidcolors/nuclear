@@ -18,10 +18,14 @@ interface CartDrawerProps {
     orderStatus: 'idle' | 'success' | 'error';
     customerInfo: string;
     setCustomerInfo: (info: string) => void;
+    message: string;
+    setMessage: (message: string) => void;
     drawerRef: React.RefObject<HTMLDivElement | null>;
     overlayRef: React.RefObject<HTMLDivElement | null>;
     successRef: React.RefObject<HTMLDivElement | null>;
     emptyCartRef: React.RefObject<HTMLDivElement | null>;
+    showContactError: boolean;
+    isPlaceholderFading: boolean;
 }
 
 const CartItemRow = ({ item, handleRemoveItem, updateQuantity, formatPrice }: { 
@@ -137,10 +141,14 @@ export const CartDrawerDesktop = ({
     orderStatus,
     customerInfo,
     setCustomerInfo,
+    message,
+    setMessage,
     drawerRef,
     overlayRef,
     successRef,
-    emptyCartRef
+    emptyCartRef,
+    showContactError,
+    isPlaceholderFading
 }: CartDrawerProps) => {
     return (
         <>
@@ -228,22 +236,34 @@ export const CartDrawerDesktop = ({
                                     </div>
                                 </div>
 
-                                {/* Footer Controls */}
+                                 {/* Footer Controls */}
                                 <div className="pb-12 pt-0 flex flex-col gap-10">
-                                    <input
-                                        type="text"
-                                        value={customerInfo}
-                                        onChange={(e) => setCustomerInfo(e.target.value)}
-                                        placeholder="@telegram или телефон"
-                                        className="w-[95%] h-[50px] bg-white border-none rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start"
-                                        style={{ paddingLeft: '30px' }}
-                                    />
+                                    <div className="flex flex-col gap-[12px] w-full">
+                                        {!(typeof window !== 'undefined' && (window as any).Telegram?.WebApp?.initDataUnsafe?.user) && (
+                                            <input
+                                                type="text"
+                                                value={customerInfo}
+                                                onChange={(e) => setCustomerInfo(e.target.value)}
+                                                placeholder={showContactError ? "обязательное поле" : "@telegram или телефон"}
+                                                className={`w-[95%] h-[50px] bg-white border border-transparent rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start contact-info-field ${showContactError ? 'shake-error' : ''} ${isPlaceholderFading ? 'placeholder-fading' : ''}`}
+                                                style={{ paddingLeft: '30px' }}
+                                            />
+                                        )}
+
+                                        <textarea
+                                            value={message}
+                                            onChange={(e) => setMessage(e.target.value)}
+                                            placeholder="Сообщение ( это поле может остаться пустым )"
+                                            className="w-[95%] h-[100px] bg-white border-none rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start resize-none pt-[12px]"
+                                            style={{ paddingLeft: '30px' }}
+                                        />
+                                    </div>
 
                                     <button
                                         onClick={handleCheckout}
-                                        disabled={isSubmitting || !customerInfo.trim()}
+                                        disabled={isSubmitting}
                                         className="flex items-center justify-center gap-[8px] w-[45%] h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:bg-[#ffffff] hover:text-black whitespace-nowrap active:scale-[0.95] shadow-sm disabled:opacity-50 self-start group"
-                                        style={{ marginTop: '20px' }}
+                                        style={{ marginTop: '10px' }}
                                     >
                                         <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
                                         <span style={{ transform: 'translateY(1px)' }}>Отправить</span>
