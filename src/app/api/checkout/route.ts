@@ -150,9 +150,32 @@ async function sendTelegramMessage(
             },
             {
                 httpsAgent: agent,
-                proxy: false, // Отключаем стандартный прокси axios, чтобы использовать наш агент
+                proxy: false,
             }
         );
+
+        // 2. Отправка подтверждения КЛИЕНТУ (только если это заказ, а не саппорт, и есть tgUser.id)
+        if (tgUser?.id && type !== 'support') {
+            const customerMessage = `<b>Спасибо за заказ! 🎉</b>\nВаш заказ <b>#${orderNumber}</b> успешно оформлен.\n\nИтого: <b>${totalPrice} ₽</b>\nМы свяжемся с вами в ближайшее время для уточнения деталей.`;
+            
+            try {
+                await axios.post(
+                    `https://api.telegram.org/bot${botToken}/sendMessage`,
+                    {
+                        chat_id: tgUser.id,
+                        text: customerMessage,
+                        parse_mode: 'HTML',
+                        disable_web_page_preview: true,
+                    },
+                    {
+                        httpsAgent: agent,
+                        proxy: false,
+                    }
+                );
+            } catch (clientErr) {
+                console.warn('Не удалось отправить сообщение клиенту (возможно, бот заблокирован):', clientErr);
+            }
+        }
     } catch (error: any) {
         const errorData = error.response?.data;
         throw new Error(`Telegram API error: ${errorData?.description || error.message}`);
