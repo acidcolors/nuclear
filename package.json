@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@notionhq/client": "^5.20.0",
+    "axios": "^1.16.0",
     "gsap": "^3.14.2",
     "https-proxy-agent": "^9.0.0",
     "lottie-react": "^2.4.1",

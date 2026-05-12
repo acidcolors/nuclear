@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import axios from 'axios';
 
 // 1. Инициализация Notion
 const notion = new Client({ auth: process.env.NOTION_SECRET });
@@ -138,21 +139,23 @@ async function sendTelegramMessage(
 
     const agent = new HttpsProxyAgent('http://103.75.126.30:8888');
 
-    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-            chat_id: chatId,
-            text: messageText.trim(),
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-        }),
-        agent: agent,
-    } as any);
-
-    if (!response.ok) {
-        const errorData = await response.json();
-        throw new Error(`Telegram API error: ${errorData.description || response.statusText}`);
+    try {
+        await axios.post(
+            `https://api.telegram.org/bot${botToken}/sendMessage`,
+            {
+                chat_id: chatId,
+                text: messageText.trim(),
+                parse_mode: 'HTML',
+                disable_web_page_preview: true,
+            },
+            {
+                httpsAgent: agent,
+                proxy: false, // Отключаем стандартный прокси axios, чтобы использовать наш агент
+            }
+        );
+    } catch (error: any) {
+        const errorData = error.response?.data;
+        throw new Error(`Telegram API error: ${errorData?.description || error.message}`);
     }
 }
 
