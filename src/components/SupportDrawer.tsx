@@ -100,7 +100,7 @@ export const SupportDrawer = () => {
 
             const source = tgUser ? 'app' : 'website';
             
-            const response = await fetch('/api/checkout', {
+            const response = await fetch('/api/support', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
@@ -109,7 +109,6 @@ export const SupportDrawer = () => {
                     subject,
                     items,
                     source,
-                    type: 'support', // Передаем тип саппорт
                     ...(tgUser && { tgUser })
                 }),
             });

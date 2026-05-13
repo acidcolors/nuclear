@@ -21,6 +21,8 @@ export const CartDrawer = () => {
     const [showContactError, setShowContactError] = useState(false);
     const [isPlaceholderFading, setIsPlaceholderFading] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [lastOrderNumber, setLastOrderNumber] = useState<number | null>(null);
+    const [lastOrderPrice, setLastOrderPrice] = useState<number | null>(null);
 
     useEffect(() => {
         setIsMounted(true);
@@ -146,6 +148,10 @@ export const CartDrawer = () => {
             });
 
             if (response.ok) {
+                const data = await response.json();
+                setLastOrderNumber(data.orderNumber);
+                setLastOrderPrice(totalPrice());
+                
                 setOrderStatus('success');
                 setTimeout(() => {
                     setIsOpen(false);
@@ -154,8 +160,10 @@ export const CartDrawer = () => {
                         setOrderStatus('idle');
                         setCustomerInfo('');
                         setMessage('');
+                        setLastOrderNumber(null);
+                        setLastOrderPrice(null);
                     }, 1000);
-                }, 2500); // Увеличил время, чтобы успели прочитать сообщение
+                }, 5000); // Даем больше времени прочитать длинный текст
             } else {
                 setOrderStatus('error');
             }
@@ -198,6 +206,8 @@ export const CartDrawer = () => {
         showContactError,
         isPlaceholderFading,
         contactType, // Передаем тип контакта в пропсы
+        lastOrderNumber,
+        lastOrderPrice,
     };
 
     return isDesktop ? (
