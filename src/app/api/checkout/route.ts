@@ -100,8 +100,10 @@ async function sendEmailConfirmation(
 
         const transporter = nodemailer.createTransport({
             host: 'smtp.yandex.ru',
-            port: 465,
-            secure: true,
+            port: 587,
+            secure: false, // true только для 465 порта
+            family: 4,     // Принудительно используем IPv4
+            connectionTimeout: 5000,
             auth: {
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
