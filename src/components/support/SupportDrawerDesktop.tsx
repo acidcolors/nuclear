@@ -32,7 +32,7 @@ const SupportItemRow = ({ item, handleRemoveItem }: { item: SupportItem, handleR
 
     React.useLayoutEffect(() => {
         if (rowRef.current) {
-            gsap.fromTo(rowRef.current, 
+            gsap.fromTo(rowRef.current,
                 { opacity: 0, y: 20, scale: 0.95, height: 0, marginBottom: 0 },
                 { opacity: 1, y: 0, scale: 1, height: 'auto', marginBottom: 10, duration: 0.5, ease: "power2.out" }
             );
@@ -66,7 +66,7 @@ const SupportItemRow = ({ item, handleRemoveItem }: { item: SupportItem, handleR
             className="flex items-center gap-4 group overflow-hidden"
         >
             {/* Clickable Area */}
-            <div 
+            <div
                 className="flex items-center gap-4 flex-1 min-w-0 cursor-pointer"
                 onClick={() => window.open(`/product/${item.id}`, '_blank')}
             >
@@ -191,10 +191,10 @@ export const SupportDrawerDesktop = ({
                         <div className="flex flex-col !gap-8 pb-10">
                             {/* Product List - EXACTLY AS IN CART */}
                             {items.map((item) => (
-                                <SupportItemRow 
-                                    key={item.id} 
-                                    item={item} 
-                                    handleRemoveItem={handleRemoveItem} 
+                                <SupportItemRow
+                                    key={item.id}
+                                    item={item}
+                                    handleRemoveItem={handleRemoveItem}
                                 />
                             ))}
 
@@ -211,7 +211,7 @@ export const SupportDrawerDesktop = ({
                                         type="text"
                                         value={customerInfo}
                                         onChange={(e) => setCustomerInfo(e.target.value)}
-                                        placeholder={showContactError ? "обязательное поле" : "@telegram или телефон"}
+                                        placeholder={showContactError ? "обязательное поле" : "@telegram или email"}
                                         className={`w-full h-[50px] bg-white border border-transparent rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start contact-info-field ${showContactError ? 'shake-error' : ''} ${isPlaceholderFading ? 'placeholder-fading' : ''}`}
                                         style={{ paddingLeft: '30px', paddingRight: '30px', boxSizing: 'border-box' }}
                                     />

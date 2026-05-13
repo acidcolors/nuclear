@@ -108,7 +108,7 @@ async function sendEmailConfirmation(
                 user: process.env.EMAIL_USER,
                 pass: process.env.EMAIL_PASS,
             },
-        });
+        } as any);
 
         const itemsHtml = items
             .map(item => `<li>${item.title} (x${item.quantity})</li>`)
