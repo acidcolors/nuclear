@@ -174,7 +174,7 @@ export const CartDrawer = () => {
     if (!isMounted) return null;
 
     const isEmail = customerInfo.includes('@') && customerInfo.includes('.');
-    const contactType = isEmail ? 'email' : 'telegram';
+    const contactType = (isEmail ? 'email' : 'telegram') as 'email' | 'telegram';
 
     const commonProps = {
         items,
