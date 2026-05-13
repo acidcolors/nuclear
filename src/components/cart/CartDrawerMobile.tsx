@@ -150,6 +150,7 @@ export const CartDrawerMobile = ({
     emptyCartRef,
     showContactError,
     isPlaceholderFading,
+    contactType,
 }: CartDrawerProps) => {
     return (
         <>

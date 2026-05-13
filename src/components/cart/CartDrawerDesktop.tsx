@@ -149,7 +149,8 @@ export const CartDrawerDesktop = ({
     successRef,
     emptyCartRef,
     showContactError,
-    isPlaceholderFading
+    isPlaceholderFading,
+    contactType
 }: CartDrawerProps) => {
     return (
         <>
