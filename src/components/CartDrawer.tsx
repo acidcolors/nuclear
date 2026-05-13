@@ -124,6 +124,8 @@ export const CartDrawer = () => {
 
         setIsSubmitting(true);
         try {
+            const source = tgUser ? 'app' : 'website';
+
             const response = await fetch('/api/checkout', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
@@ -133,6 +135,7 @@ export const CartDrawer = () => {
                     customerInfo,
                     message,
                     type: 'order',
+                    source,
                     ...(tgUser && { tgUser })
                 }),
             });

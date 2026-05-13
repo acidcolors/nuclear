@@ -1,7 +1,6 @@
 import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import axios from 'axios';
+import { normalizeContact, createTelegramTopic } from '@/lib/telegram';
 
 // 1. Инициализация Notion
 const notion = new Client({ auth: process.env.NOTION_SECRET });
@@ -83,20 +82,41 @@ async function createNotionOrder(
 }
 
 async function sendTelegramMessage(
-    orderNumber: number, // 2. Передаем номер заказа аргументом
+    orderNumber: number,
     items: any[],
     totalPrice: number,
     customerInfo: string,
     type?: string,
     userMessage?: string,
     baseUrl?: string,
-    tgUser?: any
+    tgUser?: any,
+    source: 'website' | 'app' = 'website'
 ) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = process.env.TELEGRAM_CHAT_ID;
-
-    if (!botToken || !chatId) {
+    const chatId = "-1003811463175";
+    if (!botToken) {
+        console.error('TELEGRAM_BOT_TOKEN is missing');
         throw new Error('Telegram credentials not configured');
+    }
+
+    const contact = normalizeContact(customerInfo);
+    let targetThreadId: number | undefined;
+
+    // Сценарий А: Сайт + Телефон -> Статические топики
+    if (source === 'website' && contact.type === 'phone') {
+        targetThreadId = (type === 'support') ? 5 : 3;
+    } else {
+        // Сценарии Б и В: Сайт + TG-ник ИЛИ Приложение -> Создаем новый топик
+        const topicPrefix = type === 'support' ? 'Поддержка' : 'Заказ';
+        const sourceLabel = source === 'app' ? 'App' : 'Web';
+        const topicName = `${topicPrefix} - ${sourceLabel} - ${contact.value}`;
+        
+        try {
+            targetThreadId = await createTelegramTopic(botToken, chatId, topicName);
+        } catch (err) {
+            console.error('Failed to create topic, falling back to general:', err);
+            targetThreadId = (type === 'support') ? 5 : 3; // Fallback
+        }
     }
 
     const isSupport = type === 'support';
@@ -137,55 +157,65 @@ async function sendTelegramMessage(
         }).join('\n');
     }
 
-    const agent = new HttpsProxyAgent('http://103.75.126.30:8888');
+    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
 
     try {
-        await axios.post(
-            `https://api.telegram.org/bot${botToken}/sendMessage`,
-            {
+        // 1. Отправка уведомления АДМИНУ (в топик)
+        console.log(`Sending message to Telegram chat ${chatId}, topic ${targetThreadId}...`);
+        const adminResponse = await fetch(url, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
                 chat_id: chatId,
+                message_thread_id: targetThreadId,
                 text: messageText.trim(),
                 parse_mode: 'HTML',
                 disable_web_page_preview: true,
-            },
-            {
-                httpsAgent: agent,
-                proxy: false,
-            }
-        );
+            }),
+        });
 
-        // 2. Отправка подтверждения КЛИЕНТУ (только если это заказ, а не саппорт, и есть tgUser.id)
+        const adminData = await adminResponse.json();
+
+        if (!adminResponse.ok) {
+            console.error('Telegram API error (Admin Notification):', adminData);
+            throw new Error(`Telegram API Error: ${adminData.description || adminResponse.statusText}`);
+        }
+
+        // 2. Отправка подтверждения КЛИЕНТУ
         if (tgUser?.id && type !== 'support') {
             const customerMessage = `<b>Спасибо за заказ! 🎉</b>\nВаш заказ <b>#${orderNumber}</b> успешно оформлен.\n\nИтого: <b>${totalPrice} ₽</b>\nМы свяжемся с вами в ближайшее время для уточнения деталей.`;
             
-            try {
-                await axios.post(
-                    `https://api.telegram.org/bot${botToken}/sendMessage`,
-                    {
-                        chat_id: tgUser.id,
-                        text: customerMessage,
-                        parse_mode: 'HTML',
-                        disable_web_page_preview: true,
-                    },
-                    {
-                        httpsAgent: agent,
-                        proxy: false,
-                    }
-                );
-            } catch (clientErr) {
-                console.warn('Не удалось отправить сообщение клиенту (возможно, бот заблокирован):', clientErr);
+            const clientResponse = await fetch(url, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    chat_id: tgUser.id,
+                    text: customerMessage,
+                    parse_mode: 'HTML',
+                    disable_web_page_preview: true,
+                }),
+            });
+
+            if (!clientResponse.ok) {
+                const clientData = await clientResponse.json();
+                console.warn('Could not send message to client:', clientData.description);
             }
         }
     } catch (error: any) {
-        const errorData = error.response?.data;
-        throw new Error(`Telegram API error: ${errorData?.description || error.message}`);
+        console.error('Error sending Telegram message:', error);
+        throw error;
     }
 }
 
 export async function POST(req: Request) {
     try {
         const body = await req.json();
-        const { items, totalPrice, customerInfo, type, message: userMessage, tgUser } = body;
+        console.log('Incoming checkout request:', body);
+        const { items, totalPrice, customerInfo, type, message: userMessage, tgUser, source = 'website' } = body;
 
         const host = req.headers.get('host');
         const protocol = req.headers.get('x-forwarded-proto') || 'http';
@@ -200,7 +230,7 @@ export async function POST(req: Request) {
         }
 
         // Отправка уведомления в Telegram
-        await sendTelegramMessage(orderNumber, items, totalPrice || 0, customerInfo, type, userMessage, origin, tgUser);
+        await sendTelegramMessage(orderNumber, items, totalPrice || 0, customerInfo, type, userMessage, origin, tgUser, source);
 
         return NextResponse.json({ success: true });
     } catch (error: any) {

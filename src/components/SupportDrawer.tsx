@@ -98,15 +98,17 @@ export const SupportDrawer = () => {
                 ? `Запрос на уведомление: ${items.map(i => `${i.title} (${i.quantity})`).join(', ')}`
                 : 'Общий запрос в поддержку';
 
-            const response = await fetch('/api/checkout', {
+            const source = tgUser ? 'app' : 'website';
+            
+            const response = await fetch('/api/support', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify({
                     customerInfo,
                     message,
-                    type: 'support',
                     subject,
                     items,
+                    source,
                     ...(tgUser && { tgUser })
                 }),
             });
