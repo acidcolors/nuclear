@@ -160,7 +160,7 @@ async function sendTelegramMessage(
     }
 
     const agent = new HttpsProxyAgent(process.env.PROXY_URL || 'http://103.75.126.30:8888');
-    const axiosConfig = { httpsAgent: agent, proxy: false };
+    const axiosConfig = { httpsAgent: agent, proxy: false as const };
 
     try {
         // 1. Отправка уведомления АДМИНУ (в топик)

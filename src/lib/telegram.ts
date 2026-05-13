@@ -10,7 +10,7 @@ const agent = new HttpsProxyAgent(PROXY_URL);
 
 const telegramAxios = axios.create({
     httpsAgent: agent,
-    proxy: false, // Отключаем встроенный прокси axios, используем наш агент
+    proxy: false as const, // Отключаем встроенный прокси axios, используем наш агент
     headers: {
         'Content-Type': 'application/json',
     },
