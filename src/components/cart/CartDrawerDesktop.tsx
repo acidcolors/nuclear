@@ -23,6 +23,7 @@ interface CartDrawerProps {
     drawerRef: React.RefObject<HTMLDivElement | null>;
     overlayRef: React.RefObject<HTMLDivElement | null>;
     successRef: React.RefObject<HTMLDivElement | null>;
+    emptyCartRef: React.RefObject<HTMLDivElement | null>;
     showContactError: boolean;
     isPlaceholderFading: boolean;
     contactType: 'email' | 'telegram';
