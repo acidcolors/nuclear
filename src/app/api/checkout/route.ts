@@ -153,6 +153,23 @@ async function sendTelegramMessage(
             parse_mode: 'HTML',
             disable_web_page_preview: true,
         }, axiosConfig);
+
+        // Отправка подтверждения пользователю в личку
+        if (contactType === 'telegram' && tgUser?.id) {
+            const customerMessage = `Спасибо, мы получили информацию о вашем заказе!\nНомер вашего заказа: #${orderNumber}\nИтого: ${totalPrice} ₽\n\nНапишите нам в группу для уточнения деталей и узнать статус заказа.`;
+            
+            console.log(`[Telegram] Sending private message to user ${tgUser.id}`);
+            try {
+                await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+                    chat_id: tgUser.id,
+                    text: customerMessage,
+                    parse_mode: 'HTML',
+                    disable_web_page_preview: true,
+                }, axiosConfig);
+            } catch (userErr: any) {
+                console.warn('[Telegram] Could not send private message to user:', userErr.response?.data || userErr.message);
+            }
+        }
     } catch (error: any) {
         const errorData = error.response?.data;
         console.error('[Telegram] API error:', errorData || error.message);
