@@ -100,9 +100,9 @@ async function sendEmailConfirmation(
 
         const transporter = nodemailer.createTransport({
             host: 'smtp.yandex.ru',
-            port: 587,
-            secure: false, // true только для 465 порта
-            family: 4,     // Принудительно используем IPv4
+            port: 465,
+            secure: true,
+            family: 4,     // Обязательно для обхода проблем с IPv6 на сервере
             connectionTimeout: 5000,
             auth: {
                 user: process.env.EMAIL_USER,
@@ -115,13 +115,13 @@ async function sendEmailConfirmation(
             .join('');
 
         const mailOptions = {
-            from: '"Nuclear Garden" <info@nucleargarden.ru>',
+            from: `"Nuclear Garden" <${process.env.EMAIL_USER}>`,
             to: email,
             subject: 'Ваш заказ оформлен | Nuclear Garden',
             html: `
                 <div style="font-family: sans-serif; line-height: 1.6; color: #111; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; border-radius: 10px; border: 1px solid #eee;">
                     <h2 style="text-transform: uppercase; letter-spacing: -1px; color: #111; margin-bottom: 20px;">Ваш заказ оформлен!</h2>
-                    <p style="margin-bottom: 20px;">Спасибо, мы получили информацию о вашем заказе!</p>
+                    <p style="margin-bottom: 20px;">Спасибо за заказ! Ваша заявка успешно принята.</p>
                     
                     <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
                         <p style="margin: 0 0 10px 0;"><strong>Номер заказа:</strong> #${orderNumber}</p>
