@@ -3,59 +3,35 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 
 /**
  * Настройка прокси для Telegram API.
- * Используется французский прокси-сервер для обхода блокировок на сервере.
  */
 const PROXY_URL = process.env.PROXY_URL || 'http://103.75.126.30:8888';
 const agent = new HttpsProxyAgent(PROXY_URL);
 
 const telegramAxios = axios.create({
     httpsAgent: agent,
-    proxy: false as const, // Отключаем встроенный прокси axios, используем наш агент
+    proxy: false as const,
     headers: {
         'Content-Type': 'application/json',
     },
+    timeout: 10000,
 });
 
 /**
- * Нормализует контактные данные (телефон или ник Telegram).
+ * Определяет тип контакта и нормализует его.
+ * Логика: если есть '@' и '.', считаем Email. Иначе - Telegram.
  */
-export function normalizeContact(contact: string): { type: 'phone' | 'telegram'; value: string } {
+export function normalizeContact(contact: string): { type: 'email' | 'telegram'; value: string } {
     const clean = contact.trim();
-    const hasLetters = /[a-zA-Zа-яА-Я]/.test(clean);
     
-    if (hasLetters) {
+    // Простая проверка на email
+    const isEmail = clean.includes('@') && clean.includes('.');
+    
+    if (isEmail) {
+        return { type: 'email', value: clean };
+    } else {
+        // Для Telegram добавляем @ в начало, если его нет
         const value = clean.startsWith('@') ? clean : `@${clean}`;
         return { type: 'telegram', value };
-    } else {
-        return { type: 'phone', value: clean };
-    }
-}
-
-/**
- * Создает новый топик в группе-форуме Telegram.
- * Возвращает message_thread_id созданного топика.
- */
-export async function createTelegramTopic(botToken: string, chatId: string, name: string): Promise<number> {
-    const url = `https://api.telegram.org/bot${botToken}/createForumTopic`;
-    
-    try {
-        const response = await telegramAxios.post(url, {
-            chat_id: chatId,
-            name: name,
-        });
-        
-        const data = response.data;
-        
-        if (!data.ok || !data.result?.message_thread_id) {
-            console.error('Telegram createForumTopic Error:', data);
-            throw new Error(`Failed to create topic: ${data.description || 'Unknown error'}`);
-        }
-        
-        return data.result.message_thread_id;
-    } catch (error: any) {
-        const errorData = error.response?.data;
-        console.error('Error in createTelegramTopic:', errorData || error.message);
-        throw new Error(errorData?.description || error.message);
     }
 }
 

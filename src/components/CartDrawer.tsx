@@ -125,6 +125,10 @@ export const CartDrawer = () => {
         setIsSubmitting(true);
         try {
             const source = tgUser ? 'app' : 'website';
+            
+            // Определяем тип контакта перед отправкой
+            const isEmail = customerInfo.includes('@') && customerInfo.includes('.');
+            const contactType = isEmail ? 'email' : 'telegram';
 
             const response = await fetch('/api/checkout', {
                 method: 'POST',
@@ -136,6 +140,7 @@ export const CartDrawer = () => {
                     message,
                     type: 'order',
                     source,
+                    contactType, // Добавляем тип контакта в запрос
                     ...(tgUser && { tgUser })
                 }),
             });
@@ -150,7 +155,7 @@ export const CartDrawer = () => {
                         setCustomerInfo('');
                         setMessage('');
                     }, 1000);
-                }, 1500);
+                }, 2500); // Увеличил время, чтобы успели прочитать сообщение
             } else {
                 setOrderStatus('error');
             }
@@ -167,6 +172,9 @@ export const CartDrawer = () => {
     };
 
     if (!isMounted) return null;
+
+    const isEmail = customerInfo.includes('@') && customerInfo.includes('.');
+    const contactType = isEmail ? 'email' : 'telegram';
 
     const commonProps = {
         items,
@@ -189,6 +197,7 @@ export const CartDrawer = () => {
         emptyCartRef,
         showContactError,
         isPlaceholderFading,
+        contactType, // Передаем тип контакта в пропсы
     };
 
     return isDesktop ? (

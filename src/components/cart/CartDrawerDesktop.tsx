@@ -26,6 +26,7 @@ interface CartDrawerProps {
     emptyCartRef: React.RefObject<HTMLDivElement | null>;
     showContactError: boolean;
     isPlaceholderFading: boolean;
+    contactType: 'email' | 'telegram';
 }
 
 const CartItemRow = ({ item, handleRemoveItem, updateQuantity, formatPrice }: { 
@@ -195,7 +196,11 @@ export const CartDrawerDesktop = ({
                             style={{ marginTop: '-60px' }}
                         >
                             <h3 className="text-2xl font-black tracking-tighter text-[#111] uppercase mb-2">Заказ принят!</h3>
-                            <p className="text-sm font-medium text-[#111] opacity-60">Мы скоро свяжемся с вами для подтверждения.</p>
+                            <p className="text-sm font-medium text-[#111] opacity-60">
+                                {contactType === 'email' 
+                                    ? "Мы отправили подтверждение на вашу почту." 
+                                    : "Мы скоро свяжемся с вами в Telegram."}
+                            </p>
                         </div>
                     ) : items.length === 0 ? (
                         <div
@@ -244,7 +249,7 @@ export const CartDrawerDesktop = ({
                                                 type="text"
                                                 value={customerInfo}
                                                 onChange={(e) => setCustomerInfo(e.target.value)}
-                                                placeholder={showContactError ? "обязательное поле" : "@telegram или телефон"}
+                                                placeholder={showContactError ? "обязательное поле" : "@telegram или email"}
                                                 className={`w-[95%] h-[50px] bg-white border border-transparent rounded-[10px] pr-8 text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start contact-info-field ${showContactError ? 'shake-error' : ''} ${isPlaceholderFading ? 'placeholder-fading' : ''}`}
                                                 style={{ paddingLeft: '30px' }}
                                             />

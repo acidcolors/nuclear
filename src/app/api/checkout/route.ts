@@ -2,7 +2,7 @@ import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import axios from 'axios';
-import { normalizeContact, createTelegramTopic } from '@/lib/telegram';
+import { normalizeContact } from '@/lib/telegram';
 
 // 1. Инициализация Notion
 const notion = new Client({ auth: process.env.NOTION_SECRET });
@@ -95,31 +95,17 @@ async function sendTelegramMessage(
     source: 'website' | 'app' = 'website'
 ) {
     const botToken = process.env.TELEGRAM_BOT_TOKEN;
-    const chatId = "-1003811463175";
+    const chatId = process.env.TELEGRAM_CHAT_ID || "-1003811463175";
+    const ordersThreadId = process.env.TELEGRAM_ORDERS_THREAD_ID ? Number(process.env.TELEGRAM_ORDERS_THREAD_ID) : undefined;
+
     if (!botToken) {
         console.error('TELEGRAM_BOT_TOKEN is missing');
         throw new Error('Telegram credentials not configured');
     }
 
     const contact = normalizeContact(customerInfo);
-    let targetThreadId: number | undefined;
-
-    // Сценарий А: Сайт + Телефон -> Статические топики
-    if (source === 'website' && contact.type === 'phone') {
-        targetThreadId = (type === 'support') ? 5 : 3;
-    } else {
-        // Сценарии Б и В: Сайт + TG-ник ИЛИ Приложение -> Создаем новый топик
-        const topicPrefix = type === 'support' ? 'Поддержка' : 'Заказ';
-        const sourceLabel = source === 'app' ? 'App' : 'Web';
-        const topicName = `${topicPrefix} - ${sourceLabel} - ${contact.value}`;
-        
-        try {
-            targetThreadId = await createTelegramTopic(botToken, chatId, topicName);
-        } catch (err) {
-            console.error('Failed to create topic, falling back to general:', err);
-            targetThreadId = (type === 'support') ? 5 : 3; // Fallback
-        }
-    }
+    // Теперь все заказы идут в фиксированный топик
+    const targetThreadId = ordersThreadId;
 
     const isSupport = type === 'support';
     const title = isSupport ? `новое сообщение #${orderNumber}` : `новый заказ #${orderNumber}`;
