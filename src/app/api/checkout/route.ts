@@ -79,7 +79,7 @@ async function createNotionOrder(
         });
     } catch (error) {
         // Ошибка в Notion не должна прерывать выполнение основного роута
-        console.error('Notion order creation error:', error);
+        console.error('[Notion] order creation error:', error);
     }
 }
 
@@ -104,7 +104,6 @@ async function sendTelegramMessage(
     }
 
     const contact = normalizeContact(customerInfo);
-    // Теперь все заказы идут в фиксированный топик
     const targetThreadId = ordersThreadId;
 
     const isSupport = type === 'support';
@@ -146,11 +145,14 @@ async function sendTelegramMessage(
     }
 
     const agent = new HttpsProxyAgent(process.env.PROXY_URL || 'http://103.75.126.30:8888');
-    const axiosConfig = { httpsAgent: agent, proxy: false as const };
+    const axiosConfig = { 
+        httpsAgent: agent, 
+        proxy: false as const,
+        timeout: 10000
+    };
 
     try {
-        // 1. Отправка уведомления АДМИНУ (в топик)
-        console.log(`Sending message to Telegram chat ${chatId}, topic ${targetThreadId} via proxy...`);
+        console.log(`[Telegram] Sending to admin. Chat: ${chatId}, Thread: ${targetThreadId}`);
         await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             chat_id: chatId,
             message_thread_id: targetThreadId,
@@ -158,11 +160,12 @@ async function sendTelegramMessage(
             parse_mode: 'HTML',
             disable_web_page_preview: true,
         }, axiosConfig);
+        console.log(`[Telegram] Admin message sent.`);
 
-        // 2. Отправка подтверждения КЛИЕНТУ
         if (tgUser?.id && type !== 'support') {
             const customerMessage = `<b>Спасибо за заказ! 🎉</b>\nВаш заказ <b>#${orderNumber}</b> успешно оформлен.\n\nИтого: <b>${totalPrice} ₽</b>\nМы свяжемся с вами в ближайшее время для уточнения деталей.`;
             
+            console.log(`[Telegram] Sending to customer: ${tgUser.id}`);
             try {
                 await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                     chat_id: tgUser.id,
@@ -170,41 +173,43 @@ async function sendTelegramMessage(
                     parse_mode: 'HTML',
                     disable_web_page_preview: true,
                 }, axiosConfig);
+                console.log(`[Telegram] Customer message sent.`);
             } catch (clientErr: any) {
-                console.warn('Не удалось отправить сообщение клиенту:', clientErr.response?.data || clientErr.message);
+                console.warn('[Telegram] Failed to send to customer:', clientErr.response?.data || clientErr.message);
             }
         }
     } catch (error: any) {
         const errorData = error.response?.data;
-        console.error('Telegram API error:', errorData || error.message);
+        console.error('[Telegram] API error:', errorData || error.message);
         throw new Error(`Telegram API Error: ${errorData?.description || error.message}`);
     }
 }
 
 export async function POST(req: Request) {
     try {
+        console.log('[Checkout] Parsing request body...');
         const body = await req.json();
-        console.log('Incoming checkout request:', body);
+        console.log('[Checkout] Request received.');
         const { items, totalPrice, customerInfo, type, message: userMessage, tgUser, source = 'website' } = body;
 
         const host = req.headers.get('host');
         const protocol = req.headers.get('x-forwarded-proto') || 'http';
         const origin = host ? `${protocol}://${host}` : undefined;
 
-        // 2. Генерация единого номера заказа
         const orderNumber = Math.floor(10000 + Math.random() * 90000);
 
-        // 5. Параллельное сохранение в Notion (только для заказов, не для саппорта)
         if (type !== 'support') {
+            console.log('[Checkout] Creating Notion order...');
             await createNotionOrder(orderNumber, items, totalPrice || 0, customerInfo, tgUser);
         }
 
-        // Отправка уведомления в Telegram
+        console.log('[Checkout] Calling sendTelegramMessage...');
         await sendTelegramMessage(orderNumber, items, totalPrice || 0, customerInfo, type, userMessage, origin, tgUser, source);
+        console.log('[Checkout] Success.');
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
-        console.error('Checkout Error:', error);
+        console.error('[Checkout] Fatal Error:', error);
         return NextResponse.json({ error: error.message }, { status: 500 });
     }
 }
