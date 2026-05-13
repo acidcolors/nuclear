@@ -13,7 +13,8 @@ async function createNotionOrder(
     items: any[],
     totalPrice: number,
     customerInfo: string,
-    tgUser?: any
+    tgUser?: any,
+    contactType?: 'email' | 'telegram'
 ) {
     const databaseId = process.env.NOTION_ORDERS_DB_ID;
 
@@ -102,42 +103,41 @@ async function sendTelegramMessage(
     }
 
     const contact = normalizeContact(customerInfo);
-
+    const contactType = customerInfo.includes('@') && customerInfo.includes('.') ? 'email' : 'telegram';
+    
+    // Формируем текст сообщения в едином стиле
     let messageText = `— <b>новый заказ #${orderNumber}</b>\n\n`;
-
-    if (tgUser) {
-        const fullName = `${tgUser.first_name || ''} ${tgUser.last_name || ''}`.trim();
-        const username = tgUser.username ? `@${tgUser.username}` : 'нет юзернейма';
-        messageText += `<b>Контакт:</b> <a href="tg://user?id=${tgUser.id}">${fullName}</a> (${username}, ID: <code>${tgUser.id}</code>)\n`;
+    
+    const contactValue = tgUser?.username ? `@${tgUser.username}` : contact.value;
+    messageText += `<b>Контакт:</b> ${contactValue}\n`;
+    
+    if (tgUser?.id) {
+        messageText += `<b>ID:</b> <code>${tgUser.id}</code>\n`;
     } else {
-        messageText += `<b>Контакт:</b> ${customerInfo}\n`;
-    }
-
-    if (userMessage) {
-        messageText += `<b>Сообщение:</b> ${userMessage}\n`;
+        messageText += `<b>ID:</b> нет\n`;
     }
 
     if (totalPrice > 0) {
         messageText += `<b>Итог:</b> ${totalPrice} ₽\n`;
     }
 
+    if (userMessage) {
+        messageText += `\n<b>Сообщение:</b> ${userMessage}\n`;
+    }
+
     if (items && items.length > 0) {
         messageText += `\n<b>Товары:</b>\n`;
         messageText += items.map((item: any) => {
-            let activeBaseUrl = baseUrl;
-            if (baseUrl?.includes('localhost')) {
-                activeBaseUrl = 'https://nucleargarden.ru';
-            }
-
-            const productLink = (activeBaseUrl && item.id) ? `${activeBaseUrl}/product/${item.id}` : null;
             const escapedTitle = item.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
-            const titleHtml = productLink ? `<a href="${productLink}">${escapedTitle}</a>` : escapedTitle;
-
-            return `— ${titleHtml} (x${item.quantity})`;
+            return `— ${escapedTitle} (x${item.quantity})`;
         }).join('\n');
     }
 
-    const agent = new HttpsProxyAgent(process.env.PROXY_URL || 'http://103.75.126.30:8888');
+    // Умный прокси: только в продакшене
+    const agent = process.env.NODE_ENV === 'production' 
+        ? new HttpsProxyAgent(process.env.PROXY_URL || 'http://103.75.126.30:8888') 
+        : undefined;
+
     const axiosConfig = { 
         httpsAgent: agent, 
         proxy: false as const,
@@ -145,7 +145,7 @@ async function sendTelegramMessage(
     };
 
     try {
-        console.log(`[Telegram] Sending to admin. Chat: ${chatId}, Thread: ${threadId}`);
+        console.log(`[Telegram] Sending admin notification. Mode: ${process.env.NODE_ENV}`);
         await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
             chat_id: chatId,
             message_thread_id: threadId,
@@ -170,9 +170,13 @@ export async function POST(req: Request) {
         const origin = host ? `${protocol}://${host}` : undefined;
 
         const orderNumber = Math.floor(10000 + Math.random() * 90000);
+        
+        // Определяем тип контакта для логов/будущего использования
+        const contactType = customerInfo.includes('@') && customerInfo.includes('.') ? 'email' : 'telegram';
+        console.log(`[Checkout] New order #${orderNumber}. Contact type: ${contactType}`);
 
         // Сохранение в Notion
-        await createNotionOrder(orderNumber, items, totalPrice || 0, customerInfo, tgUser);
+        await createNotionOrder(orderNumber, items, totalPrice || 0, customerInfo, tgUser, contactType);
 
         // Отправка в Telegram
         await sendTelegramMessage(orderNumber, items, totalPrice || 0, customerInfo, userMessage, origin, tgUser);

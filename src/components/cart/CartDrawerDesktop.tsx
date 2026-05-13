@@ -27,8 +27,6 @@ interface CartDrawerProps {
     showContactError: boolean;
     isPlaceholderFading: boolean;
     contactType: 'email' | 'telegram';
-    lastOrderNumber: number | null;
-    lastOrderPrice: number | null;
 }
 
 const CartItemRow = ({ item, handleRemoveItem, updateQuantity, formatPrice }: { 
@@ -153,8 +151,6 @@ export const CartDrawerDesktop = ({
     showContactError,
     isPlaceholderFading,
     contactType,
-    lastOrderNumber,
-    lastOrderPrice
 }: CartDrawerProps) => {
     return (
         <>
@@ -200,26 +196,9 @@ export const CartDrawerDesktop = ({
                             className="h-full flex flex-col items-center justify-center text-center px-10"
                             style={{ marginTop: '-60px' }}
                         >
-                            <h3 className="text-2xl font-black tracking-tighter text-[#111] uppercase mb-4">
-                                Спасибо, мы получили информацию о вашем заказе!
-                            </h3>
-                            <div className="text-lg font-bold text-[#111] mb-2">
-                                Номер вашего заказа #{lastOrderNumber || '######'}
-                            </div>
-                            <div className="text-lg font-bold text-[#111] mb-8">
-                                Итого: {lastOrderPrice ? formatPrice(lastOrderPrice) : '#####'} ₽
-                            </div>
-                            <p className="text-sm font-medium text-[#111] opacity-60 leading-relaxed">
-                                {contactType === 'email' ? (
-                                    <>
-                                        Вы можете написать нам в группу для уточнения деталей и узнать статус заказа.<br/>
-                                        Так же мы проинформируем вас по почте и пришлём детали.
-                                    </>
-                                ) : (
-                                    <>
-                                        Напишите нам в группу для уточнения деталей и узнать статус заказа.
-                                    </>
-                                )}
+                            <h3 className="text-2xl font-black tracking-tighter text-[#111] uppercase mb-2">Заказ принят!</h3>
+                            <p className="text-sm font-medium text-[#111] opacity-60">
+                                Мы скоро свяжемся с вами для подтверждения.
                             </p>
                         </div>
                     ) : items.length === 0 ? (
