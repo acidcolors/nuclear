@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+import axios from 'axios';
 import { normalizeContact, createTelegramTopic } from '@/lib/telegram';
 
 // 1. Инициализация Notion
@@ -157,57 +159,39 @@ async function sendTelegramMessage(
         }).join('\n');
     }
 
-    const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
+    const agent = new HttpsProxyAgent(process.env.PROXY_URL || 'http://103.75.126.30:8888');
+    const axiosConfig = { httpsAgent: agent, proxy: false };
 
     try {
         // 1. Отправка уведомления АДМИНУ (в топик)
-        console.log(`Sending message to Telegram chat ${chatId}, topic ${targetThreadId}...`);
-        const adminResponse = await fetch(url, {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-            body: JSON.stringify({
-                chat_id: chatId,
-                message_thread_id: targetThreadId,
-                text: messageText.trim(),
-                parse_mode: 'HTML',
-                disable_web_page_preview: true,
-            }),
-        });
-
-        const adminData = await adminResponse.json();
-
-        if (!adminResponse.ok) {
-            console.error('Telegram API error (Admin Notification):', adminData);
-            throw new Error(`Telegram API Error: ${adminData.description || adminResponse.statusText}`);
-        }
+        console.log(`Sending message to Telegram chat ${chatId}, topic ${targetThreadId} via proxy...`);
+        await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+            chat_id: chatId,
+            message_thread_id: targetThreadId,
+            text: messageText.trim(),
+            parse_mode: 'HTML',
+            disable_web_page_preview: true,
+        }, axiosConfig);
 
         // 2. Отправка подтверждения КЛИЕНТУ
         if (tgUser?.id && type !== 'support') {
             const customerMessage = `<b>Спасибо за заказ! 🎉</b>\nВаш заказ <b>#${orderNumber}</b> успешно оформлен.\n\nИтого: <b>${totalPrice} ₽</b>\nМы свяжемся с вами в ближайшее время для уточнения деталей.`;
             
-            const clientResponse = await fetch(url, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
+            try {
+                await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
                     chat_id: tgUser.id,
                     text: customerMessage,
                     parse_mode: 'HTML',
                     disable_web_page_preview: true,
-                }),
-            });
-
-            if (!clientResponse.ok) {
-                const clientData = await clientResponse.json();
-                console.warn('Could not send message to client:', clientData.description);
+                }, axiosConfig);
+            } catch (clientErr: any) {
+                console.warn('Не удалось отправить сообщение клиенту:', clientErr.response?.data || clientErr.message);
             }
         }
     } catch (error: any) {
-        console.error('Error sending Telegram message:', error);
-        throw error;
+        const errorData = error.response?.data;
+        console.error('Telegram API error:', errorData || error.message);
+        throw new Error(`Telegram API Error: ${errorData?.description || error.message}`);
     }
 }
 

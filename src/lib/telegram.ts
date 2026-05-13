@@ -1,18 +1,32 @@
+import axios from 'axios';
+import { HttpsProxyAgent } from 'https-proxy-agent';
+
+/**
+ * Настройка прокси для Telegram API.
+ * Используется французский прокси-сервер для обхода блокировок на сервере.
+ */
+const PROXY_URL = process.env.PROXY_URL || 'http://103.75.126.30:8888';
+const agent = new HttpsProxyAgent(PROXY_URL);
+
+const telegramAxios = axios.create({
+    httpsAgent: agent,
+    proxy: false, // Отключаем встроенный прокси axios, используем наш агент
+    headers: {
+        'Content-Type': 'application/json',
+    },
+});
 
 /**
  * Нормализует контактные данные (телефон или ник Telegram).
  */
 export function normalizeContact(contact: string): { type: 'phone' | 'telegram'; value: string } {
     const clean = contact.trim();
-    // Проверка на наличие букв (латиница или кириллица)
     const hasLetters = /[a-zA-Zа-яА-Я]/.test(clean);
     
     if (hasLetters) {
-        // Считаем это Telegram-ником
         const value = clean.startsWith('@') ? clean : `@${clean}`;
         return { type: 'telegram', value };
     } else {
-        // Считаем это номером телефона (цифры, пробелы, тире, скобки, плюс)
         return { type: 'phone', value: clean };
     }
 }
@@ -25,23 +39,23 @@ export async function createTelegramTopic(botToken: string, chatId: string, name
     const url = `https://api.telegram.org/bot${botToken}/createForumTopic`;
     
     try {
-        const response = await fetch(url, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ chat_id: chatId, name }),
+        const response = await telegramAxios.post(url, {
+            chat_id: chatId,
+            name: name,
         });
         
-        const data = await response.json();
+        const data = response.data;
         
-        if (!response.ok || !data.result?.message_thread_id) {
+        if (!data.ok || !data.result?.message_thread_id) {
             console.error('Telegram createForumTopic Error:', data);
             throw new Error(`Failed to create topic: ${data.description || 'Unknown error'}`);
         }
         
         return data.result.message_thread_id;
-    } catch (error) {
-        console.error('Error in createTelegramTopic:', error);
-        throw error;
+    } catch (error: any) {
+        const errorData = error.response?.data;
+        console.error('Error in createTelegramTopic:', errorData || error.message);
+        throw new Error(errorData?.description || error.message);
     }
 }
 
@@ -53,26 +67,24 @@ interface SendMessageOptions {
 }
 
 /**
- * Отправляет сообщение в Telegram.
+ * Отправляет сообщение в Telegram через прокси.
  */
 export async function sendTelegramRawMessage({ botToken, chatId, threadId, text }: SendMessageOptions) {
     const url = `https://api.telegram.org/bot${botToken}/sendMessage`;
-    const response = await fetch(url, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
+    
+    try {
+        const response = await telegramAxios.post(url, {
             chat_id: chatId,
             message_thread_id: threadId,
-            text,
+            text: text,
             parse_mode: 'HTML',
             disable_web_page_preview: true,
-        }),
-    });
+        });
 
-    const data = await response.json();
-    if (!response.ok) {
-        console.error('Telegram sendMessage Error:', data);
-        throw new Error(`Telegram API Error: ${data.description || response.statusText}`);
+        return response.data;
+    } catch (error: any) {
+        const errorData = error.response?.data;
+        console.error('Telegram sendMessage Error:', errorData || error.message);
+        throw new Error(`Telegram API Error: ${errorData?.description || error.message}`);
     }
-    return data;
 }
