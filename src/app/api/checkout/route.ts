@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import axios from 'axios';
+import nodemailer from 'nodemailer';
 import { normalizeContact } from '@/lib/telegram';
 
 // 1. Инициализация Notion
@@ -84,6 +85,65 @@ async function createNotionOrder(
     }
 }
 
+// 4. Функция для отправки Email подтверждения
+async function sendEmailConfirmation(
+    orderNumber: number,
+    items: any[],
+    totalPrice: number,
+    email: string
+) {
+    try {
+        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+            console.warn('[Email] EMAIL_USER or EMAIL_PASS is not configured');
+            return;
+        }
+
+        const transporter = nodemailer.createTransport({
+            host: 'smtp.yandex.ru',
+            port: 465,
+            secure: true,
+            auth: {
+                user: process.env.EMAIL_USER,
+                pass: process.env.EMAIL_PASS,
+            },
+        });
+
+        const itemsHtml = items
+            .map(item => `<li>${item.title} (x${item.quantity})</li>`)
+            .join('');
+
+        const mailOptions = {
+            from: '"Nuclear Garden" <info@nucleargarden.ru>',
+            to: email,
+            subject: 'Ваш заказ оформлен | Nuclear Garden',
+            html: `
+                <div style="font-family: sans-serif; line-height: 1.6; color: #111; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; border-radius: 10px; border: 1px solid #eee;">
+                    <h2 style="text-transform: uppercase; letter-spacing: -1px; color: #111; margin-bottom: 20px;">Ваш заказ оформлен!</h2>
+                    <p style="margin-bottom: 20px;">Спасибо, мы получили информацию о вашем заказе!</p>
+                    
+                    <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
+                        <p style="margin: 0 0 10px 0;"><strong>Номер заказа:</strong> #${orderNumber}</p>
+                        <p style="margin: 0 0 10px 0;"><strong>Товары:</strong></p>
+                        <ul style="margin: 0; padding-left: 20px; color: #333;">
+                            ${itemsHtml}
+                        </ul>
+                        <p style="margin: 15px 0 0 0; font-size: 18px;"><strong>Итоговая сумма:</strong> ${totalPrice} ₽</p>
+                    </div>
+
+                    <p style="font-size: 14px; color: #666; border-top: 1px solid #eee; pt: 20px;">
+                        Вы можете написать нам в <a href="https://t.me/mynuclear" style="color: #111; font-weight: bold; text-decoration: underline;">Telegram-группу</a> для уточнения деталей и узнать статус заказа.
+                    </p>
+                </div>
+            `,
+        };
+
+        await transporter.sendMail(mailOptions);
+        console.log(`[Email] Confirmation sent to ${email}`);
+    } catch (error) {
+        console.error('[Email] Failed to send confirmation:', error);
+    }
+}
+
 async function sendTelegramMessage(
     orderNumber: number,
     items: any[],
@@ -154,9 +214,9 @@ async function sendTelegramMessage(
             disable_web_page_preview: true,
         }, axiosConfig);
 
-        // Отправка подтверждения пользователю в личку
+        // Отправка подтверждения пользователю в личку (только для Telegram)
         if (contactType === 'telegram' && tgUser?.id) {
-            const customerMessage = `Спасибо, мы получили информацию о вашем заказе!\nНомер вашего заказа: #${orderNumber}\nИтого: ${totalPrice} ₽\n\nНапишите нам в группу для уточнения деталей и узнать статус заказа.`;
+            const customerMessage = `Спасибо, мы получили информацию о вашем заказе!\nНомер вашего заказа: #${orderNumber}\nИтого: ${totalPrice} ₽\n\nНапишите нам в <a href="https://t.me/mynuclear">группу</a> для уточнения деталей и узнать статус заказа.`;
             
             console.log(`[Telegram] Sending private message to user ${tgUser.id}`);
             try {
@@ -188,15 +248,22 @@ export async function POST(req: Request) {
 
         const orderNumber = Math.floor(10000 + Math.random() * 90000);
         
-        // Определяем тип контакта для логов/будущего использования
+        // Определяем тип контакта
         const contactType = customerInfo.includes('@') && customerInfo.includes('.') ? 'email' : 'telegram';
         console.log(`[Checkout] New order #${orderNumber}. Contact type: ${contactType}`);
 
-        // Сохранение в Notion
+        // 1. Сохранение в Notion
         await createNotionOrder(orderNumber, items, totalPrice || 0, customerInfo, tgUser, contactType);
 
-        // Отправка в Telegram
+        // 2. Отправка уведомлений в Telegram (админу и клиенту, если TG)
         await sendTelegramMessage(orderNumber, items, totalPrice || 0, customerInfo, userMessage, origin, tgUser);
+
+        // 3. Отправка Email-подтверждения (если Email)
+        if (contactType === 'email') {
+            // Не дожидаемся (await), чтобы не задерживать ответ пользователю, 
+            // либо дожидаемся внутри try/catch в функции
+            await sendEmailConfirmation(orderNumber, items, totalPrice || 0, customerInfo);
+        }
 
         return NextResponse.json({ success: true, orderNumber });
     } catch (error: any) {
