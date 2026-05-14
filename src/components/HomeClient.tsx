@@ -65,15 +65,18 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
       if (newTargets.length === 0) return;
 
       gsap.context(() => {
-        gsap.to(newTargets, {
-          y: 0,
-          opacity: 1,
-          duration: 1.2,
-          stagger: 0.1,
-          ease: "power4.out",
-          delay: 0.2,
-          overwrite: true
-        });
+        gsap.fromTo(newTargets, 
+          { y: 20, opacity: 0 },
+          {
+            y: 0,
+            opacity: 1,
+            duration: 1.2,
+            stagger: 0.1,
+            ease: "power4.out",
+            delay: 0.2,
+            overwrite: true
+          }
+        );
       }, containerRef);
     });
   }, [loading]);

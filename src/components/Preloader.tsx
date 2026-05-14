@@ -64,11 +64,13 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
         };
     }, [variant, isLoading, onComplete]);
 
-    // Если не загрузка ИЛИ компонент еще не вмонтирован - ничего не рендерим
-    if (!isLoading || !mounted) return null;
+    // Если не загрузка - ничего не рендерим
+    if (!isLoading) return null;
 
-    return createPortal(
+    // Контент прелоадера
+    const preloaderContent = (
         <div
+            id="global-preloader"
             style={{
                 position: 'fixed',
                 top: 0,
@@ -79,7 +81,7 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'center',
-                zIndex: 999999
+                zIndex: 9999999
             }}
         >
             {/* РЕЖИМ 1: HOME */}
@@ -95,7 +97,13 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
                     <Lottie animationData={spaceAnimationData} loop={true} />
                 </div>
             )}
-        </div>,
-        document.body
+        </div>
     );
+
+    // Если компонент еще не вмонтирован (SSR), возвращаем обычный div
+    // Это предотвращает мерцание (FOUC) до загрузки JS.
+    if (!mounted) return preloaderContent;
+
+    // В браузере используем портал для гарантии перекрытия всего документа
+    return createPortal(preloaderContent, document.body);
 };

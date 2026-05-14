@@ -111,12 +111,15 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
     useEffect(() => {
         if (!isLoading) {
             requestAnimationFrame(() => {
-                gsap.to(".animate-stagger", {
-                    opacity: 1,
-                    y: 0,
-                    duration: 0.8,
-                    ease: "power2.out"
-                });
+                gsap.fromTo(".animate-stagger", 
+                    { opacity: 0, y: 20 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.8,
+                        ease: "power2.out"
+                    }
+                );
                 if (filteredProducts.length > 0) {
                     gsap.fromTo(".product-card-wrapper",
                         { opacity: 0, y: 30 },
@@ -250,9 +253,9 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
             >
                 <div
                     ref={leftPanelRef}
-                    className="flex flex-col justify-start lg:justify-center pointer-events-auto z-40 shrink-0 relative w-full h-auto pt-[12vh] pb-[8vh] px-[6vw] md:pt-[20vh] md:pb-[10vh] md:px-[60px] lg:fixed lg:top-0 lg:left-0 lg:w-[35%] lg:h-[100dvh] lg:py-[6vh] lg:px-[4vw] box-border"
+                    className="flex flex-col justify-start lg:justify-center pointer-events-auto z-40 shrink-0 relative w-full h-auto pt-[12vh] pb-[8vh] px-[6vw] md:pt-[20vh] md:pb-[10vh] md:px-[60px] lg:fixed lg:top-0 lg:left-0 lg:w-[35%] lg:h-[100dvh] lg:py-[6vh] lg:px-[4vw] box-border opacity-0 animate-stagger"
                 >
-                    <div className="animate-stagger opacity-0 translate-y-5 flex flex-col w-full max-w-[100%] lg:max-w-[90%] my-auto lg:m-auto">
+                    <div className="flex flex-col w-full max-w-[100%] lg:max-w-[90%] my-auto lg:m-auto">
                         <h2 className="text-[32px] md:text-[40px] lg:text-[3.5vw] font-bold tracking-tighter leading-none mb-6 text-[#111]">
                             {headerTitle}
                         </h2>

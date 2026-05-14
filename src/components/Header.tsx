@@ -281,6 +281,18 @@ export const Header = () => {
     // Значение счетчика с защитой от гидратации
     const displayCount = mounted ? cartCount : 0;
 
+    // Анимация появления самого хедера для исключения мерцания (FOUC)
+    useEffect(() => {
+        if (mounted) {
+            gsap.to(".header-main-container", {
+                opacity: 1,
+                duration: 0.8,
+                delay: 0.5,
+                ease: "power2.out"
+            });
+        }
+    }, [mounted]);
+
     useEffect(() => {
         if (lottieContainerRef.current && !animationInstanceRef.current) {
             animationInstanceRef.current = lottie.loadAnimation({
@@ -352,8 +364,8 @@ export const Header = () => {
         <>
             <div className="fixed top-0 left-0 w-full h-[100px] z-[50] pointer-events-none">
                 {/* BIG PINK STAR - MOBILE */}
-                <div className={`lg:hidden absolute top-[10vh] right-[4vw] flex items-center z-[50] pointer-events-none h-[44px] transition-all duration-500
-                    ${isHomePage ? 'opacity-100' : 'opacity-0'} scale-100
+                <div className={`lg:hidden absolute top-[10vh] right-[4vw] flex items-center z-[50] pointer-events-none h-[44px] transition-all duration-500 opacity-0
+                    ${isHomePage ? 'md:opacity-100' : 'opacity-0'} scale-100
                 `}>
                     <div className="absolute top-[-55px] right-[-80px] md:right-[-160px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
                         <div
@@ -369,8 +381,8 @@ export const Header = () => {
                 </div>
 
                 {/* BIG PINK STAR - DESKTOP LEFT */}
-                <div className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[50] pointer-events-none h-[44px] transition-all duration-500
-                    ${isHomePage && !isRightSideLogo ? 'opacity-100' : 'opacity-0'} scale-100
+                <div className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[50] pointer-events-none h-[44px] transition-all duration-500 opacity-0
+                    ${isHomePage && !isRightSideLogo ? 'lg:opacity-100' : 'opacity-0'} scale-100
                 `}>
                     <div className="absolute top-[-55px] left-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
                         <div
@@ -386,8 +398,8 @@ export const Header = () => {
                 </div>
 
                 {/* BIG PINK STAR - DESKTOP RIGHT */}
-                <div className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[50] pointer-events-none h-[44px] transition-all duration-500
-                    ${isHomePage && isRightSideLogo ? 'opacity-100' : 'opacity-0'} scale-100
+                <div className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[50] pointer-events-none h-[44px] transition-all duration-500 opacity-0
+                    ${isHomePage && isRightSideLogo ? 'lg:opacity-100' : 'opacity-0'} scale-100
                 `}>
                     <div className="absolute top-[-55px] right-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
                         <div
@@ -403,7 +415,7 @@ export const Header = () => {
                 </div>
             </div>
 
-            <header className="fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none mix-blend-exclusion">
+            <header className="fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none mix-blend-exclusion opacity-0 header-main-container">
                 {/* Burger & Cart Icon Group */}
                 <div className="lg:hidden absolute top-[4vh] left-[6vw] flex items-center gap-6 z-[200] pointer-events-none">
                     <button
