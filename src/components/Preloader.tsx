@@ -39,7 +39,7 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
         const backupTimer = setTimeout(() => {
             console.log("Прелоадер закрыт по таймеру (страховка)");
             onComplete();
-        }, variant === 'home' ? 8000 : 5000); 
+        }, variant === 'home' ? 10000 : 5000); 
 
         // 2. Принудительное закрытие после полной загрузки окна браузера
         const handleWindowLoad = () => {
@@ -48,8 +48,8 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
         };
 
         if (document.readyState === 'complete') {
-            // Если уже загружено, не закрываем сразу, даем анимации проиграться
-            // Но вешаем слушатель на случай если что-то пойдет не так
+            // Если уже загружено, не закрываем сразу, даем анимации проиграться.
+            // onComplete вызовется самой Lottie.
         } else {
             window.addEventListener('load', handleWindowLoad);
         }
