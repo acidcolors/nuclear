@@ -10,7 +10,8 @@ import { CMS_CONFIG } from '@/config/cmsSwitch';
  */
 export default async function Page() {
   return (
-    <Suspense fallback={<HomeClient />}>
+    // ВАЖНО: Мы добавили forcedLoading={true}, агент этого не сделал!
+    <Suspense fallback={<HomeClient forcedLoading={true} />}>
       <HomeDataLoader />
     </Suspense>
   );

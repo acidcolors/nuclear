@@ -9,12 +9,26 @@ import { TextPressure } from '@/components/ui/TextPressure';
 interface HomeClientProps {
   initialMain?: { title: string; description: string } | null;
   initialLinks?: any[];
+  // ВАЖНО: Добавили проп, который агент забыл
+  forcedLoading?: boolean;
 }
 
-export default function HomeClient({ initialMain, initialLinks }: HomeClientProps) {
+export default function HomeClient({ initialMain, initialLinks, forcedLoading = false }: HomeClientProps) {
   const [viewMode, setViewMode] = useState<'mobile' | 'adaptive' | 'desktop'>('mobile');
   const [startPressure, setStartPressure] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+
+  // Состояние "Шторка открыта": когда данные пришли И анимация доиграла
+  const isLocked = (forcedLoading || isLoading || !isAnimationComplete);
+
+  // Поскольку данные в HomeClient приходят через пропсы, они "загружены" сразу
+  useEffect(() => {
+    if (!forcedLoading) {
+      setIsLoading(false);
+    }
+  }, [forcedLoading]);
 
   // 1. ТИП УСТРОЙСТВА
   useEffect(() => {
@@ -30,51 +44,42 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
-  const [isPreloaderFinished, setIsPreloaderFinished] = useState(false);
-  const [isLoading, setIsLoading] = useState(true);
-
-  // Синхронизация: контент показывается только когда и данные есть (через props), и анимация готова
-  useEffect(() => {
-    if (isPreloaderFinished) {
-      setIsLoading(false);
-    }
-  }, [isPreloaderFinished]);
-
   // 2. ЗАДЕРЖКА ДЛЯ ТЯЖЕЛЫХ АНИМАЦИЙ
   useEffect(() => {
-    if (!isLoading) {
+    if (!isLocked) {
       const timer = setTimeout(() => {
         setStartPressure(true);
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [isLoading]);
+  }, [isLocked]);
 
   // 3. АНИМАЦИЯ ПОЯВЛЕНИЯ (GSAP)
   useEffect(() => {
-    if (isLoading || !containerRef.current) return;
+    // Жестко блокируем GSAP, пока крутится прелоадер или висит заглушка
+    if (isLocked || !containerRef.current) return;
 
     requestAnimationFrame(() => {
       const selectors = [
-        ".custom-home-btn", 
-        ".custom-nav", 
-        ".animate-up", 
-        ".custom-insta", 
-        ".custom-tg", 
-        ".custom-behance", 
+        ".custom-home-btn",
+        ".custom-nav",
+        ".animate-up",
+        ".custom-insta",
+        ".custom-tg",
+        ".custom-behance",
         ".custom-thank-you"
       ];
       const allTargets = Array.from(containerRef.current!.querySelectorAll(selectors.join(',')));
 
       const newTargets = allTargets.filter(el => {
         const htmlEl = el as HTMLElement;
-        return !htmlEl.style.opacity;
+        return !htmlEl.style.opacity || htmlEl.style.opacity === '0';
       });
 
       if (newTargets.length === 0) return;
 
       gsap.context(() => {
-        gsap.fromTo(newTargets, 
+        gsap.fromTo(newTargets,
           { y: 20, opacity: 0 },
           {
             y: 0,
@@ -88,7 +93,7 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
         );
       }, containerRef);
     });
-  }, [isLoading]);
+  }, [isLocked]);
 
   // 4. УМНОЕ ФОРМАТИРОВАНИЕ ЗАГОЛОВКОВ
   const titles = useMemo(() => {
@@ -109,11 +114,12 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
     <main ref={containerRef} className="relative w-screen h-screen bg-[#ebebeb] overflow-hidden">
       <Preloader
         variant="home"
-        isLoading={isLoading}
-        onComplete={() => setIsPreloaderFinished(true)}
+        isLoading={isLocked}
+        onComplete={() => setIsAnimationComplete(true)}
       />
 
       <div className="absolute inset-0 w-full h-full overflow-hidden">
+        {/* ВЕСЬ ТВОЙ ОСТАЛЬНОЙ JSX (Заголовки, кнопки и т.д.) ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ */}
         <div className="absolute top-0 left-0 w-full h-full z-[95] pointer-events-none blend-exclusion">
           {/* Приветственный текст */}
           <div className="animate-up opacity-0 translate-y-5 hidden lg:block absolute top-[40px] left-[22.2vw]">
@@ -149,7 +155,7 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
               <Typewriter
                 text={displayDescription}
                 speed={25}
-                delay={isLoading ? 3500 : 500}
+                delay={isLocked ? 3500 : 500}
               />
             </p>
           </div>

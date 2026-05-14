@@ -3,7 +3,6 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
-import { Preloader } from '@/components/Preloader';
 import { products as localProducts } from '@/data/products';
 import { TransitionLink } from '@/components/TransitionLink';
 import { useCart } from '@/app/store/useCart';
