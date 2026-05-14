@@ -2,11 +2,12 @@ import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
 import { HttpsProxyAgent } from 'https-proxy-agent';
 import axios from 'axios';
-import nodemailer from 'nodemailer';
+import { Resend } from 'resend';
 import { normalizeContact } from '@/lib/telegram';
 
-// 1. Инициализация Notion
+// 1. Инициализация Notion и Resend
 const notion = new Client({ auth: process.env.NOTION_SECRET });
+const resend = new Resend(process.env.RESEND_API_KEY);
 
 // 3. Функция для создания заказа в Notion
 async function createNotionOrder(
@@ -85,7 +86,7 @@ async function createNotionOrder(
     }
 }
 
-// 4. Функция для отправки Email подтверждения
+// 4. Функция для отправки Email подтверждения через Resend
 async function sendEmailConfirmation(
     orderNumber: number,
     items: any[],
@@ -93,34 +94,22 @@ async function sendEmailConfirmation(
     email: string
 ) {
     try {
-        if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-            console.warn('[Email] EMAIL_USER or EMAIL_PASS is not configured');
+        if (!process.env.RESEND_API_KEY) {
+            console.warn('[Resend] RESEND_API_KEY is not configured');
             return;
         }
-
-        const transporter = nodemailer.createTransport({
-            host: 'smtp.yandex.ru',
-            port: 465,
-            secure: true,
-            family: 4,     // Обязательно для обхода проблем с IPv6 на сервере
-            connectionTimeout: 5000,
-            auth: {
-                user: process.env.EMAIL_USER,
-                pass: process.env.EMAIL_PASS,
-            },
-        } as any);
 
         const itemsHtml = items
             .map(item => `<li>${item.title} (x${item.quantity})</li>`)
             .join('');
 
-        const mailOptions = {
-            from: `"Nuclear Garden" <${process.env.EMAIL_USER}>`,
+        const { data, error } = await resend.emails.send({
+            from: 'Nuclear Garden <info@nucleargarden.ru>',
             to: email,
-            subject: 'Ваш заказ оформлен | Nuclear Garden',
+            subject: `Заказ #${orderNumber} принят! | Nuclear Garden`,
             html: `
                 <div style="font-family: sans-serif; line-height: 1.6; color: #111; max-width: 600px; margin: 0 auto; padding: 20px; background: #f9f9f9; border-radius: 10px; border: 1px solid #eee;">
-                    <h2 style="text-transform: uppercase; letter-spacing: -1px; color: #111; margin-bottom: 20px;">Ваш заказ оформлен!</h2>
+                    <h2 style="text-transform: uppercase; letter-spacing: -1px; color: #111; margin-bottom: 20px;">Заказ #${orderNumber} принят!</h2>
                     <p style="margin-bottom: 20px;">Спасибо за заказ! Ваша заявка успешно принята.</p>
                     
                     <div style="background: white; padding: 20px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 1px 3px rgba(0,0,0,0.05);">
@@ -132,17 +121,20 @@ async function sendEmailConfirmation(
                         <p style="margin: 15px 0 0 0; font-size: 18px;"><strong>Итоговая сумма:</strong> ${totalPrice} ₽</p>
                     </div>
 
-                    <p style="font-size: 14px; color: #666; border-top: 1px solid #eee; pt: 20px;">
+                    <p style="font-size: 14px; color: #666; border-top: 1px solid #eee; pt: 20px; margin-top: 20px;">
                         Вы можете написать нам в <a href="https://t.me/mynuclear" style="color: #111; font-weight: bold; text-decoration: underline;">Telegram-группу</a> для уточнения деталей и узнать статус заказа.
                     </p>
                 </div>
             `,
-        };
+        });
 
-        await transporter.sendMail(mailOptions);
-        console.log(`[Email] Confirmation sent to ${email}`);
-    } catch (error) {
-        console.error('[Email] Failed to send confirmation:', error);
+        if (error) {
+            console.error('[Resend] API Error:', error);
+        } else {
+            console.log(`[Resend] Confirmation sent to ${email}. ID: ${data?.id}`);
+        }
+    } catch (err) {
+        console.error('[Resend] Unexpected Error:', err);
     }
 }
 
@@ -262,8 +254,7 @@ export async function POST(req: Request) {
 
         // 3. Отправка Email-подтверждения (если Email)
         if (contactType === 'email') {
-            // Не дожидаемся (await), чтобы не задерживать ответ пользователю, 
-            // либо дожидаемся внутри try/catch в функции
+            // Обернуто в try/catch внутри функции, не блокирует основной поток
             await sendEmailConfirmation(orderNumber, items, totalPrice || 0, customerInfo);
         }
 
