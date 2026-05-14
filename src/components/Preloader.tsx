@@ -33,12 +33,35 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
 
     // Защитный таймер для Home, чтобы сайт не вис вечно
     useEffect(() => {
-        if (variant !== 'home' || !isLoading) return;
+        if (!isLoading) return;
+
+        // 1. Принудительное закрытие по таймеру (страховка)
         const backupTimer = setTimeout(() => {
-            console.log("Прелоадер закрыт по страховке");
+            console.log("Прелоадер закрыт по таймеру (страховка)");
             onComplete();
-        }, 5000); // Через 5 секунд сайт откроется в любом случае
-        return () => clearTimeout(backupTimer);
+        }, variant === 'home' ? 6000 : 4000); 
+
+        // 2. Принудительное закрытие после полной загрузки окна браузера
+        const handleWindowLoad = () => {
+            console.log("Окно загружено, закрываем прелоадер");
+            onComplete();
+        };
+
+        if (document.readyState === 'complete') {
+            // Если уже загружено
+            const t = setTimeout(onComplete, 1000);
+            return () => {
+                clearTimeout(backupTimer);
+                clearTimeout(t);
+            };
+        } else {
+            window.addEventListener('load', handleWindowLoad);
+        }
+
+        return () => {
+            clearTimeout(backupTimer);
+            window.removeEventListener('load', handleWindowLoad);
+        };
     }, [variant, isLoading, onComplete]);
 
     // Если не загрузка ИЛИ компонент еще не вмонтирован - ничего не рендерим

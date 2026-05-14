@@ -10,13 +10,36 @@ const NOTION_FRIENDS_DATABASE_ID = process.env.NOTION_FRIENDS_DATABASE_ID;
 const NOTION_HOME_MAIN_DB_ID = '354645ebe3ec804d8db5cd393d0b560f';
 const NOTION_HOME_LINKS_DB_ID = '354645ebe3ec80e08aa7dd63155950f4';
 
+/**
+ * Обертка над fetch с таймаутом для предотвращения зависания SSR
+ */
+async function fetchWithTimeout(url: string, options: any, timeout = 7000) {
+    const controller = new AbortController();
+    const id = setTimeout(() => controller.abort(), timeout);
+    
+    try {
+        const response = await fetch(url, {
+            ...options,
+            signal: controller.signal
+        });
+        clearTimeout(id);
+        return response;
+    } catch (error: any) {
+        clearTimeout(id);
+        if (error.name === 'AbortError') {
+            console.error(`[Notion] Request timed out for: ${url}`);
+        }
+        throw error;
+    }
+}
+
 export async function getNotionProducts() {
     console.log('getNotionProducts: fetching all products for DB:', NOTION_DATABASE_ID);
     
     if (!NOTION_SECRET || !NOTION_DATABASE_ID) return [];
 
     try {
-        const response = await fetch(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -24,7 +47,6 @@ export async function getNotionProducts() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({
-                // Сортируем по вашей новой колонке "id"
                 sorts: [
                     {
                         property: 'id',
@@ -32,7 +54,7 @@ export async function getNotionProducts() {
                     },
                 ],
             }),
-            next: { revalidate: 0 }
+            next: { revalidate: 60 } // Кэшируем на минуту
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -40,7 +62,6 @@ export async function getNotionProducts() {
         const data = await response.json();
         if (!data.results) return [];
 
-        // Помогаторы для извлечения данных
         const getText = (prop: any) => {
             if (!prop) return '';
             const list = prop.title || prop.rich_text || [];
@@ -51,8 +72,6 @@ export async function getNotionProducts() {
 
         return data.results
             .filter((page: any) => {
-                // Если колонка Checkbox существует, проверяем её значение. 
-                // Если колонки нет (старая версия базы), по умолчанию показываем товар.
                 if (page.properties.Checkbox) {
                     return page.properties.Checkbox.checkbox === true;
                 }
@@ -60,12 +79,11 @@ export async function getNotionProducts() {
             })
             .map((page: any) => {
                 const props = page.properties;
-                
                 const galleryFiles = props.Gallery?.files || props.main?.files || [];
                 const imageUrls = galleryFiles.map((f: any) => f.file?.url || f.external?.url).filter(Boolean);
 
                 return {
-                    id: getText(props.id) || page.id, // Используем ваш ID из колонки
+                    id: getText(props.id) || page.id,
                     notionId: page.id,
                     title: getText(props.Title) || getText(props.Name) || '',
                     description: getText(props.Description),
@@ -88,7 +106,7 @@ export async function getNotionMainPageData() {
     if (!NOTION_SECRET || !NOTION_MAIN_PAGE_DATABASE_ID) return null;
 
     try {
-        const response = await fetch(`https://api.notion.com/v1/databases/${NOTION_MAIN_PAGE_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_MAIN_PAGE_DATABASE_ID}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -98,7 +116,7 @@ export async function getNotionMainPageData() {
             body: JSON.stringify({
                 page_size: 1
             }),
-            next: { revalidate: 0 }
+            next: { revalidate: 60 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -129,7 +147,7 @@ export async function getNotionContactData() {
     if (!NOTION_SECRET || !NOTION_CONTACT_DATABASE_ID) return [];
 
     try {
-        const response = await fetch(`https://api.notion.com/v1/databases/${NOTION_CONTACT_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_CONTACT_DATABASE_ID}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -137,13 +155,12 @@ export async function getNotionContactData() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 0 }
+            next: { revalidate: 60 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
 
         const data = await response.json();
-        
         const getText = (prop: any) => {
             if (prop?.type === 'url') return prop.url || '';
             const list = prop?.title || prop?.rich_text || [];
@@ -173,7 +190,7 @@ export async function getNotionFriendsData() {
     if (!NOTION_SECRET || !NOTION_FRIENDS_DATABASE_ID) return [];
 
     try {
-        const response = await fetch(`https://api.notion.com/v1/databases/${NOTION_FRIENDS_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_FRIENDS_DATABASE_ID}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -181,13 +198,12 @@ export async function getNotionFriendsData() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 0 }
+            next: { revalidate: 60 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
 
         const data = await response.json();
-        
         const getText = (prop: any) => {
             if (prop?.type === 'url') return prop.url || '';
             const list = prop?.title || prop?.rich_text || [];
@@ -215,7 +231,7 @@ export async function getNotionHomePageMain() {
     if (!NOTION_SECRET) return null;
 
     try {
-        const response = await fetch(`https://api.notion.com/v1/databases/${NOTION_HOME_MAIN_DB_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_HOME_MAIN_DB_ID}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -223,7 +239,7 @@ export async function getNotionHomePageMain() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ page_size: 1 }),
-            next: { revalidate: 0 }
+            next: { revalidate: 60 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -251,7 +267,7 @@ export async function getNotionHomePageLinks() {
     if (!NOTION_SECRET) return [];
 
     try {
-        const response = await fetch(`https://api.notion.com/v1/databases/${NOTION_HOME_LINKS_DB_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_HOME_LINKS_DB_ID}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -259,12 +275,11 @@ export async function getNotionHomePageLinks() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 0 }
+            next: { revalidate: 60 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
         const data = await response.json();
-        
         const getText = (prop: any) => {
             if (prop?.type === 'url') return prop.url || '';
             const list = prop?.title || prop?.rich_text || [];
