@@ -151,26 +151,51 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
 
           {/* СОЦИАЛЬНЫЕ СЕТИ */}
           <div className="flex flex-col lg:block">
-            {homeLinks.map((link: any) => {
-              const name = link.name.toLowerCase();
-              let posClass = "relative mt-4 ml-[6vw] lg:hidden";
-              if (name.includes('insta')) posClass = "custom-insta";
-              else if (name.includes('tg') || name.includes('telegr')) posClass = "custom-tg";
-              else if (name.includes('behan')) posClass = "custom-behance";
+            {homeLinks.length > 0 ? (
+              homeLinks.map((link: any) => {
+                const name = link.name.toLowerCase();
+                let posClass = "relative mt-4 ml-[6vw] lg:hidden";
+                if (name.includes('insta')) posClass = "custom-insta";
+                else if (name.includes('tg') || name.includes('telegr')) posClass = "custom-tg";
+                else if (name.includes('behan')) posClass = "custom-behance";
 
-              return (
-                <div key={link.id} className={`${posClass} pointer-events-auto animate-up opacity-0 translate-y-5`}>
-                  <a href={link.url} target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                return (
+                  <div key={link.id} className={`${posClass} pointer-events-auto animate-up opacity-0 translate-y-5`}>
+                    <a href={link.url} target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                      <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
+                        <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                          <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
+                          <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
+                        </div>
+                      </div>
+                    </a>
+                  </div>
+                );
+              })
+            ) : (
+              <>
+                <div className="custom-insta pointer-events-auto animate-up opacity-0 translate-y-5">
+                  <a href="https://www.instagram.com/gardennuclear/" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
                     <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
                       <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                        <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
-                        <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
+                        <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
+                        <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
                       </div>
                     </div>
                   </a>
                 </div>
-              );
-            })}
+                <div className="custom-tg pointer-events-auto animate-up opacity-0 translate-y-5">
+                  <a href="https://t.me/mynuclear" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                    <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
+                      <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                        <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                        <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                      </div>
+                    </div>
+                  </a>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>
