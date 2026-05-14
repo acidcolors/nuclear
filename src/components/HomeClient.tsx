@@ -48,7 +48,7 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
       }, 800);
       return () => clearTimeout(timer);
     }
-  }, [loading]);
+  }, [isLoading]);
 
   // 3. АНИМАЦИЯ ПОЯВЛЕНИЯ (GSAP)
   useEffect(() => {
