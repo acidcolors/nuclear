@@ -12,7 +12,6 @@ interface HomeClientProps {
 }
 
 export default function HomeClient({ initialMain, initialLinks }: HomeClientProps) {
-  const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<'mobile' | 'adaptive' | 'desktop'>('mobile');
   const [startPressure, setStartPressure] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
@@ -31,9 +30,19 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
     return () => window.removeEventListener('resize', handleResize);
   }, []);
 
+  const [isPreloaderFinished, setIsPreloaderFinished] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  // Синхронизация: контент показывается только когда и данные есть (через props), и анимация готова
+  useEffect(() => {
+    if (isPreloaderFinished) {
+      setIsLoading(false);
+    }
+  }, [isPreloaderFinished]);
+
   // 2. ЗАДЕРЖКА ДЛЯ ТЯЖЕЛЫХ АНИМАЦИЙ
   useEffect(() => {
-    if (!loading) {
+    if (!isLoading) {
       const timer = setTimeout(() => {
         setStartPressure(true);
       }, 800);
@@ -43,7 +52,7 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
 
   // 3. АНИМАЦИЯ ПОЯВЛЕНИЯ (GSAP)
   useEffect(() => {
-    if (loading || !containerRef.current) return;
+    if (isLoading || !containerRef.current) return;
 
     requestAnimationFrame(() => {
       const selectors = [
@@ -100,8 +109,8 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
     <main ref={containerRef} className="relative w-screen h-screen bg-[#ebebeb] overflow-hidden">
       <Preloader
         variant="home"
-        isLoading={loading}
-        onComplete={() => setLoading(false)}
+        isLoading={isLoading}
+        onComplete={() => setIsPreloaderFinished(true)}
       />
 
       <div className="absolute inset-0 w-full h-full overflow-hidden">
@@ -140,7 +149,7 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
               <Typewriter
                 text={displayDescription}
                 speed={25}
-                delay={loading ? 3500 : 500}
+                delay={isLoading ? 3500 : 500}
               />
             </p>
           </div>

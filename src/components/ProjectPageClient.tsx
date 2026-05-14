@@ -3,6 +3,7 @@
 import React, { useEffect, useRef, useState, useMemo } from 'react';
 import Image from 'next/image';
 import gsap from 'gsap';
+import { Preloader } from '@/components/Preloader';
 import { products as localProducts } from '@/data/products';
 import { TransitionLink } from '@/components/TransitionLink';
 import { useCart } from '@/app/store/useCart';
@@ -34,21 +35,44 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
     const [activeFilter, setActiveFilter] = useState('All');
     const [hoveredTagIndex, setHoveredTagIndex] = useState<number | null>(null);
 
+    // СОСТОЯНИЯ ЗАГРУЗКИ (Двойной замок)
     const [notionData, setNotionData] = useState<any[] | null>(initialProducts || null);
     const [headerData, setHeaderData] = useState<any | null>(initialHeader || null);
-    const [isLoading, setIsLoading] = useState(forcedLoading || (!initialProducts && CMS_CONFIG.USE_NOTION));
+    const [isDataLoaded, setIsDataLoaded] = useState(!!initialProducts);
+    const [isPreloaderFinished, setIsPreloaderFinished] = useState(false);
+    const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
+
     const [addedStatus, setAddedStatus] = useState<Record<string, 'added' | 'removed' | null>>({});
+
+    // Общий флаг загрузки: ждем данные И анимацию И хотя бы часть картинок
+    const itemsToWaitFor = 4; // Ждем первые 4 картинки
+    const imagesLoadedCount = Object.values(loadedImages).filter(Boolean).length;
+    
+    // Определяем, когда можно открывать страницу
+    const isReadyToShow = isDataLoaded && isPreloaderFinished && (
+        // Ждем картинки только если они есть в списке
+        !notionData || notionData.length === 0 || imagesLoadedCount >= Math.min(notionData.length, itemsToWaitFor)
+    );
+
+    // Основной стейт, который видит UI
+    const [isLoading, setIsLoading] = useState(true);
+
+    useEffect(() => {
+        if (isReadyToShow) {
+            setIsLoading(false);
+        }
+    }, [isReadyToShow]);
 
     useEffect(() => {
         let isMounted = true;
 
         if (initialProducts) {
-            setIsLoading(false);
+            setIsDataLoaded(true);
             return;
         }
 
         if (!CMS_CONFIG.USE_NOTION) {
-            setIsLoading(false);
+            setIsDataLoaded(true);
             return;
         }
 
@@ -62,11 +86,11 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                 if (isMounted) {
                     setNotionData(productsData);
                     setHeaderData(mainPageData);
+                    setIsDataLoaded(true);
                 }
             } catch (err) {
                 console.error("Notion Fetch Error:", err);
-            } finally {
-                if (isMounted) setIsLoading(false);
+                if (isMounted) setIsDataLoaded(true); // Все равно пускаем дальше с локальными данными
             }
         }
 
@@ -226,13 +250,11 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
     return (
         <main id="project-main-container" className={`fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] z-[60] ${isDesktop ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'}`}>
 
-            {isLoading && (
-                <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
-                    <span className="text-[12px] font-bold tracking-widest text-[#111] opacity-40 animate-pulse">
-                        Loading
-                    </span>
-                </div>
-            )}
+            <Preloader 
+                variant="space" 
+                isLoading={isLoading} 
+                onComplete={() => setIsPreloaderFinished(true)} 
+            />
 
             {isDesktop && (
                 <div
@@ -457,6 +479,9 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                                     fill
                                                     sizes="(max-width: 768px) 100vw, 400px"
                                                     className="object-cover drop-shadow-lg"
+                                                    onLoad={() => {
+                                                        setLoadedImages(prev => ({ ...prev, [product.id]: true }));
+                                                    }}
                                                 />
                                             </div>
                                         </TransitionLink>
