@@ -39,17 +39,17 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
     const [notionData, setNotionData] = useState<any[] | null>(initialProducts || null);
     const [headerData, setHeaderData] = useState<any | null>(initialHeader || null);
     const [isDataLoaded, setIsDataLoaded] = useState(!!initialProducts);
-    const [isPreloaderFinished, setIsPreloaderFinished] = useState(false);
+    const [isPreloaderFinished, setIsPreloaderFinished] = useState(true); // Для текстовой заглушки не ждем анимацию
     const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
     const [addedStatus, setAddedStatus] = useState<Record<string, 'added' | 'removed' | null>>({});
 
-    // Общий флаг загрузки: ждем данные И анимацию И хотя бы часть картинок
+    // Общий флаг загрузки: ждем данные И хотя бы часть картинок
     const itemsToWaitFor = 4; // Ждем первые 4 картинки
     const imagesLoadedCount = Object.values(loadedImages).filter(Boolean).length;
     
     // Определяем, когда можно открывать страницу
-    const isReadyToShow = isDataLoaded && isPreloaderFinished && (
+    const isReadyToShow = isDataLoaded && (
         // Ждем картинки только если они есть в списке
         !notionData || notionData.length === 0 || imagesLoadedCount >= Math.min(notionData.length, itemsToWaitFor)
     );
@@ -250,11 +250,13 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
     return (
         <main id="project-main-container" className={`fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] z-[60] ${isDesktop ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'}`}>
 
-            <Preloader 
-                variant="space" 
-                isLoading={isLoading} 
-                onComplete={() => setIsPreloaderFinished(true)} 
-            />
+            {isLoading && (
+                <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
+                    <span className="text-[12px] font-bold tracking-widest text-[#111] opacity-40 animate-pulse uppercase">
+                        Loading...
+                    </span>
+                </div>
+            )}
 
             {isDesktop && (
                 <div

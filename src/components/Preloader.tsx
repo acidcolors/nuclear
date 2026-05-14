@@ -20,18 +20,18 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
         setMounted(true);
     }, []);
 
-    // Логика таймера для Space (ровно 3.5 секунды)
+    // Логика таймера для Space (БОЛЬШЕ НЕ НУЖНА, ТАК КАК ЖДЕМ onComplete)
+    /*
     useEffect(() => {
         if (variant !== 'space' || !isLoading) return;
-
         const timer = setTimeout(() => {
             onComplete();
         }, 3500);
-
         return () => clearTimeout(timer);
     }, [variant, isLoading, onComplete]);
+    */
 
-    // Защитный таймер для Home, чтобы сайт не вис вечно
+    // Защитный таймер (страховка), чтобы сайт не вис вечно
     useEffect(() => {
         if (!isLoading) return;
 
@@ -39,7 +39,7 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
         const backupTimer = setTimeout(() => {
             console.log("Прелоадер закрыт по таймеру (страховка)");
             onComplete();
-        }, variant === 'home' ? 6000 : 4000); 
+        }, variant === 'home' ? 8000 : 5000); 
 
         // 2. Принудительное закрытие после полной загрузки окна браузера
         const handleWindowLoad = () => {
@@ -48,12 +48,8 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
         };
 
         if (document.readyState === 'complete') {
-            // Если уже загружено
-            const t = setTimeout(onComplete, 1000);
-            return () => {
-                clearTimeout(backupTimer);
-                clearTimeout(t);
-            };
+            // Если уже загружено, не закрываем сразу, даем анимации проиграться
+            // Но вешаем слушатель на случай если что-то пойдет не так
         } else {
             window.addEventListener('load', handleWindowLoad);
         }
@@ -91,10 +87,10 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
                 </div>
             )}
 
-            {/* РЕЖИМ 2: SPACE (Новая полоска загрузки) */}
+            {/* РЕЖИМ 2: SPACE (Полоска загрузки) */}
             {variant === 'space' && (
                 <div className="flex items-center justify-center w-[30vw] md:w-[250px]">
-                    <Lottie animationData={spaceAnimationData} loop={true} />
+                    <Lottie animationData={spaceAnimationData} loop={false} onComplete={onComplete} />
                 </div>
             )}
         </div>
