@@ -45,21 +45,33 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
     const [addedStatus, setAddedStatus] = useState<Record<string, 'added' | 'removed' | null>>({});
 
     // Общий флаг загрузки: ждем данные И хотя бы часть картинок
-    const itemsToWaitFor = 4; // Ждем первые 4 картинки
+    const itemsToWaitFor = 2; // Ждем первые 2 картинки для быстрого старта
     const imagesLoadedCount = Object.values(loadedImages).filter(Boolean).length;
     
     // Определяем, когда можно открывать страницу
     const isReadyToShow = isDataLoaded && (
-        // Ждем картинки только если они есть в списке
         !notionData || notionData.length === 0 || imagesLoadedCount >= Math.min(notionData.length, itemsToWaitFor)
     );
 
     // Основной стейт, который видит UI
     const [isLoading, setIsLoading] = useState(true);
 
+    // 1. СТРАХОВКА: Принудительное скрытие через 2 секунды
+    useEffect(() => {
+        const safetyTimer = setTimeout(() => {
+            console.log("Loading hidden by safety timer (2s fallback)");
+            setIsLoading(false);
+        }, 2000);
+
+        return () => clearTimeout(safetyTimer);
+    }, []);
+
+    // 2. Обычное скрытие по готовности
     useEffect(() => {
         if (isReadyToShow) {
-            setIsLoading(false);
+            // Даем небольшую задержку в 300мс для плавности, если все загрузилось мгновенно
+            const t = setTimeout(() => setIsLoading(false), 300);
+            return () => clearTimeout(t);
         }
     }, [isReadyToShow]);
 
