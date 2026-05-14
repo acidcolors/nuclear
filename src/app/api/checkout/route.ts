@@ -5,9 +5,8 @@ import axios from 'axios';
 import { Resend } from 'resend';
 import { normalizeContact } from '@/lib/telegram';
 
-// 1. Инициализация Notion и Resend
+// 1. Инициализация Notion
 const notion = new Client({ auth: process.env.NOTION_SECRET });
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // 3. Функция для создания заказа в Notion
 async function createNotionOrder(
@@ -98,6 +97,8 @@ async function sendEmailConfirmation(
             console.warn('[Resend] RESEND_API_KEY is not configured');
             return;
         }
+
+        const resend = new Resend(process.env.RESEND_API_KEY);
 
         const itemsHtml = items
             .map(item => `<li>${item.title} (x${item.quantity})</li>`)
