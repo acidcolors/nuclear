@@ -88,7 +88,7 @@ export default function HomeClient({ initialMain, initialLinks }: HomeClientProp
         );
       }, containerRef);
     });
-  }, [loading]);
+  }, [isLoading]);
 
   // 4. УМНОЕ ФОРМАТИРОВАНИЕ ЗАГОЛОВКОВ
   const titles = useMemo(() => {
