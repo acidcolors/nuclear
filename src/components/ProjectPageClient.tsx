@@ -54,8 +54,9 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
 
     // Основной стейт, который видит UI
     const [isLoading, setIsLoading] = useState(true);
+    const mountTimeRef = useRef(Date.now());
 
-    // 1. СТРАХОВКА: Принудительное скрытие через 2 секунды
+    // 1. СТРАХОВКА: Принудительное скрытие через 2 секунды (если что-то пошло не так)
     useEffect(() => {
         const safetyTimer = setTimeout(() => {
             console.log("Loading hidden by safety timer (2s fallback)");
@@ -65,11 +66,16 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
         return () => clearTimeout(safetyTimer);
     }, []);
 
-    // 2. Обычное скрытие по готовности
+    // 2. Обычное скрытие по готовности + МИНИМУМ 1500мс
     useEffect(() => {
         if (isReadyToShow) {
-            // Даем небольшую задержку в 300мс для плавности, если все загрузилось мгновенно
-            const t = setTimeout(() => setIsLoading(false), 300);
+            const timeElapsed = Date.now() - mountTimeRef.current;
+            const remainingTime = Math.max(0, 1500 - timeElapsed);
+
+            const t = setTimeout(() => {
+                setIsLoading(false);
+            }, remainingTime);
+
             return () => clearTimeout(t);
         }
     }, [isReadyToShow]);
@@ -264,7 +270,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
             {isLoading && (
                 <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
                     <span className="text-[12px] font-bold tracking-widest text-[#111] opacity-40 animate-pulse">
-                        Loading.
+                        loading.
                     </span>
                 </div>
             )}
