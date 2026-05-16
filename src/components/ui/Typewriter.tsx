@@ -109,7 +109,11 @@ export function Typewriter({
   const chars = text.split('');
 
   return (
-    <span ref={containerRef} className="text-[inherit]">
+    <span 
+      ref={containerRef} 
+      className="relative text-[inherit]" 
+      style={{ whiteSpace: 'pre-wrap' }}
+    >
       <style>{`
         @keyframes custom-blink {
           0%, 100% { opacity: 1; }
@@ -120,22 +124,42 @@ export function Typewriter({
         }
       `}</style>
 
-      {chars.map((char, index) => (
-        <span
-          key={index}
-          className="pressure-char inline-block"
-          style={{ 
-            fontVariationSettings: `"wght" ${weightInactive}, "slnt" 0`,
-            display: index >= displayedCount ? 'none' : 'inline-block'
-          }}
-        >
-          {char === ' ' ? '\u00A0' : char}
-        </span>
-      ))}
+      {/* Разбиваем текст на слова, сохраняя пробелы */}
+      {text.split(/(\s+)/).map((word, wordIdx, wordArr) => {
+        // Вычисляем глобальный индекс начала этого слова
+        const wordStartIdx = wordArr.slice(0, wordIdx).join('').length;
 
-      <span className="cursor-blink inline-block ml-[2px] font-bold">
-        _
-      </span>
+        return (
+          <span key={wordIdx} className="inline-block">
+            {word.split('').map((char, charIdx) => {
+              const globalIdx = wordStartIdx + charIdx;
+              return (
+                <React.Fragment key={globalIdx}>
+                  <span
+                    className="pressure-char inline-block"
+                    style={{ 
+                      fontVariationSettings: `"wght" ${weightInactive}, "slnt" 0`,
+                      opacity: globalIdx >= displayedCount ? 0 : 1,
+                      pointerEvents: globalIdx >= displayedCount ? 'none' : 'auto'
+                    }}
+                  >
+                    {char}
+                  </span>
+                  {/* Курсор бежит за буквами */}
+                  {globalIdx === displayedCount - 1 && globalIdx < text.length - 1 && (
+                    <span className="cursor-blink inline-block ml-[1px] font-bold">_</span>
+                  )}
+                </React.Fragment>
+              );
+            })}
+          </span>
+        );
+      })}
+
+      {/* Курсор в самом начале или в самом конце */}
+      {(displayedCount === 0 || displayedCount === text.length) && (
+        <span className="cursor-blink inline-block ml-[1px] font-bold">_</span>
+      )}
     </span>
   );
 }
