@@ -1,30 +1,48 @@
 'use client';
 
 import { useState, useEffect, useRef, useMemo } from 'react';
+import { createPortal } from 'react-dom';
 import { gsap } from 'gsap';
 import { Preloader } from '@/components/Preloader';
 import { Typewriter } from '@/components/ui/Typewriter';
 import { TextPressure } from '@/components/ui/TextPressure';
+import { Marquee } from '@/components/ui/Marquee';
 
 interface HomeClientProps {
   initialMain?: { title: string; description: string } | null;
   initialLinks?: any[];
   // ВАЖНО: Добавили проп, который агент забыл
   forcedLoading?: boolean;
+  marqueeData?: { isActive: boolean; text: string; link?: string } | null;
 }
 
-export default function HomeClient({ initialMain, initialLinks, forcedLoading = false }: HomeClientProps) {
+export default function HomeClient({ initialMain, initialLinks, forcedLoading = false, marqueeData }: HomeClientProps) {
+  useEffect(() => {
+    console.log('[Marquee Debug] Data from Notion:', marqueeData);
+  }, [marqueeData]);
+
   const [viewMode, setViewMode] = useState<'mobile' | 'adaptive' | 'desktop'>('mobile');
   const [startPressure, setStartPressure] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
+  const [mounted, setMounted] = useState(false);
 
   // Состояние "Шторка открыта": когда данные пришли И анимация доиграла
   const isLocked = (forcedLoading || isLoading || !isAnimationComplete);
 
+  // Функция завершения прелоадера (анимация Lottie доиграла до конца)
+  const handlePreloaderComplete = () => {
+    if (!forcedLoading) {
+      setIsAnimationComplete(true);
+      // Отправляем сигнал Хедеру, что анимация Lottie физически завершилась
+      window.dispatchEvent(new CustomEvent('preloaderFinished'));
+    }
+  };
+
   // Поскольку данные в HomeClient приходят через пропсы, они "загружены" сразу
   useEffect(() => {
+    setMounted(true);
     if (!forcedLoading) {
       setIsLoading(false);
     }
@@ -111,18 +129,19 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
   const homeLinks = initialLinks || [];
 
   return (
-    <main ref={containerRef} className="relative w-screen h-screen bg-[#ebebeb] overflow-hidden">
+    <>
+      <main ref={containerRef} className="relative w-screen h-screen bg-[#ebebeb] overflow-hidden">
       <Preloader
         variant="home"
         isLoading={isLocked}
-        onComplete={() => setIsAnimationComplete(true)}
+        onComplete={handlePreloaderComplete}
       />
 
       <div className="absolute inset-0 w-full h-full overflow-hidden">
         {/* ВЕСЬ ТВОЙ ОСТАЛЬНОЙ JSX (Заголовки, кнопки и т.д.) ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ */}
         <div className="absolute top-0 left-0 w-full h-full z-[95] pointer-events-none blend-exclusion">
           {/* Приветственный текст */}
-          <div className="animate-up opacity-0 translate-y-5 hidden lg:block absolute top-[40px] left-[22.2vw]">
+          <div className="animate-up opacity-0 translate-y-5 hidden lg:block absolute top-[55px] left-[22.2vw]">
             <span className="text-sm font-bold tracking-widest text-[#ebebeb]">
               Welcome <br /> to other world.
             </span>
@@ -218,5 +237,9 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
         </div>
       </div>
     </main>
+    {marqueeData?.isActive && marqueeData.text && mounted && (
+        <Marquee text={marqueeData.text} link={marqueeData.link} />
+    )}
+    </>
   );
 }

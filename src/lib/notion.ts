@@ -238,25 +238,51 @@ export async function getNotionHomePageMain() {
                 'Notion-Version': '2022-06-28',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({ page_size: 1 }),
+            body: JSON.stringify({ page_size: 20 }),
             next: { revalidate: 60 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
         const data = await response.json();
-        const page = data.results[0];
-        if (!page) return null;
+        
+        const results = data.results;
+        console.log('[Notion Debug] Found pages in Home Main DB:', results?.map((p: any) => {
+            const list = p.properties.Title?.title || p.properties.Name?.title || p.properties.Title?.rich_text || p.properties.Name?.rich_text || [];
+            return list[0]?.plain_text || 'No Title';
+        }));
 
-        const props = page.properties;
+        if (!results || results.length === 0) return null;
+
         const getText = (prop: any) => {
             const list = prop?.title || prop?.rich_text || [];
             return list[0]?.plain_text || '';
         };
 
-        return {
-            title: getText(props.Title) || getText(props.Name),
-            description: getText(props.Discription) || getText(props.Description)
+        // Ищем основные данные (обычно первая запись, которая НЕ бегущая строка)
+        const mainPage = results.find((p: any) => !getText(p.properties.Title).includes('Бегущая Строка')) || results[0];
+        
+        // Ищем данные бегущей строки (гибкий поиск)
+        const marqueePage = results.find((p: any) => {
+            const t = (getText(p.properties.Title) || getText(p.properties.Name)).toLowerCase();
+            return t.includes('бегущая строка');
+        });
+
+        const mainData = {
+            title: getText(mainPage.properties.Title) || getText(mainPage.properties.Name),
+            description: getText(mainPage.properties.Discription) || getText(mainPage.properties.Description)
         };
+
+        let marqueeData = null;
+        if (marqueePage) {
+            console.log('[Notion Debug] Found Marquee Page properties:', Object.keys(marqueePage.properties));
+            marqueeData = {
+                isActive: marqueePage.properties.Checkbox?.checkbox === true,
+                text: getText(marqueePage.properties.Description) || getText(marqueePage.properties.Discription) || getText(marqueePage.properties.Text) || "ДРОП ОТКРЫТОК 10x15 ✧",
+                link: marqueePage.properties.URL?.url || getText(marqueePage.properties.URL) || marqueePage.properties.Link?.url || getText(marqueePage.properties.Link)
+            };
+        }
+
+        return { mainData, marqueeData };
     } catch (error: any) {
         console.error('Error in getNotionHomePageMain:', error.message);
         return null;

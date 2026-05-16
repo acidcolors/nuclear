@@ -178,13 +178,47 @@ export const Header = () => {
     {/* const themeColor = isDarkTheme ? '#1a1a1a' : '#ebebeb'; */ }
 
     const themeColor = '#ebebeb';
-    const bigStarRef = useRef<HTMLDivElement>(null);
-    const rotationTween = useRef<gsap.core.Tween | null>(null);
+    const leftStarRef = useRef<HTMLDivElement>(null);
+    const rightStarRef = useRef<HTMLDivElement>(null);
+    const mobileStarRef = useRef<HTMLDivElement>(null);
+
+    const rotationTweens = useRef<{ [key: string]: gsap.core.Tween | null }>({
+        left: null,
+        right: null,
+        mobile: null
+    });
+
     const [isMenuOpen, setIsMenuOpen] = useState(false);
     const lottieContainerRef = useRef<HTMLDivElement>(null);
     const animationInstanceRef = useRef<any>(null);
     const isFirstMount = useRef(true);
     const [mounted, setMounted] = useState(false);
+    const [screenWidth, setScreenWidth] = useState(0);
+
+    // Если экран от 1024 до 1440px, принудительно показываем логотип справа
+    const forceLogoRight = screenWidth >= 1024 && screenWidth <= 1440;
+    const displayLogoRight = isRightSideLogo || forceLogoRight;
+
+    useEffect(() => {
+        setMounted(true);
+        setScreenWidth(window.innerWidth);
+        const handleResize = () => setScreenWidth(window.innerWidth);
+        window.addEventListener('resize', handleResize);
+        return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const [isPreloaderDone, setIsPreloaderDone] = useState(pathname !== '/');
+
+    useEffect(() => {
+        if (pathname !== '/') {
+            setIsPreloaderDone(true);
+            return;
+        }
+        const handler = () => setIsPreloaderDone(true);
+        window.addEventListener('preloaderFinished', handler);
+        return () => window.removeEventListener('preloaderFinished', handler);
+    }, [pathname]);
+
 
     // Состояние для бленд-мода с задержкой (чтобы звезда успела исчезнуть)
     {/* const [delayedBlend, setDelayedBlend] = useState(!isDarkTheme);
@@ -281,31 +315,31 @@ export const Header = () => {
     // Значение счетчика с защитой от гидратации
     const displayCount = mounted ? cartCount : 0;
 
-    // Анимация появления самого хедера (без звезд здесь, звезды отдельно)
+    // Анимация появления самого хедера (ждет прелоадер на главной)
     useEffect(() => {
-        if (mounted) {
+        if (mounted && isPreloaderDone) {
             gsap.to(".header-main-container", {
                 opacity: 1,
                 duration: 0.8,
-                delay: 0.5,
                 ease: "power2.out"
             });
         }
-    }, [mounted]);
+    }, [mounted, isPreloaderDone]);
 
-    // ЛОГИКА ЗВЕЗДЫ: Появление с задержкой 2с и плавное исчезновение
+    // ЛОГИКА ЗВЕЗДЫ: Появление (теперь ждет сигнала от прелоадера)
     useEffect(() => {
         if (!mounted) return;
 
         if (isHomePage) {
-            // Если мы на главной - плавно появляемся через 2 секунды
-            gsap.to(".header-star-element", {
-                opacity: 1,
-                duration: 1.5,
-                delay: 2,
-                ease: "power2.out",
-                overwrite: true
-            });
+            if (isPreloaderDone) {
+                // Если мы на главной и прелоадер закончил - плавно появляемся
+                gsap.to(".header-star-element", {
+                    opacity: 1,
+                    duration: 1.5,
+                    ease: "power2.out",
+                    overwrite: true
+                });
+            }
         } else {
             // Если уходим с главной - плавно гаснем
             gsap.to(".header-star-element", {
@@ -315,7 +349,7 @@ export const Header = () => {
                 overwrite: true
             });
         }
-    }, [isHomePage, mounted]);
+    }, [isHomePage, mounted, isPreloaderDone]);
 
     useEffect(() => {
         if (lottieContainerRef.current && !animationInstanceRef.current) {
@@ -354,46 +388,61 @@ export const Header = () => {
 
     const supportIcon = '/edit_chat.svg';
 
-    // Анимация звезды с защитой от дерганья
+    // Управление вращением всех звезд
     useEffect(() => {
-        if (isHomePage && bigStarRef.current) {
-            // Убрали здесь opacity: 1, чтобы не мешать плавному появлению через 2 сек
-            gsap.set(bigStarRef.current, { display: 'flex', scale: 1 });
+        const setupRotation = () => {
+            if (typeof window === 'undefined') return;
+            const isMobile = window.innerWidth < 1024;
+            const isLarge = window.innerWidth >= 1441;
 
-            if (!rotationTween.current) {
-                rotationTween.current = gsap.to(bigStarRef.current, {
-                    rotation: 360,
-                    duration: 25,
-                    ease: "none",
-                    repeat: -1,
-                    transformOrigin: "center center"
-                });
-            }
-        } else if (bigStarRef.current) {
-            gsap.set(bigStarRef.current, { display: 'none' });
-            if (rotationTween.current) {
-                rotationTween.current.kill();
-                rotationTween.current = null;
-            }
+            const rotate = (ref: React.RefObject<HTMLDivElement | null>, key: 'left' | 'right' | 'mobile', shouldRotate: boolean) => {
+                if (shouldRotate && ref.current) {
+                    if (!rotationTweens.current[key]) {
+                        rotationTweens.current[key] = gsap.to(ref.current, {
+                            rotation: 360,
+                            duration: 25,
+                            ease: "none",
+                            repeat: -1,
+                            transformOrigin: "center center"
+                        });
+                    }
+                } else {
+                    if (rotationTweens.current[key]) {
+                        rotationTweens.current[key]?.kill();
+                        rotationTweens.current[key] = null;
+                    }
+                }
+            };
+
+            // Мобильная звезда
+            rotate(mobileStarRef, 'mobile', isHomePage && isMobile);
+            // Левая звезда: десктоп, большой экран, логотип слева
+            rotate(leftStarRef, 'left', isHomePage && !isMobile && isLarge && !isRightSideLogo);
+            // Правая звезда: десктоп, (логотип справа ИЛИ экран <= 1440)
+            rotate(rightStarRef, 'right', isHomePage && !isMobile && (isRightSideLogo || !isLarge));
+        };
+
+        if (mounted && isPreloaderDone) {
+            setupRotation();
+            window.addEventListener('resize', setupRotation);
         }
 
         return () => {
-            if (rotationTween.current) {
-                rotationTween.current.kill();
-                rotationTween.current = null;
-            }
+            window.removeEventListener('resize', setupRotation);
+            Object.values(rotationTweens.current).forEach(t => t?.kill());
+            rotationTweens.current = { left: null, right: null, mobile: null };
         };
-    }, [isHomePage]);
+    }, [isHomePage, isRightSideLogo, mounted, isPreloaderDone]);
 
     return (
         <>
             <div className="fixed top-0 left-0 w-full h-[100px] z-[50] pointer-events-none">
                 {/* BIG PINK STAR - MOBILE */}
-                <div className={`lg:hidden absolute top-[10vh] right-[4vw] flex items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-100
+                <div className={`lg:hidden absolute top-[10vh] right-[4vw] flex items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-170
                 `}>
                     <div className="absolute top-[-55px] right-[-80px] md:right-[-160px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
                         <div
-                            ref={isHomePage && typeof window !== 'undefined' && window.innerWidth < 1024 ? bigStarRef : null}
+                            ref={mobileStarRef}
                             className="w-full h-full will-change-transform flex items-center justify-center"
                             style={{ color: '#f5b3ffff' }}
                         >
@@ -405,36 +454,46 @@ export const Header = () => {
                 </div>
 
                 {/* BIG PINK STAR - DESKTOP LEFT */}
-                <div className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-100
-                `}>
-                    <div className="absolute top-[-55px] left-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
-                        <div
-                            ref={isHomePage && !isRightSideLogo && typeof window !== 'undefined' && window.innerWidth >= 1024 ? bigStarRef : null}
-                            className="w-full h-full will-change-transform flex items-center justify-center"
-                            style={{ color: '#f5b3ffff' }}
-                        >
-                            <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
-                                <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
-                            </svg>
+                {screenWidth >= 1441 && (
+                    <div
+                        className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-200
+                            ${isHomePage && !isRightSideLogo ? '' : '!hidden'}
+                        `}
+                    >
+                        <div className="absolute top-[-55px] left-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
+                            <div
+                                ref={leftStarRef}
+                                className="w-full h-full will-change-transform flex items-center justify-center"
+                                style={{ color: '#f5b3ffff' }}
+                            >
+                                <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
+                                    <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
 
                 {/* BIG PINK STAR - DESKTOP RIGHT */}
-                <div className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-100
-                `}>
-                    <div className="absolute top-[-55px] right-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
-                        <div
-                            ref={isHomePage && isRightSideLogo && typeof window !== 'undefined' && window.innerWidth >= 1024 ? bigStarRef : null}
-                            className="w-full h-full will-change-transform flex items-center justify-center"
-                            style={{ color: '#f5b3ffff' }}
-                        >
-                            <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
-                                <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
-                            </svg>
+                {screenWidth > 0 && screenWidth <= 1440 && (
+                    <div
+                        className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-200
+                            ${isHomePage ? '' : '!hidden'}
+                        `}
+                    >
+                        <div className="absolute top-[-55px] right-[-80px] w-[280px] h-[280px] pointer-events-none flex items-center justify-center">
+                            <div
+                                ref={rightStarRef}
+                                className="w-full h-full will-change-transform flex items-center justify-center"
+                                style={{ color: '#f5b3ffff' }}
+                            >
+                                <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
+                                    <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                                </svg>
+                            </div>
                         </div>
                     </div>
-                </div>
+                )}
             </div>
 
             <header className="fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none mix-blend-exclusion opacity-0 header-main-container">
@@ -505,7 +564,7 @@ export const Header = () => {
 
                     {/* DESKTOP LOGO - LEFT */}
                     <div className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[150] pointer-events-none h-[70px] transition-all duration-500
-                        ${!isRightSideLogo ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-50 pointer-events-none'}
+                        ${!displayLogoRight ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-50 pointer-events-none'}
                     `}>
                         <div className="flex items-center z-[10] origin-left pointer-events-auto">
                             <TransitionLink href="/" className="pointer-events-auto">
@@ -515,8 +574,8 @@ export const Header = () => {
                     </div>
 
                     {/* DESKTOP LOGO - RIGHT */}
-                    <div className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[150] pointer-events-none h-[70px] transition-all duration-500
-                        ${isRightSideLogo ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-50 pointer-events-none'}
+                    <div className={`hidden lg:flex absolute top-[40px] right-[40px] items-center z-[150] pointer-events-none h-[70px] transition-all duration-500
+                        ${displayLogoRight ? 'opacity-100 scale-100 pointer-events-auto' : 'opacity-0 scale-50 pointer-events-none'}
                     `}>
                         <div className="flex items-center z-[10] origin-right pointer-events-auto">
                             <TransitionLink href="/" className="pointer-events-auto">
@@ -537,7 +596,7 @@ export const Header = () => {
 
                     {/* Desktop Nav Container */}
                     <nav className={`hidden lg:flex absolute top-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto transition-all duration-500
-    ${isRightSideLogo ? 'right-[240px]' : 'right-[80px]'}
+    ${displayLogoRight ? 'right-[240px]' : 'right-[80px]'}
 `}>
                         <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
                         <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />

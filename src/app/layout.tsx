@@ -32,10 +32,10 @@ export default function RootLayout({
     <html lang="en" suppressHydrationWarning>
       <body className={inter.className}>
         {/* 2. Подключаем SDK Телеграма. 
-            strategy="beforeInteractive" заставит его загрузиться максимально быстро */}
+            Используем afterInteractive для лучшей совместимости с React */}
         <Script
           src="https://telegram.org/js/telegram-web-app.js"
-          strategy="beforeInteractive"
+          strategy="afterInteractive"
         />
 
         <CustomCursor />

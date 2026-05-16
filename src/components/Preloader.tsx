@@ -31,26 +31,25 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
     }, [variant, isLoading, onComplete]);
     */
 
-    // Защитный таймер (страховка), чтобы сайт не вис вечно
+    // Защитный таймер (страховка) и логика загрузки окна
     useEffect(() => {
         if (!isLoading) return;
 
-        // 1. Принудительное закрытие по таймеру (страховка)
-        const backupTimer = setTimeout(() => {
-            console.log("Прелоадер закрыт по таймеру (страховка)");
-            onComplete();
-        }, variant === 'home' ? 10000 : 5000); 
+        // КРИТИЧНО: Для главной (home) отключаем все авто-закрытия. 
+        // Шторка должна закрыться ТОЛЬКО через onComplete от Lottie в JSX ниже.
+        if (variant === 'home') return;
 
-        // 2. Принудительное закрытие после полной загрузки окна браузера
+        // Для остальных (space) оставляем страховку и таймер 3.5с
+        const backupTimer = setTimeout(() => {
+            console.log("Space-прелоадер закрыт по таймеру (3.5с)");
+            onComplete();
+        }, 3500); 
+
         const handleWindowLoad = () => {
-            console.log("Окно загружено, закрываем прелоадер");
             onComplete();
         };
 
-        if (document.readyState === 'complete') {
-            // Если уже загружено, не закрываем сразу, даем анимации проиграться.
-            // onComplete вызовется самой Lottie.
-        } else {
+        if (document.readyState !== 'complete') {
             window.addEventListener('load', handleWindowLoad);
         }
 
@@ -96,9 +95,11 @@ export const Preloader = ({ variant, isLoading, onComplete }: PreloaderProps) =>
         </div>
     );
 
-    // Если компонент еще не вмонтирован (SSR), возвращаем обычный div
-    // Это предотвращает мерцание (FOUC) до загрузки JS.
-    if (!mounted) return preloaderContent;
+    // 5. Заглушка для SSR / Hydration Gap
+    // Пока компонент не вмонтирован, рендерим глухую серую подложку
+    if (!mounted) {
+        return <div className="fixed inset-0 z-[999999] w-screen h-screen bg-[#ebebeb] pointer-events-none"></div>;
+    }
 
     // В браузере используем портал для гарантии перекрытия всего документа
     return createPortal(preloaderContent, document.body);

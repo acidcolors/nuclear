@@ -125,6 +125,13 @@ export default function SpacePage() {
         </div>
     );
 
+    const handleVideoEnd = () => {
+        // Выбираем следующее видео, исключая текущее, чтобы не повторялось подряд
+        const otherVideos = bgVideos.filter(v => v !== videoSrc);
+        const nextVideo = otherVideos[Math.floor(Math.random() * otherVideos.length)];
+        setVideoSrc(nextVideo);
+    };
+
     return (
         <main className="page-space fixed inset-0 w-full h-[100dvh] bg-[#111] text-[#ebebeb] overflow-hidden z-[60]">
 
@@ -143,9 +150,9 @@ export default function SpacePage() {
                     ref={videoRef}
                     src={videoSrc}
                     autoPlay
-                    loop
                     muted
                     playsInline
+                    onEnded={handleVideoEnd}
                     className="absolute top-0 left-0 w-full h-full object-cover z-0"
                 />
             )}

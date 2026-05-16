@@ -23,12 +23,24 @@
   --space-vol-top: 76vh;
   --space-vol-left: calc(6vw - 3px);
   --space-social-bottom: 15vh;
+  --marquee-height: 50px;
+  --marquee-bg: #000000;
+  --marquee-text-color: #ebebeb;
+  --marquee-bottom: 100px;
+  --marquee-speed: 30s;
+  --marquee-gap: 21px;
 }
+
+
 
 @media (min-width: 768px) {
   :root {
     --title-size: 80px;
     --desc-size: 18px;
+    --marquee-height: 45px;
+    --marquee-bottom: 50px;
+    --home-title-top: 15vh;
+    --home-desc-top: 40vh;
   }
 }
 
@@ -36,15 +48,17 @@
   :root {
     --title-size: 100px;
     --desc-size: 25px;
-    --home-title-top: 20vh;
-    --home-desc-top: 50vh;
+    --home-title-top: 12vh;
+    --home-desc-top: 40vh;
 
-    /* Контакты для десктопа */
-    --contact-padding-top: 22vh;
+    /* Контакты для десктопа - ПОДНЯЛИ ЕЩЕ ВЫШЕ */
+    --contact-padding-top: 14vh;
     --contact-desc-size: 28px;
     --contact-desc-top: 40px;
     --contact-socials-mt: 40px;
-    --space-vol-top: 40px;
+    --space-vol-top: 56px;
+    --marquee-height: 60px;
+    --marquee-bottom: 25px;
   }
 }
 
@@ -259,7 +273,7 @@ input[type="range"]::-moz-range-thumb {
 /* Десктоп (от 1024px) */
 @media (min-width: 1024px) {
   .custom-vol {
-    top: 40px !important;
+    top: var(--space-vol-top) !important;
     bottom: auto !important;
     left: 50% !important;
     transform: translateX(-50%) !important;
@@ -563,4 +577,19 @@ input[type="range"]::-moz-range-thumb {
 
 .zoom-in {
   animation-name: zoomIn;
+}
+
+/* --- MARQUEE ANIMATION --- */
+@keyframes marquee {
+  0% {
+    transform: translateX(0%);
+  }
+
+  100% {
+    transform: translateX(-50%);
+  }
+}
+
+.animate-marquee {
+  animation: marquee var(--marquee-speed) linear infinite;
 }
