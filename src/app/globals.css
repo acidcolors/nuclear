@@ -107,8 +107,8 @@
     /* Уменьшаем описание */
 
     /* Сжимаем вертикальные отступы */
-    --home-title-top: 80px !important;
-    --home-desc-top: 260px !important;
+    --home-title-top: 70px !important;
+    --home-desc-top: 230px !important;
     --home-thank-you-bottom: 20px !important;
     --home-social-bottom: 100px !important;
 
