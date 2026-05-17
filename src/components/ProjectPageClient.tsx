@@ -161,23 +161,30 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                         ease: "power2.out"
                     }
                 );
-                if (filteredProducts.length > 0) {
-                    gsap.fromTo(".product-card-wrapper",
-                        { opacity: 0, y: 30 },
-                        {
-                            opacity: 1,
-                            y: 0,
-                            duration: 0.8,
-                            stagger: 0.1,
-                            ease: "power2.out",
-                            overwrite: true
-                        }
-                    );
-                }
             });
         }
         return () => {
             gsap.killTweensOf(".animate-stagger");
+        };
+    }, [isLoading]);
+
+    useEffect(() => {
+        if (!isLoading && filteredProducts.length > 0) {
+            requestAnimationFrame(() => {
+                gsap.fromTo(".product-card-wrapper",
+                    { opacity: 0, y: 30 },
+                    {
+                        opacity: 1,
+                        y: 0,
+                        duration: 0.8,
+                        stagger: 0.1,
+                        ease: "power2.out",
+                        overwrite: true
+                    }
+                );
+            });
+        }
+        return () => {
             gsap.killTweensOf(".product-card-wrapper");
         };
     }, [isLoading, activeFilter, filteredProducts.length]);
