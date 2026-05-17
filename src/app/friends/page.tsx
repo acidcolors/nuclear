@@ -34,7 +34,7 @@ export default function FriendsPage() {
             .then(([friends, contacts]) => {
                 setFriendsData(friends);
                 // Ищем строку с названием "Discription" или "Friends" в Контактах
-                const contactDesc = contacts.find(c => c.title && (c.title.toLowerCase().includes('discription') || c.title.toLowerCase().includes('description') || c.title.toLowerCase().includes('friend')));
+                const contactDesc = contacts.find((c: any) => c.title && (c.title.toLowerCase().includes('discription') || c.title.toLowerCase().includes('description') || c.title.toLowerCase().includes('friend')));
                 if (contactDesc && contactDesc.description) {
                     // Если нашли, сохраняем в отдельный стейт
                     setFriendsDescData(contactDesc.description);
