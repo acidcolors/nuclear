@@ -47,7 +47,7 @@ export async function getNotionProducts() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 5 }
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -108,7 +108,8 @@ export async function getNotionProducts() {
                     role: getText(props.Role),
                     tags: getMultiSelect(props.Tags),
                     notionImages: imageUrls,
-                    sortOrder: getSortNumber(props)
+                    sortOrder: getSortNumber(props),
+                    edition: getText(props['Тираж']) || getText(props.Edition) || ''
                 };
             });
 

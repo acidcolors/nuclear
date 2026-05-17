@@ -317,9 +317,18 @@ export default function ProductPage() {
                             {product.title}
                         </h2>
 
-                        <h3 className="inline-block bg-[#f4f4f4] px-[16px] py-[6px] rounded-[8px] text-[#111] font-bold text-[18px] md:text-[22px] mb-[18px] lg:mb-[30px] self-start shadow-sm">
-                            {product.price && !isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
-                        </h3>
+                        <div className="mb-[18px] lg:mb-[30px]">
+                            {product.price && (
+                                <h3 className="inline-block bg-[#f4f4f4] px-[12px] py-[5px] md:px-[16px] md:py-[6px] rounded-[8px] text-[#111] font-bold text-[15px] md:text-[22px] self-start shadow-sm mr-[10px]">
+                                    {!isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
+                                </h3>
+                            )}
+                            {product.edition && (
+                                <h3 className="inline-block bg-[#f4f4f4] px-[12px] py-[5px] md:px-[16px] md:py-[6px] rounded-[8px] text-[#111] font-bold text-[15px] md:text-[22px] self-start shadow-sm">
+                                    Тираж: {product.edition}
+                                </h3>
+                            )}
+                        </div>
 
                         <p className="text-[16px] md:text-lg lg:text-[1.2vw] font-medium leading-[1.35] lg:leading-[1.5] opacity-90 mb-[25px] lg:mb-[40px] text-[#111]">
                             {product.description}
@@ -331,6 +340,7 @@ export default function ProductPage() {
                             {product.material && <span className="text-[13px] font-bold opacity-80 text-[#111]">Материал: {product.material}</span>}
                             {product.year && <span className="text-[13px] font-bold opacity-80 text-[#111]">Год: {product.year}</span>}
                             {product.role && <span className="text-[13px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>}
+                            {product.edition && <span className="text-[13px] font-bold opacity-80 text-[#111]">Тираж: {product.edition}</span>}
                         </div>
 
                         <div

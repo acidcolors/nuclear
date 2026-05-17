@@ -365,15 +365,15 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                             href={`/product/${product.id}`}
                                             className="product-card cursor-pointer group relative bg-[#e3e3e3] aspect-square overflow-hidden shadow-sm w-full block"
                                         >
-                                            <div className="absolute top-[0px] md:top-[20px] left-[20px] z-10 flex flex-wrap gap-[10px] items-center pointer-events-none pr-[20px]">
+                                            <div className="absolute top-[0px] md:top-[20px] left-[20px] z-10 flex flex-wrap items-center pointer-events-none pr-[20px]" style={{ columnGap: '10px', rowGap: '2px' }}>
                                                 {product.title && (
-                                                    <h3 className="bg-[#f4f4f4] h-[40px] px-[14px] rounded-[8px] text-[16px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0">
+                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[40px] px-[10px] md:px-[14px] rounded-[8px] text-[13px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
                                                         {product.title}
                                                     </h3>
                                                 )}
 
                                                 {product.price && (
-                                                    <h3 className="bg-[#f4f4f4] h-[40px] px-[18px] rounded-[8px] text-[16px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0">
+                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[40px] px-[12px] md:px-[18px] rounded-[8px] text-[13px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
                                                         {!isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
                                                     </h3>
                                                 )}
@@ -429,7 +429,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                                                     setAddedStatus(prev => ({ ...prev, [product.id]: null }));
                                                                 }, 2000);
                                                             }}
-                                                            className={`h-[40px] w-[40px] rounded-[8px] flex items-center justify-center text-[#111] shadow-sm transition-all duration-500 pointer-events-auto border-none cursor-pointer group/cart active:scale-95 relative overflow-hidden ${isSoldOut
+                                                            className={`h-[34px] w-[34px] md:h-[40px] md:w-[40px] rounded-[8px] flex items-center justify-center text-[#111] shadow-sm transition-all duration-500 pointer-events-auto border-none cursor-pointer group/cart active:scale-95 relative overflow-hidden ${isSoldOut
                                                                     ? (supportStatus[product.id] === 'added' || (isInSupport && supportStatus[product.id] !== 'removed') ? 'bg-[#4ade80]' : 'bg-[#f4f4f4] hover:bg-[#ffffff]')
                                                                     : (!isSoldOut && (addedStatus[product.id] === 'added' || (isInCart && addedStatus[product.id] !== 'removed')) ? 'bg-[#4ade80]' : 'bg-[#f4f4f4] hover:bg-[#ffffff]')
                                                                 }`}
@@ -490,6 +490,14 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                                     );
                                                 })()}
                                             </div>
+
+                                            {product.edition && (
+                                                <div className="absolute bottom-[0px] left-[20px] z-10 pointer-events-none">
+                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[40px] px-[11px] md:px-[16px] rounded-[8px] text-[13px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
+                                                        Тираж: {product.edition}
+                                                    </h3>
+                                                </div>
+                                            )}
 
                                             <div className="relative w-full h-full overflow-hidden transition-transform duration-700 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:scale-[1.1]">
                                                 <Image
