@@ -313,24 +313,24 @@ export default function ProductPage() {
                 >
                     <div className="animate-stagger flex flex-col w-full max-w-[100%] lg:max-w-[90%] my-auto lg:m-auto">
 
-                        <h2 className="text-[32px] md:text-[40px] lg:text-[3.5vw] font-bold tracking-tighter leading-none mb-[20px] text-[#111]">
+                        <h2 className="text-[28px] md:text-[40px] lg:text-[3.5vw] font-bold tracking-tighter leading-[1.05] mb-[12px] lg:mb-[20px] text-[#111]">
                             {product.title}
                         </h2>
 
-                        <h3 className="inline-block bg-[#f4f4f4] px-[18px] py-[8px] rounded-[8px] text-[#111] font-bold text-[22px] mb-[30px] self-start shadow-sm">
+                        <h3 className="inline-block bg-[#f4f4f4] px-[16px] py-[6px] rounded-[8px] text-[#111] font-bold text-[18px] md:text-[22px] mb-[18px] lg:mb-[30px] self-start shadow-sm">
                             {product.price && !isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
                         </h3>
 
-                        <p className="text-[20px] md:text-lg lg:text-[1.2vw] font-medium leading-[1.6] opacity-90 mb-[50px] text-[#111]">
+                        <p className="text-[16px] md:text-lg lg:text-[1.2vw] font-medium leading-[1.35] lg:leading-[1.5] opacity-90 mb-[25px] lg:mb-[40px] text-[#111]">
                             {product.description}
                         </p>
 
-                        <div className="flex flex-col gap-1 mb-[50px]">
-                            <span className="text-[11px] font-bold tracking-widest opacity-40 uppercase text-[#111]">Детали проекта</span>
-                            {product.size && <span className="text-[14px] font-bold opacity-80 mt-2 text-[#111]">Размер: {product.size}</span>}
-                            {product.material && <span className="text-[14px] font-bold opacity-80 text-[#111]">Материал: {product.material}</span>}
-                            {product.year && <span className="text-[14px] font-bold opacity-80 text-[#111]">Год: {product.year}</span>}
-                            {product.role && <span className="text-[14px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>}
+                        <div className="flex flex-col gap-0.5 mb-[25px] lg:mb-[40px]">
+                            <span className="text-[10px] font-bold tracking-widest opacity-40 uppercase text-[#111]">Детали проекта</span>
+                            {product.size && <span className="text-[13px] font-bold opacity-80 mt-1.5 text-[#111]">Размер: {product.size}</span>}
+                            {product.material && <span className="text-[13px] font-bold opacity-80 text-[#111]">Материал: {product.material}</span>}
+                            {product.year && <span className="text-[13px] font-bold opacity-80 text-[#111]">Год: {product.year}</span>}
+                            {product.role && <span className="text-[13px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>}
                         </div>
 
                         <div

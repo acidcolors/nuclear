@@ -259,14 +259,14 @@ export default function ProjectClient({ initialProducts }: ProjectClientProps) {
                                         >
                                             {/* Labels (Absolute overlays) */}
                                             <div className="absolute top-[15px] left-[15px] right-[15px] z-20 flex justify-between items-start pointer-events-none">
-                                                <div className="flex flex-col gap-2 items-start">
-                                                    <div className="bg-[#f4f4f4] px-4 py-1.5 rounded-[8px] shadow-sm backdrop-blur-sm">
-                                                        <span className="text-[11px] font-bold tracking-widest uppercase text-[#111] opacity-70">
+                                                <div className="flex flex-col gap-1 lg:gap-1.5 items-start">
+                                                    <div className="bg-[#f4f4f4] px-3 py-1 lg:px-4 lg:py-1.5 rounded-[8px] shadow-sm backdrop-blur-sm">
+                                                        <span className="text-[10px] lg:text-[11px] font-bold tracking-widest uppercase text-[#111] opacity-70 whitespace-nowrap">
                                                             {currentTag}
                                                         </span>
                                                     </div>
-                                                    <div className="bg-[#f4f4f4] px-4 py-2 rounded-[10px] shadow-sm">
-                                                        <span className="text-[15px] font-bold tracking-tight text-[#111]">
+                                                    <div className="bg-[#f4f4f4] px-3 py-1.5 lg:px-4 lg:py-2 rounded-[10px] shadow-sm">
+                                                        <span className="text-[13px] lg:text-[15px] font-bold tracking-tight text-[#111] whitespace-nowrap">
                                                             {product.price}{!isNaN(Number(product.price)) && ' ₽'}
                                                         </span>
                                                     </div>
