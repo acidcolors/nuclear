@@ -14,9 +14,9 @@ interface TypewriterProps {
   interactive?: boolean;
 }
 
-export function Typewriter({ 
-  text, 
-  speed = 30, 
+export function Typewriter({
+  text,
+  speed = 1,
   delay = 1000,
   weightInactive = 500, // Базовая толщина для обычного текста
   weightActive = 900,   // Надувается при наведении
@@ -70,7 +70,7 @@ export function Typewriter({
 
         const influence = Math.max(0, 1 - distance / maxDist);
         const weight = weightInactive + (weightActive - weightInactive) * influence;
-        
+
         const skewDirection = distX > 0 ? 1 : -1;
         const skew = (skewActive * influence) * skewDirection;
 
@@ -109,9 +109,9 @@ export function Typewriter({
   const chars = text.split('');
 
   return (
-    <span 
-      ref={containerRef} 
-      className="relative text-[inherit]" 
+    <span
+      ref={containerRef}
+      className="relative text-[inherit]"
       style={{ whiteSpace: 'pre-wrap' }}
     >
       <style>{`
@@ -137,7 +137,7 @@ export function Typewriter({
                 <React.Fragment key={globalIdx}>
                   <span
                     className="pressure-char inline-block"
-                    style={{ 
+                    style={{
                       fontVariationSettings: `"wght" ${weightInactive}, "slnt" 0`,
                       opacity: globalIdx >= displayedCount ? 0 : 1,
                       pointerEvents: globalIdx >= displayedCount ? 'none' : 'auto'

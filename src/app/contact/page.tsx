@@ -182,8 +182,9 @@ export default function ContactPage() {
     const description = useMemo(() => {
         if (CMS_CONFIG.USE_NOTION && contactData.length > 0) {
             const row = contactData.find(c =>
-                (c.title && c.title.toLowerCase().includes('контакт')) ||
-                (!c.title && c.description)
+                c.description && 
+                (!c.url || c.url.trim() === '') && 
+                !(c.title && c.title.toLowerCase().includes('friend'))
             );
             if (row) return row.description;
         }
@@ -193,7 +194,8 @@ export default function ContactPage() {
     const socials = useMemo(() => {
         let items: any[] = [];
         if (CMS_CONFIG.USE_NOTION && contactData.length > 0) {
-            items = contactData.filter(c => c.url && !(c.title && c.title.toLowerCase().includes('контакт')));
+            // Берем всё, у чего есть url, кроме ссылок для "Друзей"
+            items = contactData.filter(c => c.url && !(c.title && c.title.toLowerCase().includes('friend')));
         }
         if (items.length > 0) return items;
         return [
@@ -267,18 +269,23 @@ export default function ContactPage() {
                     <div className="w-full max-w-[650px]">
                         <h2 className="animate-stagger opacity-0 translate-y-5 text-[1.8vw] font-bold mb-6 text-[#111]/60">Друзья</h2>
                         <div className="grid grid-cols-3 w-full gap-6">
-                            {friendsData.length > 0 ? (
-                                friendsData.map((friend) => {
-                                    const lowerName = friend.name.toLowerCase();
-                                    let imageSrc = friend.image;
+                            {(() => {
+                                const logosData = friendsData.filter(f => f.image || (f.name && f.name.toLowerCase() !== 'discription' && f.name.toLowerCase() !== 'description' && f.name.trim() !== ''));
 
-                                    if (!imageSrc) {
-                                        if (lowerName.includes('books')) imageSrc = '/logos/books.svg';
-                                        else if (lowerName.includes('gutenberg')) imageSrc = '/logos/gutenberg.svg';
-                                    }
+                                return logosData.length > 0 ? (
+                                    logosData.map((friend) => {
+                                        const lowerName = friend.name.toLowerCase();
+                                        let imageSrc = friend.image;
 
-                                    return (
-                                        <div key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] transition-all duration-300 hover:scale-105 group">
+                                        if (!imageSrc) {
+                                            if (lowerName.includes('books')) imageSrc = '/logos/books.svg';
+                                            else if (lowerName.includes('gutenberg')) imageSrc = '/logos/gutenberg.svg';
+                                        }
+
+                                        let href = friend.url;
+                                        if (href && !href.startsWith('http')) href = `https://${href}`;
+
+                                        const content = (
                                             <div className="w-full h-full relative">
                                                 {imageSrc ? (
                                                     <img
@@ -287,22 +294,32 @@ export default function ContactPage() {
                                                         className="w-full h-full object-contain transition-all duration-300 grayscale brightness-[0.2] group-hover:brightness-[0.5]"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase">NO IMG</div>
+                                                    <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase text-center p-2">NO IMG<br/>{friend.name}</div>
                                                 )}
                                             </div>
+                                        );
+
+                                        return href ? (
+                                            <a href={href} target="_blank" rel="noopener noreferrer" key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] transition-all duration-300 hover:scale-105 group block outline-none">
+                                                {content}
+                                            </a>
+                                        ) : (
+                                            <div key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] transition-all duration-300 hover:scale-105 group">
+                                                {content}
+                                            </div>
+                                        );
+                                    })
+                                ) : (
+                                    [
+                                        { src: '/logos/books.svg', alt: 'Books' },
+                                        { src: '/logos/gutenberg.svg', alt: 'Gutenberg' }
+                                    ].map((logo, i) => (
+                                        <div key={i} className="animate-stagger opacity-0 translate-y-5 aspect-square flex items-center justify-center p-[15%] transition-all duration-300 hover:scale-105">
+                                            <img src={logo.src} alt={logo.alt} className="w-full h-full object-contain" style={{ filter: 'grayscale(1) brightness(0.2)' }} />
                                         </div>
-                                    );
-                                })
-                            ) : (
-                                [
-                                    { src: '/logos/books.svg', alt: 'Books' },
-                                    { src: '/logos/gutenberg.svg', alt: 'Gutenberg' }
-                                ].map((logo, i) => (
-                                    <div key={i} className="animate-stagger opacity-0 translate-y-5 aspect-square flex items-center justify-center p-[15%] transition-all duration-300 hover:scale-105">
-                                        <img src={logo.src} alt={logo.alt} className="w-full h-full object-contain" style={{ filter: 'grayscale(1) brightness(0.2)' }} />
-                                    </div>
-                                ))
-                            )}
+                                    ))
+                                );
+                            })()}
                         </div>
                     </div>
                 </div>

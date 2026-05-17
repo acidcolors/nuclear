@@ -35,7 +35,7 @@ export const Marquee: React.FC<MarqueeProps> = ({ text, link }) => {
         <div 
             className="fixed bottom-0 left-0 w-full overflow-hidden bg-black text-white flex items-center"
             style={{ 
-                zIndex: 99999, 
+                zIndex: 900, 
                 height: 'var(--marquee-height, 50px)',
                 backgroundColor: 'var(--marquee-bg)',
                 color: 'var(--marquee-text-color)',

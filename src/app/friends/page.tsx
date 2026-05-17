@@ -15,6 +15,7 @@ export default function FriendsPage() {
     const [friendsData, setFriendsData] = useState<any[]>([]);
     const [loading, setLoading] = useState(true);
     const [isFetchingData, setIsFetchingData] = useState(true);
+    const [friendsDescData, setFriendsDescData] = useState<string | null>(null);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -26,10 +27,21 @@ export default function FriendsPage() {
         }, 50);
 
         if (CMS_CONFIG.USE_NOTION) {
-            getNotionFriendsData()
-                .then(data => setFriendsData(data))
-                .catch(err => console.error("Ошибка Notion Friends:", err))
-                .finally(() => setIsFetchingData(false));
+            Promise.all([
+                getNotionFriendsData(),
+                import('@/lib/notion').then(m => m.getNotionContactData()) // Загружаем и Контакты тоже, т.к. текст может быть там
+            ])
+            .then(([friends, contacts]) => {
+                setFriendsData(friends);
+                // Ищем строку с названием "Discription" или "Friends" в Контактах
+                const contactDesc = contacts.find(c => c.title && (c.title.toLowerCase().includes('discription') || c.title.toLowerCase().includes('description') || c.title.toLowerCase().includes('friend')));
+                if (contactDesc && contactDesc.description) {
+                    // Если нашли, сохраняем в отдельный стейт
+                    setFriendsDescData(contactDesc.description);
+                }
+            })
+            .catch(err => console.error("Ошибка Notion Friends/Contacts:", err))
+            .finally(() => setIsFetchingData(false));
         } else {
             setIsFetchingData(false);
         }
@@ -134,9 +146,14 @@ export default function FriendsPage() {
                 <div className="w-[84vw] max-w-[500px] flex flex-col items-center text-center">
 
                     <div className="grid grid-cols-2 md:grid-cols-3 w-full gap-4 pb-10 pt-2 px-2">
-                        {isFetchingData ? null : (
-                            friendsData.length > 0 ? (
-                                friendsData.map((friend) => {
+                        {isFetchingData ? null : (() => {
+                            const descriptionText = friendsData.find(f => f.text && f.text.trim() !== '')?.text 
+                                || "Друзья с которыми мы сотрудничаем, у нас вы можете найти наши изделия.";
+                            
+                            const logosData = friendsData.filter(f => f.image || (f.name && f.name.toLowerCase() !== 'discription' && f.name.toLowerCase() !== 'description' && f.name.trim() !== ''));
+
+                            return logosData.length > 0 ? (
+                                logosData.map((friend) => {
                                     const lowerName = friend.name.toLowerCase();
                                     let imageSrc = friend.image;
 
@@ -145,20 +162,30 @@ export default function FriendsPage() {
                                         else if (lowerName.includes('gutenberg')) imageSrc = '/logos/gutenberg.svg';
                                     }
 
-                                    return (
-                                        // ИЗМЕНЕНИЕ: Добавлен lg:p-[20%] для уменьшения логотипов на десктопе
+                                    let href = friend.url;
+                                    if (href && !href.startsWith('http')) href = `https://${href}`;
+
+                                    const content = (
+                                        <div className="w-full h-full relative">
+                                            {imageSrc ? (
+                                                <img
+                                                    src={imageSrc}
+                                                    alt={friend.name}
+                                                    className="w-full h-full object-contain transition-all duration-300 grayscale brightness-[0.2] group-hover:brightness-[0.5]"
+                                                />
+                                            ) : (
+                                                <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase text-center p-2">NO IMG<br/>{friend.name}</div>
+                                            )}
+                                        </div>
+                                    );
+
+                                    return href ? (
+                                        <a href={href} target="_blank" rel="noopener noreferrer" key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] lg:p-[20%] transition-all duration-300 hover:scale-110 group block outline-none">
+                                            {content}
+                                        </a>
+                                    ) : (
                                         <div key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] lg:p-[20%] transition-all duration-300 hover:scale-110 group">
-                                            <div className="w-full h-full relative">
-                                                {imageSrc ? (
-                                                    <img
-                                                        src={imageSrc}
-                                                        alt={friend.name}
-                                                        className="w-full h-full object-contain transition-all duration-300 grayscale brightness-[0.2] group-hover:brightness-[0.5]"
-                                                    />
-                                                ) : (
-                                                    <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase">NO IMG</div>
-                                                )}
-                                            </div>
+                                            {content}
                                         </div>
                                     );
                                 })
@@ -167,7 +194,6 @@ export default function FriendsPage() {
                                     { src: '/logos/books.svg', alt: 'Books' },
                                     { src: '/logos/gutenberg.svg', alt: 'Gutenberg' }
                                 ].map((logo, i) => (
-                                    // ИЗМЕНЕНИЕ: Добавлен lg:p-[25%] для фолбэка
                                     <div key={i} className="animate-stagger opacity-0 translate-y-5 aspect-square flex items-center justify-center p-[15%] lg:p-[25%] transition-all duration-300 hover:scale-105">
                                         <img
                                             src={logo.src}
@@ -177,15 +203,13 @@ export default function FriendsPage() {
                                         />
                                     </div>
                                 ))
-                            )
-                        )}
+                            );
+                        })()}
                     </div>
 
                     <div className="animate-stagger opacity-0 translate-y-5 w-full max-w-[400px]">
                         <p className="text-[17px] md:text-[20px] font-medium leading-[1.3] text-[#111] opacity-90 mb-12">
-                            {friendsData.length > 0 && friendsData[0].text
-                                ? friendsData[0].text
-                                : "Друзья с которыми мы сотрудничаем, у нас вы можете найти наши изделия."}
+                            {friendsDescData || friendsData.find(f => f.text && f.text.trim() !== '')?.text || "Друзья с которыми мы сотрудничаем, у нас вы можете найти наши изделия."}
                         </p>
                     </div>
 

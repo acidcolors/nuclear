@@ -46,15 +46,8 @@ export async function getNotionProducts() {
                 'Notion-Version': '2022-06-28',
                 'Content-Type': 'application/json',
             },
-            body: JSON.stringify({
-                sorts: [
-                    {
-                        property: 'id',
-                        direction: 'ascending',
-                    },
-                ],
-            }),
-            next: { revalidate: 60 } // Кэшируем на минуту
+            body: JSON.stringify({}),
+            next: { revalidate: 5 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -70,7 +63,28 @@ export async function getNotionProducts() {
         const getNumber = (prop: any) => prop?.number?.toString() || '';
         const getMultiSelect = (prop: any) => prop?.multi_select?.map((s: any) => s.name) || [];
 
-        return data.results
+        const getSortNumber = (properties: any) => {
+            if (!properties) return null;
+            const keys = Object.keys(properties);
+            // Приоритет отдаем index, order или решетке, и только в конце - id
+            const sortKey = keys.find(key => {
+                const lowerKey = key.toLowerCase();
+                return lowerKey.includes('index') || lowerKey.includes('order') || lowerKey.includes('#');
+            }) || keys.find(key => key.toLowerCase() === 'id');
+            
+            if (!sortKey) return null;
+            const prop = properties[sortKey];
+            if (prop.type === 'number') return prop.number;
+            
+            const text = prop.title?.[0]?.plain_text || prop.rich_text?.[0]?.plain_text || '';
+            // Вытаскиваем только цифры (чтобы prj_01 превратилось в 1)
+            const digits = text.replace(/\D/g, '');
+            if (!digits) return null;
+            const num = parseInt(digits, 10);
+            return isNaN(num) ? null : num;
+        };
+
+        const items = data.results
             .filter((page: any) => {
                 if (page.properties.Checkbox) {
                     return page.properties.Checkbox.checkbox === true;
@@ -94,8 +108,19 @@ export async function getNotionProducts() {
                     role: getText(props.Role),
                     tags: getMultiSelect(props.Tags),
                     notionImages: imageUrls,
+                    sortOrder: getSortNumber(props)
                 };
             });
+
+        // Сортируем: по возрастанию sortOrder
+        items.sort((a: any, b: any) => {
+            if (a.sortOrder !== null && b.sortOrder !== null) return a.sortOrder - b.sortOrder;
+            if (a.sortOrder !== null) return -1;
+            if (b.sortOrder !== null) return 1;
+            return 0;
+        });
+
+        return items;
     } catch (error: any) {
         console.error('Error in getNotionProducts:', error.message);
         return [];
@@ -116,7 +141,7 @@ export async function getNotionMainPageData() {
             body: JSON.stringify({
                 page_size: 1
             }),
-            next: { revalidate: 60 }
+            next: { revalidate: 5 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -155,7 +180,7 @@ export async function getNotionContactData() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 60 }
+            next: { revalidate: 5 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -198,7 +223,7 @@ export async function getNotionFriendsData() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 60 }
+            next: { revalidate: 5 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -209,8 +234,28 @@ export async function getNotionFriendsData() {
             const list = prop?.title || prop?.rich_text || [];
             return list[0]?.plain_text || '';
         };
+        const getNumber = (properties: any) => {
+            if (!properties) return null;
+            const keys = Object.keys(properties);
+            const sortKey = keys.find(key => {
+                const lowerKey = key.toLowerCase();
+                return lowerKey.includes('index') || 
+                       lowerKey.includes('order') || 
+                       lowerKey.includes('id') || 
+                       lowerKey.includes('#');
+            });
+            
+            if (!sortKey) return null;
+            const prop = properties[sortKey];
+            if (prop.type === 'number') return prop.number;
+            
+            // Если это текст, пробуем распарсить число
+            const text = prop.title?.[0]?.plain_text || prop.rich_text?.[0]?.plain_text || '';
+            const num = parseInt(text, 10);
+            return isNaN(num) ? null : num;
+        };
 
-        return data.results.map((page: any) => {
+        const items = data.results.map((page: any) => {
             const media = page.properties['Files & media']?.files || [];
             const imageUrl = media[0]?.file?.url || media[0]?.external?.url || '';
 
@@ -218,9 +263,21 @@ export async function getNotionFriendsData() {
                 id: page.id,
                 name: getText(page.properties.Name) || getText(page.properties.Title),
                 text: getText(page.properties.Text),
-                image: imageUrl
+                image: imageUrl,
+                url: getText(page.properties.url_f) || getText(page.properties.URL) || getText(page.properties.Link) || '',
+                sortOrder: getNumber(page.properties)
             };
         });
+
+        // Сортируем: сначала элементы с указанным порядком (по возрастанию), затем без порядка
+        items.sort((a: any, b: any) => {
+            if (a.sortOrder !== null && b.sortOrder !== null) return a.sortOrder - b.sortOrder;
+            if (a.sortOrder !== null) return -1;
+            if (b.sortOrder !== null) return 1;
+            return 0;
+        });
+
+        return items;
     } catch (error: any) {
         console.error('Error in getNotionFriendsData:', error.message);
         return [];
@@ -239,7 +296,7 @@ export async function getNotionHomePageMain() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ page_size: 20 }),
-            next: { revalidate: 60 }
+            next: { revalidate: 5 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -301,7 +358,7 @@ export async function getNotionHomePageLinks() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 60 }
+            next: { revalidate: 5 }
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
