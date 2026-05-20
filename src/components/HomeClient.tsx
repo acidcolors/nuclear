@@ -28,6 +28,33 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
   const [isLoading, setIsLoading] = useState(true);
   const [isAnimationComplete, setIsAnimationComplete] = useState(false);
   const [mounted, setMounted] = useState(false);
+  const [isActualMiniAppUser, setIsActualMiniAppUser] = useState(false);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return;
+
+    const check = () => {
+      const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+      const isTelegram = Boolean(tgUser?.id);
+      const isShortScreen = window.innerHeight < 650;
+      setIsActualMiniAppUser(isTelegram || isShortScreen);
+    };
+
+    check();
+    window.addEventListener('resize', check);
+
+    let attempts = 0;
+    const tgInterval = setInterval(() => {
+      attempts++;
+      check();
+      if (attempts > 20) clearInterval(tgInterval);
+    }, 100);
+
+    return () => {
+      window.removeEventListener('resize', check);
+      clearInterval(tgInterval);
+    };
+  }, []);
 
   // Состояние "Шторка открыта": когда данные пришли И анимация доиграла
   const isLocked = (forcedLoading || isLoading || !isAnimationComplete);
@@ -240,6 +267,11 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
                     return null;
                   }
 
+                  // Скрываем телеграм, если пользователь зашел из Telegram / короткого экрана
+                  if (isActualMiniAppUser && isTg) {
+                    return null;
+                  }
+
                   let posClass = "relative mt-4 ml-[6vw] lg:hidden";
                   if (isInsta) posClass = "custom-insta";
                   else if (isTg) posClass = "custom-tg";
@@ -272,7 +304,7 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
                       </a>
                     </div>
                   )}
-                  {!marqueeData?.isActive && (
+                  {!marqueeData?.isActive && !isActualMiniAppUser && (
                     <div className="custom-tg pointer-events-auto animate-up opacity-0 translate-y-5">
                       <a href="https://t.me/mynuclear" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
                         <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>

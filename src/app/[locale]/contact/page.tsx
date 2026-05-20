@@ -13,15 +13,50 @@ import { useTranslations } from 'next-intl';
 const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boolean }) => {
     const t = useTranslations('Contact');
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
+    const [isActualMiniAppUser, setIsActualMiniAppUser] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const check = () => {
+            const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+            const isTelegram = Boolean(tgUser?.id);
+            const isShortScreen = window.innerHeight < 650;
+            setIsActualMiniAppUser(isTelegram || isShortScreen);
+        };
+
+        check();
+        window.addEventListener('resize', check);
+
+        let attempts = 0;
+        const tgInterval = setInterval(() => {
+            attempts++;
+            check();
+            if (attempts > 20) clearInterval(tgInterval);
+        }, 100);
+
+        return () => {
+            window.removeEventListener('resize', check);
+            clearInterval(tgInterval);
+        };
+    }, []);
 
     // Собираем все элементы в один массив
     const allItems = useMemo(() => {
-        const socials = items.map(it => ({ ...it, type: 'social' }));
+        let socials = items.map(it => ({ ...it, type: 'social' }));
+
+        if (isActualMiniAppUser) {
+            socials = socials.filter(it => {
+                const lowerName = it.title.toLowerCase();
+                return !(lowerName.includes('tg') || lowerName.includes('telegr') || !lowerName.includes('instagram'));
+            });
+        }
+
         if (showFriends) {
             return [...socials, { id: 'friends', type: 'button', title: t('friends'), url: '/friends' }];
         }
         return socials;
-    }, [items, showFriends, t]);
+    }, [items, showFriends, t, isActualMiniAppUser]);
 
     if (allItems.length === 0) return null;
 
