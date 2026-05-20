@@ -1,0 +1,52 @@
+{
+  "Header": {
+    "project": "Projects",
+    "contact": "Contact",
+    "cart": "Cart"
+  },
+  "Cart": {
+    "title": "Cart",
+    "successTitle": "Order Received!",
+    "successDesc": "We will contact you shortly to confirm.",
+    "emptyTitle": "Your cart is empty",
+    "emptyDesc": "Time to add something",
+    "total": "Total",
+    "requiredField": "required field",
+    "contactPlaceholder": "@telegram or email",
+    "messagePlaceholder": "Message (this field can be left empty)",
+    "submit": "Checkout",
+    "submitDesktop": "Send"
+  },
+  "Support": {
+    "title": "Support",
+    "successTitle": "Request sent!",
+    "successDesc": "We will contact you shortly.",
+    "descItemsDesktop": "You selected items that are out of stock. Leave your contacts, and we will notify you when they arrive.",
+    "descGeneralDesktop": "Have a question or suggestion? Leave your contacts and we will get back to you shortly.",
+    "descItemsMobile": "You selected items for notification. We will notify you when they arrive.",
+    "descGeneralMobile": "Have a question or suggestion? Leave your contacts and we will get back to you.",
+    "requiredField": "required field",
+    "contactPlaceholder": "@telegram or email",
+    "messagePlaceholder": "Message",
+    "submit": "Send"
+  },
+  "Projects": {
+    "title": "Projects",
+    "all": "All"
+  },
+  "Contact": {
+    "friends": "Friends",
+    "friendsDesc": "Friends we collaborate with, where you can find our products.",
+    "defaultDesc": "We thrive on blurring the lines between formats — spanning everything from 3D digital installations to limited-run silver pieces and art toys. Got a wild idea for a project or a collab? Shoot us a message on Telegram. We're always down to meet new people."
+  },
+  "Product": {
+    "details": "PROJECT DETAILS",
+    "size": "Size:",
+    "material": "Material:",
+    "year": "Year:",
+    "edition": "Edition:",
+    "addToCart": "Add to Cart",
+    "share": "Share"
+  },
+  "Home": { "heroTitle": "Nuclear Garden" }
+}

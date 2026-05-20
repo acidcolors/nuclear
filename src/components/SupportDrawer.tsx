@@ -20,13 +20,35 @@ export const SupportDrawer = () => {
     const [showContactError, setShowContactError] = useState(false);
     const [isPlaceholderFading, setIsPlaceholderFading] = useState(false);
     const [isMounted, setIsMounted] = useState(false);
+    const [isActualMiniAppUser, setIsActualMiniAppUser] = useState(false);
 
     useEffect(() => {
         setIsMounted(true);
-        const check = () => setIsDesktop(window.innerWidth >= 1024);
+        if (typeof window === 'undefined') return;
+
+        const check = () => {
+            const tgUser = (window as any).Telegram?.WebApp?.initDataUnsafe?.user;
+            const isTelegram = Boolean(tgUser?.id);
+            const isShortScreen = window.innerHeight < 650;
+            
+            setIsDesktop(window.innerWidth >= 1024);
+            setIsActualMiniAppUser(isTelegram || isShortScreen);
+        };
+
         check();
         window.addEventListener('resize', check);
-        return () => window.removeEventListener('resize', check);
+
+        let attempts = 0;
+        const tgInterval = setInterval(() => {
+            attempts++;
+            check();
+            if (attempts > 20) clearInterval(tgInterval); 
+        }, 100);
+
+        return () => {
+            window.removeEventListener('resize', check);
+            clearInterval(tgInterval);
+        };
     }, []);
 
     const handleRemoveItem = (id: string) => {
@@ -74,7 +96,9 @@ export const SupportDrawer = () => {
             tgUser = (window as any).Telegram.WebApp.initDataUnsafe.user;
         }
 
-        if (!customerInfo.trim() && !tgUser) {
+        const isSmallScreen = typeof window !== 'undefined' && window.innerHeight < 650;
+
+        if (!customerInfo.trim() && !tgUser && !isSmallScreen) {
             setIsPlaceholderFading(true);
             setTimeout(() => {
                 setShowContactError(true);
@@ -160,6 +184,7 @@ export const SupportDrawer = () => {
         successRef,
         showContactError,
         isPlaceholderFading,
+        isActualMiniAppUser,
     };
 
     return isDesktop ? (

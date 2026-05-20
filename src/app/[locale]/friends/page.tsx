@@ -5,8 +5,10 @@ import { TransitionLink } from '@/components/TransitionLink';
 import gsap from 'gsap';
 import { getNotionFriendsData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
+import { useTranslations } from 'next-intl';
 
 export default function FriendsPage() {
+    const t = useTranslations('Contact');
     const containerRef = useRef<HTMLDivElement>(null);
     const starLeftRef = useRef<HTMLDivElement>(null);
     const crossRef = useRef<HTMLSpanElement>(null);
@@ -148,7 +150,7 @@ export default function FriendsPage() {
                     <div className="grid grid-cols-2 md:grid-cols-3 w-full gap-4 pb-10 pt-2 px-2">
                         {isFetchingData ? null : (() => {
                             const descriptionText = friendsData.find(f => f.text && f.text.trim() !== '')?.text 
-                                || "Друзья с которыми мы сотрудничаем, у нас вы можете найти наши изделия.";
+                                || t('friendsDesc');
                             
                             const logosData = friendsData.filter(f => f.image || (f.name && f.name.toLowerCase() !== 'discription' && f.name.toLowerCase() !== 'description' && f.name.trim() !== ''));
 
@@ -209,7 +211,7 @@ export default function FriendsPage() {
 
                     <div className="animate-stagger opacity-0 translate-y-5 w-full max-w-[400px]">
                         <p className="text-[17px] md:text-[20px] font-medium leading-[1.3] text-[#111] opacity-90 mb-12">
-                            {friendsDescData || friendsData.find(f => f.text && f.text.trim() !== '')?.text || "Друзья с которыми мы сотрудничаем, у нас вы можете найти наши изделия."}
+                            {friendsDescData || friendsData.find(f => f.text && f.text.trim() !== '')?.text || t('friendsDesc')}
                         </p>
                     </div>
 

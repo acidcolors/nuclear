@@ -1,4 +1,5 @@
 import React from 'react';
+import { useTranslations } from 'next-intl';
 import { X, Plus, Minus, Trash2, ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useSupport, SupportItem } from '@/app/store/useSupport';
@@ -23,6 +24,7 @@ interface SupportDrawerProps {
     successRef: React.RefObject<HTMLDivElement | null>;
     showContactError: boolean;
     isPlaceholderFading: boolean;
+    isActualMiniAppUser: boolean;
 }
 
 const SupportItemRow = ({ item, handleRemoveItem }: { item: SupportItem, handleRemoveItem: (id: string) => void }) => {
@@ -139,7 +141,9 @@ export const SupportDrawerDesktop = ({
     successRef,
     showContactError,
     isPlaceholderFading,
+    isActualMiniAppUser,
 }: SupportDrawerProps) => {
+    const t = useTranslations('Support');
     return (
         <>
             {/* Overlay */}
@@ -164,7 +168,7 @@ export const SupportDrawerDesktop = ({
                     {orderStatus !== 'success' && (
                         <>
                             <h2 className="text-[32px] font-bold tracking-tight text-[#111]">
-                                Поддержка
+                                {t('title')}
                             </h2>
                             <button
                                 onClick={() => setIsOpen(false)}
@@ -184,8 +188,8 @@ export const SupportDrawerDesktop = ({
                             className="h-full flex flex-col items-center justify-center text-center px-10"
                             style={{ marginTop: '-60px' }}
                         >
-                            <h3 className="text-2xl font-black tracking-tighter text-[#111] uppercase mb-2">Запрос отправлен!</h3>
-                            <p className="text-sm font-medium text-[#111] opacity-60">Мы скоро свяжемся с вами для подтверждения.</p>
+                            <h3 className="text-2xl font-black tracking-tighter text-[#111] uppercase mb-2">{t('successTitle')}</h3>
+                            <p className="text-sm font-medium text-[#111] opacity-60">{t('successDesc')}</p>
                         </div>
                     ) : (
                         <div className="flex flex-col !gap-8 pb-10">
@@ -201,25 +205,27 @@ export const SupportDrawerDesktop = ({
                             <div className="pt-4 flex flex-col gap-10">
                                 <p className="text-[16px] font-medium text-[#111] opacity-30 leading-relaxed max-w-[90%]">
                                     {items.length > 0
-                                        ? "Вы выбрали товары, которых сейчас нет в наличии. Оставьте контакты, и мы сообщим вам о пополнении."
-                                        : "Есть вопрос или предложение? Оставьте свои контакты, и мы свяжемся с вами в ближайшее время."
+                                        ? t('descItemsDesktop')
+                                        : t('descGeneralDesktop')
                                     }
                                 </p>
 
                                 <div className="flex flex-col gap-[12px] w-full">
-                                    <input
-                                        type="text"
-                                        value={customerInfo}
-                                        onChange={(e) => setCustomerInfo(e.target.value)}
-                                        placeholder={showContactError ? "обязательное поле" : "@telegram или email"}
-                                        className={`w-full h-[50px] bg-white border border-transparent rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start contact-info-field ${showContactError ? 'shake-error' : ''} ${isPlaceholderFading ? 'placeholder-fading' : ''}`}
-                                        style={{ paddingLeft: '30px', paddingRight: '30px', boxSizing: 'border-box' }}
-                                    />
+                                    {!isActualMiniAppUser && (
+                                        <input
+                                            type="text"
+                                            value={customerInfo}
+                                            onChange={(e) => setCustomerInfo(e.target.value)}
+                                            placeholder={showContactError ? t('requiredField') : t('contactPlaceholder')}
+                                            className={`w-full h-[50px] bg-white border border-transparent rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start contact-info-field ${showContactError ? 'shake-error' : ''} ${isPlaceholderFading ? 'placeholder-fading' : ''}`}
+                                            style={{ paddingLeft: '30px', paddingRight: '30px', boxSizing: 'border-box' }}
+                                        />
+                                    )}
 
                                     <textarea
                                         value={message}
                                         onChange={(e) => setMessage(e.target.value)}
-                                        placeholder="Сообщение"
+                                        placeholder={t('messagePlaceholder')}
                                         className="w-full h-[120px] bg-white border-none rounded-[10px] text-[18px] italic focus:outline-none placeholder:text-[#111] placeholder:opacity-20 placeholder:italic shadow-sm self-start resize-none pt-[12px] pb-[12px]"
                                         style={{ paddingLeft: '30px', paddingRight: '30px', boxSizing: 'border-box' }}
                                     />
@@ -232,7 +238,7 @@ export const SupportDrawerDesktop = ({
                                     style={{ marginTop: '25px' }}
                                 >
                                     <ArrowRight className="w-5 h-5 transition-transform group-hover:translate-x-1" />
-                                    <span style={{ transform: 'translateY(1px)' }}>Отправить</span>
+                                    <span style={{ transform: 'translateY(1px)' }}>{t('submit')}</span>
                                 </button>
                             </div>
                         </div>

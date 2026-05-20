@@ -1,14 +1,8 @@
 'use server';
 
-const NOTION_SECRET = process.env.NOTION_SECRET;
-const NOTION_DATABASE_ID = process.env.NOTION_DATABASE_ID;
-const NOTION_MAIN_PAGE_DATABASE_ID = process.env.NOTION_MAIN_PAGE_DATABASE_ID;
-const NOTION_CONTACT_DATABASE_ID = process.env.NOTION_CONTACT_DATABASE_ID;
-const NOTION_FRIENDS_DATABASE_ID = process.env.NOTION_FRIENDS_DATABASE_ID;
+import { getLocale } from 'next-intl/server';
 
-// Новые базы для главной страницы
-const NOTION_HOME_MAIN_DB_ID = '354645ebe3ec804d8db5cd393d0b560f';
-const NOTION_HOME_LINKS_DB_ID = '354645ebe3ec80e08aa7dd63155950f4';
+const NOTION_SECRET = process.env.NOTION_SECRET;
 
 /**
  * Обертка над fetch с таймаутом для предотвращения зависания SSR
@@ -34,12 +28,15 @@ async function fetchWithTimeout(url: string, options: any, timeout = 7000) {
 }
 
 export async function getNotionProducts() {
-    console.log('getNotionProducts: fetching all products for DB:', NOTION_DATABASE_ID);
+    const locale = await getLocale();
+    const databaseId = locale === 'en' ? process.env.NOTION_DATABASE_EN_ID : process.env.NOTION_DATABASE_ID;
+
+    console.log('getNotionProducts: fetching all products for DB:', databaseId);
     
-    if (!NOTION_SECRET || !NOTION_DATABASE_ID) return [];
+    if (!NOTION_SECRET || !databaseId) return [];
 
     try {
-        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${databaseId}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -58,7 +55,7 @@ export async function getNotionProducts() {
         const getText = (prop: any) => {
             if (!prop) return '';
             const list = prop.title || prop.rich_text || [];
-            return list[0]?.plain_text || '';
+            return list.map((item: any) => item?.plain_text || '').join('');
         };
         const getNumber = (prop: any) => prop?.number?.toString() || '';
         const getMultiSelect = (prop: any) => prop?.multi_select?.map((s: any) => s.name) || [];
@@ -129,10 +126,13 @@ export async function getNotionProducts() {
 }
 
 export async function getNotionMainPageData() {
-    if (!NOTION_SECRET || !NOTION_MAIN_PAGE_DATABASE_ID) return null;
+    const locale = await getLocale();
+    const databaseId = locale === 'en' ? process.env.NOTION_MAIN_EN_PAGE_DATABASE_ID : process.env.NOTION_MAIN_PAGE_DATABASE_ID;
+
+    if (!NOTION_SECRET || !databaseId) return null;
 
     try {
-        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_MAIN_PAGE_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${databaseId}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -153,8 +153,9 @@ export async function getNotionMainPageData() {
 
         const props = page.properties;
         const getText = (prop: any) => {
+            if (!prop) return '';
             const list = prop?.title || prop?.rich_text || [];
-            return list[0]?.plain_text || '';
+            return list.map((item: any) => item?.plain_text || '').join('');
         };
         const getMultiSelect = (prop: any) => prop?.multi_select?.map((s: any) => s.name) || [];
 
@@ -170,10 +171,13 @@ export async function getNotionMainPageData() {
 }
 
 export async function getNotionContactData() {
-    if (!NOTION_SECRET || !NOTION_CONTACT_DATABASE_ID) return [];
+    const locale = await getLocale();
+    const databaseId = locale === 'en' ? process.env.NOTION_CONTACT_EN_DATABASE_ID : process.env.NOTION_CONTACT_DATABASE_ID;
+
+    if (!NOTION_SECRET || !databaseId) return [];
 
     try {
-        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_CONTACT_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${databaseId}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -188,9 +192,10 @@ export async function getNotionContactData() {
 
         const data = await response.json();
         const getText = (prop: any) => {
+            if (!prop) return '';
             if (prop?.type === 'url') return prop.url || '';
             const list = prop?.title || prop?.rich_text || [];
-            return list[0]?.plain_text || '';
+            return list.map((item: any) => item?.plain_text || '').join('');
         };
 
         return data.results.map((page: any) => {
@@ -213,10 +218,13 @@ export async function getNotionContactData() {
 }
 
 export async function getNotionFriendsData() {
-    if (!NOTION_SECRET || !NOTION_FRIENDS_DATABASE_ID) return [];
+    const locale = await getLocale();
+    const databaseId = locale === 'en' ? process.env.NOTION_FRIENDS_EN_DATABASE_ID : process.env.NOTION_FRIENDS_DATABASE_ID;
+
+    if (!NOTION_SECRET || !databaseId) return [];
 
     try {
-        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_FRIENDS_DATABASE_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${databaseId}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -231,9 +239,10 @@ export async function getNotionFriendsData() {
 
         const data = await response.json();
         const getText = (prop: any) => {
+            if (!prop) return '';
             if (prop?.type === 'url') return prop.url || '';
             const list = prop?.title || prop?.rich_text || [];
-            return list[0]?.plain_text || '';
+            return list.map((item: any) => item?.plain_text || '').join('');
         };
         const getNumber = (properties: any) => {
             if (!properties) return null;
@@ -286,10 +295,13 @@ export async function getNotionFriendsData() {
 }
 
 export async function getNotionHomePageMain() {
-    if (!NOTION_SECRET) return null;
+    const locale = await getLocale();
+    const databaseId = locale === 'en' ? process.env.NOTION_HOME_EN_MAIN_DB_ID : process.env.NOTION_HOME_MAIN_DB_ID;
+
+    if (!NOTION_SECRET || !databaseId) return null;
 
     try {
-        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_HOME_MAIN_DB_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${databaseId}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -312,8 +324,9 @@ export async function getNotionHomePageMain() {
         if (!results || results.length === 0) return null;
 
         const getText = (prop: any) => {
+            if (!prop) return '';
             const list = prop?.title || prop?.rich_text || [];
-            return list[0]?.plain_text || '';
+            return list.map((item: any) => item?.plain_text || '').join('');
         };
 
         // Ищем основные данные (обычно первая запись, которая НЕ бегущая строка)
@@ -348,10 +361,13 @@ export async function getNotionHomePageMain() {
 }
 
 export async function getNotionHomePageLinks() {
-    if (!NOTION_SECRET) return [];
+    const locale = await getLocale();
+    const databaseId = locale === 'en' ? process.env.NOTION_HOME_EN_LINKS_DB_ID : process.env.NOTION_HOME_LINKS_DB_ID;
+
+    if (!NOTION_SECRET || !databaseId) return [];
 
     try {
-        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${NOTION_HOME_LINKS_DB_ID}/query`, {
+        const response = await fetchWithTimeout(`https://api.notion.com/v1/databases/${databaseId}/query`, {
             method: 'POST',
             headers: {
                 'Authorization': `Bearer ${NOTION_SECRET}`,
@@ -365,9 +381,10 @@ export async function getNotionHomePageLinks() {
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
         const data = await response.json();
         const getText = (prop: any) => {
+            if (!prop) return '';
             if (prop?.type === 'url') return prop.url || '';
             const list = prop?.title || prop?.rich_text || [];
-            return list[0]?.plain_text || '';
+            return list.map((item: any) => item?.plain_text || '').join('');
         };
 
         return data.results

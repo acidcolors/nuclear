@@ -6,6 +6,7 @@ import { gsap } from 'gsap';
 import { Preloader } from '@/components/Preloader';
 import { TextPressure } from '@/components/ui/TextPressure';
 import { Marquee } from '@/components/ui/Marquee';
+import { useTranslations } from 'next-intl';
 
 interface HomeClientProps {
   initialMain?: { title: string; description: string } | null;
@@ -16,6 +17,7 @@ interface HomeClientProps {
 }
 
 export default function HomeClient({ initialMain, initialLinks, forcedLoading = false, marqueeData }: HomeClientProps) {
+  const t = useTranslations('Home');
   useEffect(() => {
     console.log('[Marquee Debug] Data from Notion:', marqueeData);
   }, [marqueeData]);
@@ -114,22 +116,53 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
 
   // 4. УМНОЕ ФОРМАТИРОВАНИЕ ЗАГОЛОВКОВ
   const titles = useMemo(() => {
-    const raw = initialMain?.title || "Ядерный Сад";
-    const isStandard = raw.toLowerCase().includes('ядерный сад');
+    const defaultTitle = t('heroTitle');
+    const raw = initialMain?.title || defaultTitle;
+    const isStandard = raw.toLowerCase().includes('ядерный сад') || raw.toLowerCase().includes('nuclear garden');
+
+    let bg = raw;
+    let fg = raw;
+
+    if (isStandard) {
+      // Если это стандартный заголовок, то используем локализованный дефолтный заголовок t('heroTitle')
+      const localizedTitle = defaultTitle;
+      if (localizedTitle.toLowerCase().includes('ядерный сад')) {
+        bg = "Ядер\nный\nСад";
+        fg = "Ядерный\nСад";
+      } else {
+        bg = "Nuclear\nGarden";
+        fg = "Nuclear\nGarden";
+      }
+    }
 
     return {
-      bg: isStandard ? "Ядер\nный\nСад" : raw,
-      fg: isStandard ? "Ядерный\nСад" : raw
+      bg,
+      fg
     };
-  }, [initialMain]);
+  }, [initialMain, t]);
 
-  const displayDescription = initialMain?.description || "В нашей мастерской рождаются самые разные форматы — от независимого самиздата до концептуального серебра. Мы ценим уникальность, поэтому каждый релиз выпускается строгим лимитом или вовсе в одном экземпляре. Загляните в меню проектов: там собраны наши актуальные коллекции, включая открытки, арт-игрушки, зины и серебряные предметы";
+  const defaultDescRu = "В нашей мастерской рождаются самые разные форматы — от независимого самиздата до концептуального серебра. Мы ценим уникальность, поэтому каждый релиз выпускается строгим лимитом или вовсе в одном экземпляре. Загляните в меню проектов: там собраны наши актуальные коллекции, включая открытки, арт-игрушки, зины и серебряные предметы";
+  const defaultDescEn = "Our workshop brings to life a variety of formats — from independent self-publishing to conceptual silver. We value uniqueness, so every release is limited or one-of-a-kind. Take a look at the projects menu: it features our current collections, including postcards, art toys, zines, and silver items.";
+
+  const displayDescription = useMemo(() => {
+    const isEn = t('heroTitle').toLowerCase().includes('nuclear');
+    const dbDesc = initialMain?.description;
+
+    // Если в базе нет описания или оно совпадает со стандартным русским, но мы на английской локали — переводим его
+    if (isEn) {
+      if (!dbDesc || dbDesc === defaultDescRu) {
+        return defaultDescEn;
+      }
+      return dbDesc;
+    }
+    return dbDesc || defaultDescRu;
+  }, [initialMain, t]);
 
   const homeLinks = initialLinks || [];
 
   return (
     <>
-      <main ref={containerRef} className="relative w-screen h-screen bg-[#ebebeb] overflow-hidden">
+      <main ref={containerRef} className={`relative w-screen h-screen bg-[#ebebeb] overflow-hidden ${marqueeData?.isActive ? 'has-marquee' : ''}`}>
         <Preloader
           variant="home"
           isLoading={isLocked}
@@ -199,9 +232,17 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
               {homeLinks.length > 0 ? (
                 homeLinks.map((link: any) => {
                   const name = link.name.toLowerCase();
+                  const isInsta = name.includes('insta');
+                  const isTg = name.includes('tg') || name.includes('telegr');
+
+                  // Скрываем инстаграм и телеграм, если включена бегущая строка
+                  if (marqueeData?.isActive && (isInsta || isTg)) {
+                    return null;
+                  }
+
                   let posClass = "relative mt-4 ml-[6vw] lg:hidden";
-                  if (name.includes('insta')) posClass = "custom-insta";
-                  else if (name.includes('tg') || name.includes('telegr')) posClass = "custom-tg";
+                  if (isInsta) posClass = "custom-insta";
+                  else if (isTg) posClass = "custom-tg";
                   else if (name.includes('behan')) posClass = "custom-behance";
 
                   return (
@@ -219,26 +260,30 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
                 })
               ) : (
                 <>
-                  <div className="custom-insta pointer-events-auto animate-up opacity-0 translate-y-5">
-                    <a href="https://www.instagram.com/gardennuclear/" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
-                      <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
-                        <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                          <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
-                          <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
+                  {!marqueeData?.isActive && (
+                    <div className="custom-insta pointer-events-auto animate-up opacity-0 translate-y-5">
+                      <a href="https://www.instagram.com/gardennuclear/" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                        <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
+                          <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
+                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
+                          </div>
                         </div>
-                      </div>
-                    </a>
-                  </div>
-                  <div className="custom-tg pointer-events-auto animate-up opacity-0 translate-y-5">
-                    <a href="https://t.me/mynuclear" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
-                      <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
-                        <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                          <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
-                          <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                      </a>
+                    </div>
+                  )}
+                  {!marqueeData?.isActive && (
+                    <div className="custom-tg pointer-events-auto animate-up opacity-0 translate-y-5">
+                      <a href="https://t.me/mynuclear" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                        <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
+                          <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                          </div>
                         </div>
-                      </div>
-                    </a>
-                  </div>
+                      </a>
+                    </div>
+                  )}
                 </>
               )}
             </div>

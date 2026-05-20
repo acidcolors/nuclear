@@ -7,19 +7,21 @@ import InteractiveRelax from '@/components/ui/InteractiveRelax';
 import { TransitionLink } from '@/components/TransitionLink';
 import { getNotionContactData, getNotionFriendsData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
+import { useTranslations } from 'next-intl';
 
 // --- УНИФИЦИРОВАННЫЙ МАГНИТНЫЙ КОМПОНЕНТ ---
 const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boolean }) => {
+    const t = useTranslations('Contact');
     const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
 
     // Собираем все элементы в один массив
     const allItems = useMemo(() => {
         const socials = items.map(it => ({ ...it, type: 'social' }));
         if (showFriends) {
-            return [...socials, { id: 'friends', type: 'button', title: 'Друзья', url: '/friends' }];
+            return [...socials, { id: 'friends', type: 'button', title: t('friends'), url: '/friends' }];
         }
         return socials;
-    }, [items, showFriends]);
+    }, [items, showFriends, t]);
 
     if (allItems.length === 0) return null;
 
@@ -68,7 +70,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                                     className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-white hover:bg-[#ffffff] no-underline pointer-events-auto"
                                 >
                                     <img src="/icons/Fire.svg" alt="fire" className="w-[18px] h-auto pointer-events-none" />
-                                    <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>Друзья</span>
+                                    <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>{item.title}</span>
                                 </TransitionLink>
                             </div>
                         </div>
@@ -123,6 +125,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
 };
 
 export default function ContactPage() {
+    const t = useTranslations('Contact');
     const [loading, setLoading] = useState(true);
     const [animations, setAnimations] = useState<{ girl: any, cube: any, triangle: any } | null>(null);
     const [contactData, setContactData] = useState<any[]>([]);
@@ -188,8 +191,8 @@ export default function ContactPage() {
             );
             if (row) return row.description;
         }
-        return "Мы любим создавать вещи на стыке разных форматов — от цифровых 3D-инсталляций до лимитированных дропов из серебра и арт-игрушек. Если у вас есть идея для совместного проекта или смелой коллаборации, пишите нам в Telegram. Всегда рады новым лицам!";
-    }, [contactData]);
+        return t('defaultDesc');
+    }, [contactData, t]);
 
     const socials = useMemo(() => {
         let items: any[] = [];
@@ -267,7 +270,7 @@ export default function ContactPage() {
 
                 <div className="hidden xl:flex xl:w-[55%] h-full flex-col justify-center pl-[4vw]">
                     <div className="w-full max-w-[650px]">
-                        <h2 className="animate-stagger opacity-0 translate-y-5 text-[1.8vw] font-bold mb-6 text-[#111]/60">Друзья</h2>
+                        <h2 className="animate-stagger opacity-0 translate-y-5 text-[1.8vw] font-bold mb-6 text-[#111]/60">{t('friends')}</h2>
                         <div className="grid grid-cols-3 w-full gap-6">
                             {(() => {
                                 const logosData = friendsData.filter(f => f.image || (f.name && f.name.toLowerCase() !== 'discription' && f.name.toLowerCase() !== 'description' && f.name.trim() !== ''));

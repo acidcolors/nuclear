@@ -16,6 +16,7 @@ import { CMS_CONFIG } from '@/config/cmsSwitch';
 import { useCart } from '@/app/store/useCart';
 import { useSupport } from '@/app/store/useSupport';
 import { ShoppingBag, Check } from 'lucide-react';
+import { useTranslations } from 'next-intl';
 
 const BackAnimation = () => {
     const lottieRef = useRef<any>(null);
@@ -68,6 +69,7 @@ const BackAnimation = () => {
 };
 
 export default function ProductPage() {
+    const t = useTranslations('Product');
     const params = useParams<{ id: string }>();
 
     const productId = params.id ? params.id.toLowerCase() : 'prj_01';
@@ -325,7 +327,7 @@ export default function ProductPage() {
                             )}
                             {product.edition && (
                                 <h3 className="inline-block bg-[#f4f4f4] px-[12px] py-[5px] md:px-[16px] md:py-[6px] rounded-[8px] text-[#111] font-bold text-[15px] md:text-[22px] self-start shadow-sm">
-                                    Тираж: {product.edition}
+                                    {t('edition')} {product.edition}
                                 </h3>
                             )}
                         </div>
@@ -335,12 +337,12 @@ export default function ProductPage() {
                         </p>
 
                         <div className="flex flex-col gap-0.5 mb-[25px] lg:mb-[40px]">
-                            <span className="text-[10px] font-bold tracking-widest opacity-40 uppercase text-[#111]">Детали проекта</span>
-                            {product.size && <span className="text-[13px] font-bold opacity-80 mt-1.5 text-[#111]">Размер: {product.size}</span>}
-                            {product.material && <span className="text-[13px] font-bold opacity-80 text-[#111]">Материал: {product.material}</span>}
-                            {product.year && <span className="text-[13px] font-bold opacity-80 text-[#111]">Год: {product.year}</span>}
+                            <span className="text-[10px] font-bold tracking-widest opacity-40 uppercase text-[#111]">{t('details')}</span>
+                            {product.size && <span className="text-[13px] font-bold opacity-80 mt-1.5 text-[#111]">{t('size')} {product.size}</span>}
+                            {product.material && <span className="text-[13px] font-bold opacity-80 text-[#111]">{t('material')} {product.material}</span>}
+                            {product.year && <span className="text-[13px] font-bold opacity-80 text-[#111]">{t('year')} {product.year}</span>}
                             {product.role && <span className="text-[13px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>}
-                            {product.edition && <span className="text-[13px] font-bold opacity-80 text-[#111]">Тираж: {product.edition}</span>}
+                            {product.edition && <span className="text-[13px] font-bold opacity-80 text-[#111]">{t('edition')} {product.edition}</span>}
                         </div>
 
                         <div
@@ -439,7 +441,7 @@ export default function ProductPage() {
                                                 `}
                                             >
                                                 <ShoppingBag size={18} />
-                                                <span style={{ transform: 'translateY(1px)' }}>В корзину</span>
+                                                <span style={{ transform: 'translateY(1px)' }}>{t('addToCart')}</span>
                                             </div>
 
                                             {/* Layer 2: Added Recently (Transparent state) */}
@@ -459,7 +461,7 @@ export default function ProductPage() {
                                                 `}
                                             >
                                                 <ShoppingBag size={18} />
-                                                <span style={{ transform: 'translateY(1px)' }}>В корзине</span>
+                                                <span style={{ transform: 'translateY(1px)' }}>{t('addToCart')}</span>
                                             </div>
                                         </>
                                     )}
@@ -484,7 +486,7 @@ export default function ProductPage() {
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                     </svg>
-                                    <span style={{ transform: 'translateY(1px)' }}>Поделиться</span>
+                                    <span style={{ transform: 'translateY(1px)' }}>{t('share')}</span>
                                 </button>
                             </div>
                         </div>

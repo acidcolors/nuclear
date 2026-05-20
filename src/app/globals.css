@@ -8,10 +8,27 @@
   --title-size: 60px;
   --desc-size: 16px;
 
+  /* Размеры и положение логотипа */
+  --logo-mobile-top: 4.3vh;
+  /* Положение сверху на мобильных (уменьшите, например до 3.5vh, чтобы поднять выше!) */
+  --logo-mobile-right: 2vw;
+  /* Положение справа на мобильных */
+  --logo-mobile-width: 158px;
+  /* Ширина логотипа на мобильных */
+  --logo-mobile-height: 48px;
+  /* Высота логотипа на мобильных */
+  --logo-mobile-container-height: 44px;
+  /* Высота контейнера логотипа на мобильных */
+
+  --logo-desktop-width: 200px;
+  /* Ширина логотипа на десктопе */
+  --logo-desktop-height: 62px;
+  /* Высота логотипа на десктопе */
+
   /* Динамические позиции для главной */
   --home-title-top: 14vh;
   --home-desc-top: 37vh;
-  --home-thank-you-bottom: 22vh;
+  --home-thank-you-bottom: 10vh;
   --home-social-bottom: 15vh;
 
   /* Динамические позиции для контактов (Мобилки по умолчанию) */
@@ -26,7 +43,7 @@
   --marquee-height: 50px;
   --marquee-bg: #000000;
   --marquee-text-color: #ebebeb;
-  --marquee-bottom: 100px;
+  --marquee-bottom: 20vh;
   --marquee-speed: 30s;
   --marquee-gap: 21px;
 }
@@ -84,6 +101,12 @@
   transition: all 0.2s ease-in-out;
 }
 
+@media (max-height: 650px) {
+  .contact-info-field {
+    display: none !important;
+  }
+}
+
 .contact-info-field::placeholder {
   transition: all 0.2s ease-in-out;
 }
@@ -121,6 +144,10 @@
     --space-vol-top: 80% !important;
     --space-vol-left: calc(6vw - 5px) !important;
     --space-social-bottom: 40px !important;
+
+    /* Бегущая строка на коротких экранах */
+    --marquee-height: 45px !important;
+    --marquee-bottom: 100px !important;
   }
 
   /* Для десктопной версии в маленьком окне корректируем центрирование */
@@ -132,16 +159,7 @@
 
 }
 
-/* Скрываем ссылку на телеграм в Mini App (т.к. мы уже в нем)
-   Скрываем как на узких мобильных экранах (до 650px), 
-   так и в узком десктопном окне телеграма (высота до 650px) */
-@media (max-width: 650px), (max-height: 650px) {
-  .custom-tg,
-  .contact-tg-link,
-  .contact-info-field {
-    display: none !important;
-  }
-}
+
 
 /* Обертка для иллюстрации на контактах */
 .contact-relax-wrap {
@@ -307,6 +325,12 @@ input[type="range"]::-moz-range-thumb {
     right: 40px !important;
     transform: translateY(-50%) rotate(90deg) !important;
   }
+}
+
+/* Скрытие соцсетей при включенной бегущей строке */
+.has-marquee .custom-insta,
+.has-marquee .custom-tg {
+  display: none !important;
 }
 
 /* ПРИНУДИТЕЛЬНЫЙ АДАПТИВ ТЕКСТА (ГЛАВНАЯ СТРАНИЦА) */

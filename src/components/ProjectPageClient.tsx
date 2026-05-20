@@ -10,6 +10,7 @@ import { useSupport } from '@/app/store/useSupport';
 import { ShoppingBag, Plus, Minus } from 'lucide-react';
 import { getNotionProducts, getNotionMainPageData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
+import { useTranslations } from 'next-intl';
 
 interface ProjectPageClientProps {
     initialProducts?: any[] | null;
@@ -22,6 +23,8 @@ const getPreviewImagePath = (folderId: string) => {
 };
 
 export default function ProjectPageClient({ initialProducts, initialHeader, forcedLoading = false }: ProjectPageClientProps) {
+    const t = useTranslations('Projects');
+    const tProduct = useTranslations('Product');
     const rightContentRef = useRef<HTMLDivElement>(null);
     const leftPanelRef = useRef<HTMLDivElement>(null);
     const scrollState = useRef({ current: 0, target: 0 });
@@ -141,7 +144,8 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
         return ['All', ...uniqueTags];
     }, [allProducts]);
 
-    const headerTitle = (CMS_CONFIG.USE_NOTION && headerData?.title) ? headerData.title : "Продукты";
+    const rawTitle = (CMS_CONFIG.USE_NOTION && headerData?.title) ? headerData.title : '';
+    const headerTitle = (rawTitle && rawTitle !== 'Продукты') ? rawTitle : t('title');
     const headerDescription = (CMS_CONFIG.USE_NOTION && headerData?.description) ? headerData.description : "Здесь собраны все наши проекты: актуальные вещи в наличии и архивные работы. По любым вопросам — пишите в директ.";
 
     const filteredProducts = useMemo(() => {
@@ -318,7 +322,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                         >
                             {filters.map((tag, index) => {
                                 const isActive = activeFilter === tag;
-                                const label = tag === 'All' ? 'Все' : tag;
+                                const label = tag === 'All' ? t('all') : tag;
                                 let bgTextClass = isActive ? 'bg-[#d1d1d1] text-[#111]' : 'bg-[#f4f4f4] text-[#111]';
                                 let opacityClass = isActive ? 'opacity-100' : 'opacity-80';
                                 let transformClass = 'translate-x-0 scale-100 z-0';
@@ -501,7 +505,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                             {product.edition && (
                                                 <div className="absolute bottom-[0px] left-[20px] z-10 pointer-events-none">
                                                     <h3 className="bg-[#f4f4f4] h-[34px] md:h-[40px] px-[11px] md:px-[16px] rounded-[8px] text-[13px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
-                                                        Тираж: {product.edition}
+                                                        {tProduct('edition')} {product.edition}
                                                     </h3>
                                                 </div>
                                             )}

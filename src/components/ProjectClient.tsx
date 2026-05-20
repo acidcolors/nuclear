@@ -29,7 +29,7 @@ export default function ProjectClient({ initialProducts }: ProjectClientProps) {
     const rightContentRef = useRef<HTMLDivElement>(null);
     const scrollState = useRef({ target: 0, current: 0 });
 
-    const headerTitle = "Продукты";
+    const headerTitle = "Проекты";
     const headerDescription = "Здесь собраны все наши проекты: актуальные вещи в наличии и архивные работы. По любым вопросам — пишите в директ.";
 
     // Фильтры (теги)

@@ -2,6 +2,7 @@
 
 import React, { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
+import { useTranslations } from 'next-intl';
 import { TransitionLink } from './TransitionLink';
 import gsap from 'gsap';
 import lottie from 'lottie-web';
@@ -56,8 +57,12 @@ const LogoAnimation = ({ color, isRightSide = false }: { color: string; isRightS
         }
     };
 
-    const width = screenState.isDesktop ? '200px' : '158px';
-    const height = screenState.isDesktop ? '62px' : '48px';
+    const width = screenState.isDesktop
+        ? 'var(--logo-desktop-width, 200px)'
+        : 'var(--logo-mobile-width, 158px)';
+    const height = screenState.isDesktop
+        ? 'var(--logo-desktop-height, 62px)'
+        : 'var(--logo-mobile-height, 48px)';
 
     // Защита: если данных нет, показываем обычную картинку
     if (!logoAnimationData || !logoAnimationData.layers) {
@@ -167,7 +172,20 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
 // 2. ОСНОВНОЙ HEADER
 // ==========================================================
 export const Header = () => {
-    const pathname = usePathname();
+    const t = useTranslations('Header');
+    const rawPathname = usePathname();
+    // Отрезаем префикс локали (/ru или /en), чтобы восстановить старую логику путей
+    const pathname = rawPathname.replace(/^\/(ru|en)(\/|$)/, '/').replace(/\/$/, '') || '/';
+    const currentLocale = rawPathname.startsWith('/en') ? 'en' : 'ru';
+
+    const getLocalizedPath = (targetLocale: 'ru' | 'en') => {
+        const hasPrefix = rawPathname.startsWith('/en') || rawPathname.startsWith('/ru');
+        if (hasPrefix) {
+            return rawPathname.replace(/^\/(en|ru)/, `/${targetLocale}`);
+        }
+        return `/${targetLocale}${rawPathname}`;
+    };
+
     const { totalItems, setIsOpen } = useCart();
     const { setIsOpen: setIsSupportOpen } = useSupport();
     const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
@@ -189,22 +207,72 @@ export const Header = () => {
     });
 
     const [isMenuOpen, setIsMenuOpen] = useState(false);
+    const [isLangOpen, setIsLangOpen] = useState(false);
+    const [isDropdownHovered, setIsDropdownHovered] = useState(false);
+    const mobileHeaderButtonRef = useRef<HTMLDivElement>(null);
+    const burgerMenuButtonRef = useRef<HTMLDivElement>(null);
+    const desktopButtonRef = useRef<HTMLDivElement>(null);
+    const isMenuVisible = isLangOpen || isDropdownHovered;
     const lottieContainerRef = useRef<HTMLDivElement>(null);
     const animationInstanceRef = useRef<any>(null);
     const isFirstMount = useRef(true);
     const [mounted, setMounted] = useState(false);
-    const [screenWidth, setScreenWidth] = useState(0);
-
-    // Если экран от 1024 до 1440px, принудительно показываем логотип справа
-    const forceLogoRight = screenWidth >= 1024 && screenWidth <= 1440;
+    const [screenSize, setScreenSize] = useState({ width: 0, height: 0 });
+    const forceLogoRight = screenSize.width >= 1024 && screenSize.width <= 1440;
     const displayLogoRight = isRightSideLogo || forceLogoRight;
 
     useEffect(() => {
         setMounted(true);
-        setScreenWidth(window.innerWidth);
-        const handleResize = () => setScreenWidth(window.innerWidth);
+        setScreenSize({ width: window.innerWidth, height: window.innerHeight });
+
+        const handleResize = () => {
+            setScreenSize({ width: window.innerWidth, height: window.innerHeight });
+        };
+
         window.addEventListener('resize', handleResize);
         return () => window.removeEventListener('resize', handleResize);
+    }, []);
+
+    const [isTelegram, setIsTelegram] = useState(false);
+
+    useEffect(() => {
+        if (typeof window === 'undefined') return;
+
+        const checkTg = () => {
+            const hash = window.location.hash.toLowerCase() || '';
+            const search = window.location.search.toLowerCase() || '';
+            const ua = navigator.userAgent.toLowerCase();
+            const tgObj = (window as any).Telegram?.WebApp;
+
+            // 1. Самый надежный маркер: Telegram ВСЕГДА инжектит параметры в URL (hash или search)
+            if (hash.includes('tgwebappdata') || search.includes('tgwebappdata')) return true;
+            if (hash.includes('tgwebappplatform') || search.includes('tgwebappplatform')) return true;
+
+            // 2. Фолбэк на объект (если скрипт успел загрузиться)
+            if (tgObj && Object.keys(tgObj).length > 0) return true;
+
+            // 3. Фолбэк на User Agent
+            if (ua.includes('telegram')) return true;
+
+            return false;
+        };
+
+        // Мгновенная проверка
+        if (checkTg()) {
+            setIsTelegram(true);
+        } else {
+            // Поллинг на случай медленной инициализации скрипта (2 секунды)
+            let attempts = 0;
+            const tgInterval = setInterval(() => {
+                attempts++;
+                if (checkTg()) {
+                    setIsTelegram(true);
+                    clearInterval(tgInterval);
+                }
+                if (attempts > 20) clearInterval(tgInterval);
+            }, 100);
+            return () => clearInterval(tgInterval);
+        }
     }, []);
 
     const [isPreloaderDone, setIsPreloaderDone] = useState(pathname !== '/');
@@ -434,6 +502,149 @@ export const Header = () => {
         };
     }, [isHomePage, isRightSideLogo, mounted, isPreloaderDone]);
 
+    // Определяем режим отображения иконки переключения языков
+    const getLanguageSwitcherMode = (): 'desktop' | 'tablet' | 'mobile' | 'app' => {
+        if (!mounted || screenSize.width === 0) return 'desktop';
+        if (screenSize.width >= 1024) return 'desktop';
+        if (screenSize.width >= 768) return 'tablet';
+
+        // Мобилки (ширина < 768px) -> всегда внутри меню
+        return 'mobile';
+    };
+
+    const switcherMode = getLanguageSwitcherMode();
+
+    const isOverlayVisible =
+        switcherMode === 'mobile'
+            ? (isMenuOpen && !isMenuVisible)
+            : (!isMenuOpen && !isMenuVisible);
+
+    const renderLanguageSwitcher = (refToUse: React.RefObject<HTMLDivElement | null>) => {
+        const isHeaderMobile = refToUse === mobileHeaderButtonRef;
+        let marginLeft = '20px';
+        let marginRight = '0px';
+        let transform = 'translateY(0.3vh)';
+
+        if (switcherMode === 'desktop') {
+            marginLeft = '10px';
+            marginRight = '5px';
+            transform = 'none';
+        } else if (switcherMode === 'tablet') {
+            marginLeft = '20px';
+            marginRight = '0px';
+            transform = 'translateY(0.3vh)';
+        } else if (switcherMode === 'app') {
+            // Стиль для Telegram Mini App (можете настраивать отдельно!)
+            marginLeft = '20px';
+            marginRight = '0px';
+            transform = 'translateY(0.3vh)';
+        } else if (switcherMode === 'mobile') {
+            // Стиль для обычной мобилки в браузере (можете настраивать отдельно!)
+            marginLeft = '20px';
+            marginRight = '0px';
+            transform = 'translateY(0.3vh)';
+        }
+
+        return (
+            <div
+                ref={refToUse}
+                className={`relative flex items-center justify-center transition-all duration-300 pointer-events-auto ${isHeaderMobile
+                    ? (isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[300ms]')
+                    : ''
+                    }`}
+                style={{
+                    marginLeft,
+                    marginRight,
+                    transform
+                }}
+                onMouseEnter={() => setIsLangOpen(true)}
+                onMouseLeave={() => {
+                    setTimeout(() => {
+                        setIsLangOpen(false);
+                    }, 100);
+                }}
+            >
+                {/* Нативная белая подложка под иконкой (находится внутри структуры!) */}
+                <div
+                    className={`absolute inset-0 bg-[#ffffff] rounded-[10px] shadow-sm pointer-events-none transition-all duration-500 ease-out ${isOverlayVisible
+                        ? 'opacity-100 scale-100'
+                        : 'opacity-0 scale-90'
+                        }`}
+                    style={{
+                        width: '36px',
+                        height: '36px',
+                        zIndex: -1
+                    }}
+                />
+
+                <button
+                    onClick={() => setIsLangOpen(!isLangOpen)}
+                    className="relative flex items-center justify-center bg-transparent border-none rounded-[10px] cursor-pointer outline-none transition-all duration-300 hover:scale-105 active:scale-95"
+                    style={{ width: '36px', height: '36px' }}
+                >
+                    {/* Globe Icon */}
+                    <img
+                        src="/Internet.svg"
+                        alt="Language"
+                        className={`absolute w-[20px] h-[20px] brightness-0 transition-all duration-300 ease-out ${isMenuVisible
+                            ? 'opacity-90 scale-100'
+                            : 'opacity-0 scale-75 pointer-events-none'
+                            }`}
+                    />
+
+                    {/* Current Locale Text */}
+                    <span
+                        className={`absolute text-[13px] font-bold tracking-tight uppercase transition-all duration-300 ease-out ${isMenuVisible
+                            ? 'opacity-0 scale-75 pointer-events-none'
+                            : 'opacity-100 scale-100'
+                            }`}
+                        style={{ color: '#000000', transform: 'translateY(0.5px)' }}
+                    >
+                        {currentLocale}
+                    </span>
+                </button>
+
+                {/* Нативное выпадающее меню языков (EN/RU) */}
+                <div
+                    className={`absolute bg-[#ffffff] rounded-[16px] flex flex-col shadow-xl z-[9999] transition-all duration-300 ease-out pointer-events-auto ${isMenuVisible
+                        ? 'opacity-100 translate-y-0 visible'
+                        : 'opacity-0 -translate-y-2 invisible pointer-events-none'
+                        }`}
+                    onMouseEnter={() => setIsDropdownHovered(true)}
+                    onMouseLeave={() => setIsDropdownHovered(false)}
+                    style={{
+                        top: '44px',
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        minWidth: '53px',
+                        padding: '15px 0px',
+                        gap: '14px',
+                        alignItems: 'center'
+                    }}
+                >
+                    <TransitionLink
+                        href={getLocalizedPath('en')}
+                        className="text-[18px] font-bold transition-opacity no-underline leading-none"
+                        style={{ color: currentLocale === 'en' ? '#888888' : '#000000' }}
+                        onClick={() => setIsLangOpen(false)}
+                    >
+                        EN
+                    </TransitionLink>
+                    <TransitionLink
+                        href={getLocalizedPath('ru')}
+                        className="text-[18px] font-bold transition-opacity no-underline leading-none"
+                        style={{ color: currentLocale === 'ru' ? '#888888' : '#000000' }}
+                        onClick={() => setIsLangOpen(false)}
+                    >
+                        RU
+                    </TransitionLink>
+                </div>
+            </div>
+        );
+    };
+
+
+
     return (
         <>
             <div className="fixed top-0 left-0 w-full h-[100px] z-[50] pointer-events-none">
@@ -454,7 +665,7 @@ export const Header = () => {
                 </div>
 
                 {/* BIG PINK STAR - DESKTOP LEFT */}
-                {screenWidth >= 1441 && (
+                {screenSize.width >= 1441 && (
                     <div
                         className={`hidden lg:flex absolute top-[40px] left-[40px] items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-200
                             ${isHomePage && !isRightSideLogo ? '' : '!hidden'}
@@ -475,7 +686,7 @@ export const Header = () => {
                 )}
 
                 {/* BIG PINK STAR - DESKTOP RIGHT */}
-                {screenWidth > 0 && screenWidth <= 1440 && (
+                {screenSize.width > 0 && screenSize.width <= 1440 && (
                     <div
                         className={`hidden lg:flex absolute top-[28px] right-[40px] items-center z-[50] pointer-events-none h-[44px] header-star-element opacity-0 scale-200
                             ${isHomePage ? '' : '!hidden'}
@@ -548,11 +759,22 @@ export const Header = () => {
                             style={{ opacity: 0.9 }}
                         />
                     </button>
+
+                    {/* Просто невидимая распорка в основном хедере */}
+                    <div style={{ display: (switcherMode === 'app' || switcherMode === 'tablet') ? 'block' : 'none', width: '36px', height: '36px' }} />
                 </div>
 
                 <div className="absolute inset-0 w-full h-full pointer-events-none z-[60]">
                     {/* MOBILE LOGO - ALWAYS STABLE */}
-                    <div className="lg:hidden absolute top-[5vh] right-[2vw] flex items-center z-[150] pointer-events-none h-[44px]">
+                    <div
+                        className="lg:hidden absolute flex items-center z-[150] pointer-events-none"
+                        style={{
+                            top: 'var(--logo-mobile-top, 5vh)',
+                            right: 'var(--logo-mobile-right, 2vw)',
+                            left: 'var(--logo-mobile-left, auto)',
+                            height: 'var(--logo-mobile-container-height, 44px)'
+                        }}
+                    >
                         <div className={`transition-all duration-300 flex items-center z-[10] origin-right pointer-events-auto
                             ${isMenuOpen ? 'opacity-0 scale-95 pointer-events-none delay-0' : 'opacity-100 scale-100 pointer-events-auto delay-[200ms]'}
                         `}>
@@ -589,8 +811,10 @@ export const Header = () => {
                         <nav className={`flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
     ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto visible' : 'duration-200 opacity-0 translate-x-8 pointer-events-none invisible'}
 `}>
-                            <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
-                            <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
+                            <NavItem href="/project" text={t('project')} isActive={isProjectActive} color={themeColor} />
+                            <NavItem href="/contact" text={t('contact')} isActive={pathname === '/contact'} color={themeColor} />
+                            {/* Невидимая распорка в основном меню */}
+                            <div style={{ display: switcherMode === 'mobile' ? 'block' : 'none', width: '36px', height: '36px' }} />
                         </nav>
                     </div>
 
@@ -598,10 +822,10 @@ export const Header = () => {
                     <nav className={`hidden lg:flex absolute top-[40px] flex-row items-center z-[150] gap-1 pointer-events-auto transition-all duration-500
     ${displayLogoRight ? 'right-[240px]' : 'right-[80px]'}
 `}>
-                        <NavItem href="/project" text="Project" isActive={isProjectActive} color={themeColor} />
-                        <NavItem href="/contact" text="Contact" isActive={pathname === '/contact'} color={themeColor} />
+                        <NavItem href="/project" text={t('project')} isActive={isProjectActive} color={themeColor} />
+                        <NavItem href="/contact" text={t('contact')} isActive={pathname === '/contact'} color={themeColor} />
                         <NavItem
-                            text="Корзина"
+                            text={t('cart')}
                             color={themeColor}
                             onClick={() => setIsOpen(true)}
                             badge={
@@ -640,9 +864,99 @@ export const Header = () => {
                                 }}
                             />
                         </button>
+                        {/* Невидимая распорка в десктопном меню с отступом 28px */}
+                        <div style={{ display: switcherMode === 'desktop' ? 'block' : 'none', width: '36px', height: '36px', marginLeft: '28px' }} />
                     </nav>
                 </div>
             </header>
+
+            {/* ==========================================================
+                СИБЛИНГ-ХЕДЕР (Z-[1000]) БЕЗ MIX-BLEND-EXCLUSION
+                ========================================================== */}
+            <div className="fixed top-0 left-0 w-full h-[100px] z-[999] pointer-events-none opacity-0 header-main-container">
+                {/* 1. Планшетный/App переключатель */}
+                <div className="lg:hidden absolute top-[4vh] left-[10vw] flex items-center gap-6 z-[200] pointer-events-none">
+                    {/* Динамические распорки для 100% идеального позиционирования */}
+                    <div className="w-[44px] h-[44px] opacity-0" /> {/* Burger spacer */}
+
+                    {/* Cart spacer с динамическим бейджем */}
+                    <div
+                        className="relative flex items-center gap-2 bg-transparent border-none outline-none translate-y-[2px] opacity-0"
+                        style={{ marginLeft: '25px' }}
+                    >
+                        <ShoppingBag size={24} />
+                        <span
+                            className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full shrink-0"
+                            style={{
+                                width: cartCount > 0 ? '22px' : '0px',
+                                height: cartCount > 0 ? '22px' : '0px',
+                                marginLeft: cartCount > 0 ? '7px' : '0px',
+                            }}
+                        />
+                    </div>
+
+                    {/* Support spacer */}
+                    <div
+                        className="relative flex items-center justify-center bg-transparent border-none outline-none translate-y-[2px] opacity-0"
+                        style={{ marginLeft: '20px' }}
+                    >
+                        <div className="w-[30px] h-[30px]" />
+                    </div>
+
+                    <div style={{ display: (switcherMode === 'app' || switcherMode === 'tablet') ? 'block' : 'none' }} className="pointer-events-auto">
+                        {renderLanguageSwitcher(mobileHeaderButtonRef)}
+                    </div>
+                </div>
+
+                {/* 2. Мобильный бургер-переключатель */}
+                <div className="absolute top-[4.1vh] left-[28vw] lg:hidden flex items-center justify-start z-[150] pointer-events-none h-[44px]">
+                    <nav className={`flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
+                        ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-none visible' : 'duration-200 opacity-0 translate-x-8 pointer-events-none invisible'}
+                    `}>
+                        {/* Распорки-тексты с идентичным размером и отступами для пиксельного совпадения */}
+                        <div className="opacity-0 pointer-events-none" style={{ padding: '15px 2vw' }}>
+                            <span className="text-[16px] font-bold tracking-widest">{t('project')}</span>
+                        </div>
+                        <div className="opacity-0 pointer-events-none" style={{ padding: '15px 2vw' }}>
+                            <span className="text-[16px] font-bold tracking-widest">{t('contact')}</span>
+                        </div>
+
+                        <div style={{ display: switcherMode === 'mobile' ? 'block' : 'none' }} className="pointer-events-auto">
+                            {renderLanguageSwitcher(burgerMenuButtonRef)}
+                        </div>
+                    </nav>
+                </div>
+
+                {/* 3. Десктопный переключатель */}
+                <nav className={`hidden lg:flex absolute top-[40px] flex-row items-center z-[150] gap-1 pointer-events-none transition-all duration-500
+                    ${displayLogoRight ? 'right-[240px]' : 'right-[80px]'}
+                `}>
+                    {/* Распорки-тексты для пиксельного совпадения с основным меню */}
+                    <div className="opacity-0 pointer-events-none" style={{ padding: '20px 15px' }}>
+                        <span className="text-sm font-bold tracking-widest">{t('project')}</span>
+                    </div>
+                    <div className="opacity-0 pointer-events-none" style={{ padding: '20px 15px' }}>
+                        <span className="text-sm font-bold tracking-widest">{t('contact')}</span>
+                    </div>
+                    <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
+                        <span className="text-sm font-bold tracking-widest">{t('cart')}</span>
+                        <span
+                            className="flex items-center justify-center border-2 border-current rounded-full"
+                            style={{
+                                width: cartCount > 0 ? '22px' : '0px',
+                                height: cartCount > 0 ? '22px' : '0px',
+                                marginLeft: cartCount > 0 ? '8px' : '0px',
+                            }}
+                        />
+                    </div>
+                    <div style={{ width: '60px' }} /> {/* Support button spacer */}
+
+                    <div style={{ display: switcherMode === 'desktop' ? 'block' : 'none', marginLeft: '28px' }} className="pointer-events-auto">
+                        {renderLanguageSwitcher(desktopButtonRef)}
+                    </div>
+                </nav>
+            </div>
+
         </>
     );
 };
