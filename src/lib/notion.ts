@@ -142,7 +142,7 @@ export async function getNotionMainPageData() {
             body: JSON.stringify({
                 page_size: 1
             }),
-            next: { revalidate: 5 }
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -185,7 +185,7 @@ export async function getNotionContactData() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 5 }
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -232,7 +232,7 @@ export async function getNotionFriendsData() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 5 }
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -309,7 +309,7 @@ export async function getNotionHomePageMain() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({ page_size: 20 }),
-            next: { revalidate: 5 }
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
@@ -375,7 +375,7 @@ export async function getNotionHomePageLinks() {
                 'Content-Type': 'application/json',
             },
             body: JSON.stringify({}),
-            next: { revalidate: 5 }
+            cache: 'no-store'
         });
 
         if (!response.ok) throw new Error(`Notion API error: ${response.status}`);
