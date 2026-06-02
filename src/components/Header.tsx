@@ -493,21 +493,9 @@ export const Header = () => {
             const isLarge = window.innerWidth >= 1441;
 
             const rotate = (ref: React.RefObject<HTMLDivElement | null>, key: 'left' | 'right' | 'mobile', shouldRotate: boolean) => {
-                if (shouldRotate && ref.current) {
-                    if (!rotationTweens.current[key]) {
-                        rotationTweens.current[key] = gsap.to(ref.current, {
-                            rotation: 360,
-                            duration: 25,
-                            ease: "none",
-                            repeat: -1,
-                            transformOrigin: "center center"
-                        });
-                    }
-                } else {
-                    if (rotationTweens.current[key]) {
-                        rotationTweens.current[key]?.kill();
-                        rotationTweens.current[key] = null;
-                    }
+                // Жестко убиваем все текущие анимации (чтобы остановить вращение при хот-релоаде)
+                if (ref.current) {
+                    gsap.killTweensOf(ref.current);
                 }
             };
 
@@ -686,8 +674,13 @@ export const Header = () => {
                             className="w-full h-full will-change-transform flex items-center justify-center"
                             style={{ color: '#f5b3ffff' }}
                         >
-                            <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
-                                <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                            <svg viewBox="0 0 1305.63 913.63" className="w-[380px] h-[380px] -rotate-[125deg]">
+                                <path
+                                    d="M1305.63,94.14c-509.51,283.07-550.91,374.44-188.61,416.24-362.31-41.81-432.31,26.79-318.91,312.51-113.4-285.72-202.73-265.8-406.93,90.74,204.2-356.54,118.33-377.2-391.18-94.14,509.51-283.07,550.91-374.44,188.61-416.24,362.31,41.81,432.31-26.79,318.91-312.51C620.92,376.46,710.24,356.54,914.45,0c-204.2,356.54-118.33,377.2,391.18,94.14Z"
+                                    fill="transparent"
+                                    stroke="#ddff12"
+                                    strokeWidth="15"
+                                />
                             </svg>
                         </div>
                     </div>
@@ -704,10 +697,15 @@ export const Header = () => {
                             <div
                                 ref={leftStarRef}
                                 className="w-full h-full will-change-transform flex items-center justify-center"
-                                style={{ color: '#f5b3ffff' }}
+                                style={{ color: '#ddff12' }}
                             >
-                                <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
-                                    <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                                <svg viewBox="0 0 1305.63 913.63" className="w-[380px] h-[380px] -rotate-[125deg]">
+                                    <path
+                                        d="M1305.63,94.14c-509.51,283.07-550.91,374.44-188.61,416.24-362.31-41.81-432.31,26.79-318.91,312.51-113.4-285.72-202.73-265.8-406.93,90.74,204.2-356.54,118.33-377.2-391.18-94.14,509.51-283.07,550.91-374.44,188.61-416.24,362.31,41.81,432.31-26.79,318.91-312.51C620.92,376.46,710.24,356.54,914.45,0c-204.2,356.54-118.33,377.2,391.18,94.14Z"
+                                        fill="transparent"
+                                        stroke="#ddff12"
+                                        strokeWidth="15"
+                                    />
                                 </svg>
                             </div>
                         </div>
@@ -725,10 +723,15 @@ export const Header = () => {
                             <div
                                 ref={rightStarRef}
                                 className="w-full h-full will-change-transform flex items-center justify-center"
-                                style={{ color: '#f5b3ffff' }}
+                                style={{ color: '#ddff12' }}
                             >
-                                <svg viewBox="0 0 100 100" className="w-[380px] h-[380px] fill-current">
-                                    <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+                                <svg viewBox="0 0 1305.63 913.63" className="w-[380px] h-[380px] -rotate-[125deg]">
+                                    <path
+                                        d="M1305.63,94.14c-509.51,283.07-550.91,374.44-188.61,416.24-362.31-41.81-432.31,26.79-318.91,312.51-113.4-285.72-202.73-265.8-406.93,90.74,204.2-356.54,118.33-377.2-391.18-94.14,509.51-283.07,550.91-374.44,188.61-416.24,362.31,41.81,432.31-26.79,318.91-312.51C620.92,376.46,710.24,356.54,914.45,0c-204.2,356.54-118.33,377.2,391.18,94.14Z"
+                                        fill="transparent"
+                                        stroke="#ddff12"
+                                        strokeWidth="15"
+                                    />
                                 </svg>
                             </div>
                         </div>

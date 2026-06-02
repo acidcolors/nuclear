@@ -33,31 +33,23 @@ export default function FriendsPage() {
                 getNotionFriendsData(),
                 import('@/lib/notion').then(m => m.getNotionContactData()) // Загружаем и Контакты тоже, т.к. текст может быть там
             ])
-            .then(([friends, contacts]) => {
-                setFriendsData(friends);
-                // Ищем строку с названием "Discription" или "Friends" в Контактах
-                const contactDesc = contacts.find((c: any) => c.title && (c.title.toLowerCase().includes('discription') || c.title.toLowerCase().includes('description') || c.title.toLowerCase().includes('friend')));
-                if (contactDesc && contactDesc.description) {
-                    // Если нашли, сохраняем в отдельный стейт
-                    setFriendsDescData(contactDesc.description);
-                }
-            })
-            .catch(err => console.error("Ошибка Notion Friends/Contacts:", err))
-            .finally(() => setIsFetchingData(false));
+                .then(([friends, contacts]) => {
+                    setFriendsData(friends);
+                    // Ищем строку с названием "Discription" или "Friends" в Контактах
+                    const contactDesc = contacts.find((c: any) => c.title && (c.title.toLowerCase().includes('discription') || c.title.toLowerCase().includes('description') || c.title.toLowerCase().includes('friend')));
+                    if (contactDesc && contactDesc.description) {
+                        // Если нашли, сохраняем в отдельный стейт
+                        setFriendsDescData(contactDesc.description);
+                    }
+                })
+                .catch(err => console.error("Ошибка Notion Friends/Contacts:", err))
+                .finally(() => setIsFetchingData(false));
         } else {
             setIsFetchingData(false);
         }
 
         let ctx = gsap.context(() => {
-            if (starLeftRef.current) {
-                gsap.to(starLeftRef.current, {
-                    rotation: 360,
-                    duration: 25,
-                    ease: "none",
-                    repeat: -1,
-                    transformOrigin: "center center"
-                });
-            }
+            // Вращение убрано по просьбе
         }, containerRef);
 
         return () => {
@@ -120,8 +112,13 @@ export default function FriendsPage() {
     };
 
     const StarSVG = () => (
-        <svg viewBox="0 0 100 100" className="w-full h-full fill-current opacity-20">
-            <path d="M50 0L54.3 35.7L85.4 14.6L64.3 45.7L100 50L64.3 54.3L85.4 85.4L54.3 64.3L50 100L45.7 64.3L14.6 85.4L35.7 54.3L0 50L35.7 45.7L14.6 14.6L45.7 35.7Z" />
+        <svg viewBox="0 0 1305.63 913.63" className="w-full h-full -rotate-[125deg]">
+            <path
+                d="M1305.63,94.14c-509.51,283.07-550.91,374.44-188.61,416.24-362.31-41.81-432.31,26.79-318.91,312.51-113.4-285.72-202.73-265.8-406.93,90.74,204.2-356.54,118.33-377.2-391.18-94.14,509.51-283.07,550.91-374.44,188.61-416.24,362.31,41.81,432.31-26.79,318.91-312.51C620.92,376.46,710.24,356.54,914.45,0c-204.2,356.54-118.33,377.2,391.18,94.14Z"
+                fill="transparent"
+                stroke="#ddff12"
+                strokeWidth="15"
+            />
         </svg>
     );
 
@@ -149,9 +146,9 @@ export default function FriendsPage() {
 
                     <div className="grid grid-cols-2 md:grid-cols-3 w-full gap-4 pb-10 pt-2 px-2">
                         {isFetchingData ? null : (() => {
-                            const descriptionText = friendsData.find(f => f.text && f.text.trim() !== '')?.text 
+                            const descriptionText = friendsData.find(f => f.text && f.text.trim() !== '')?.text
                                 || t('friendsDesc');
-                            
+
                             const logosData = friendsData.filter(f => f.image || (f.name && f.name.toLowerCase() !== 'discription' && f.name.toLowerCase() !== 'description' && f.name.trim() !== ''));
 
                             return logosData.length > 0 ? (
@@ -176,7 +173,7 @@ export default function FriendsPage() {
                                                     className="w-full h-full object-contain transition-all duration-300 grayscale brightness-[0.2] group-hover:brightness-[0.5]"
                                                 />
                                             ) : (
-                                                <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase text-center p-2">NO IMG<br/>{friend.name}</div>
+                                                <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase text-center p-2">NO IMG<br />{friend.name}</div>
                                             )}
                                         </div>
                                     );

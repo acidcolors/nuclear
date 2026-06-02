@@ -633,3 +633,5 @@ input[type="range"]::-moz-range-thumb {
 .animate-marquee {
   animation: marquee var(--marquee-speed) linear infinite;
 }
+body.promo-modal-open #global-scroll-to-top { display: none !important; opacity: 0 !important; pointer-events: none !important; }
+

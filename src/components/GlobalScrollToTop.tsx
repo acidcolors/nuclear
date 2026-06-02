@@ -31,6 +31,11 @@ export const GlobalScrollToTop = () => {
                 activeContainerRef.current = target;
             }
 
+            if (document.body.classList.contains('promo-modal-open')) {
+                setIsVisible(false);
+                return;
+            }
+
             if (scrollTop > 400) {
                 setIsVisible(true);
             } else {
@@ -148,6 +153,7 @@ export const GlobalScrollToTop = () => {
 
     return (
         <div
+            id="global-scroll-to-top"
             ref={btnRef}
             onClick={handleBackToTop}
             className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[9999] cursor-pointer opacity-0 translate-y-[30px] hidden"
