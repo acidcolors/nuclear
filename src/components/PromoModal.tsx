@@ -199,8 +199,10 @@ export const PromoModal = () => {
     const svgTextRef = useRef<SVGSVGElement>(null);
 
     useEffect(() => {
-        if (shouldRender && svgTextRef.current) {
-            const spinTween = gsap.fromTo(svgTextRef.current,
+        if (!shouldRender || !svgTextRef.current) return;
+
+        const ctx = gsap.context(() => {
+            gsap.fromTo(svgTextRef.current,
                 { rotation: 0 },
                 {
                     rotation: 360,
@@ -210,11 +212,12 @@ export const PromoModal = () => {
                     transformOrigin: "center center"
                 }
             );
-            return () => {
-                spinTween.kill();
-            };
-        }
-    }, [shouldRender]);
+        });
+
+        return () => {
+            ctx.revert();
+        };
+    }, [shouldRender, svgTextRef.current]);
 
     useEffect(() => {
         setIsMounted(true);
