@@ -103,7 +103,7 @@ const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
             <img
                 src="/animation/Link02/SA02.webp"
                 alt="Static Star Element"
-                className="w-[350px] h-auto object-contain pointer-events-none scale-[3] -translate-y-[50px]"
+                className="w-[1050px] max-w-[250vw] h-auto object-contain pointer-events-none -translate-y-[50px]"
             />
         </div>
     );
@@ -166,7 +166,7 @@ const Link03Animation = ({ className }: { className?: string }) => {
         <div ref={containerRef} className={className}>
             <canvas
                 ref={canvasRef}
-                className="w-[350px] h-auto object-contain pointer-events-none scale-[2.5]"
+                className="w-[875px] max-w-[200vw] h-auto object-contain pointer-events-none"
             />
         </div>
     );
