@@ -11,9 +11,12 @@ export const GlobalScrollToTop = () => {
     const [isVisible, setIsVisible] = useState(false);
     const btnRef = useRef<HTMLDivElement>(null);
     const activeContainerRef = useRef<HTMLElement | null>(null);
+    const ignoreScrollRef = useRef(false);
 
     useEffect(() => {
         const handleScroll = (e: Event) => {
+            if (ignoreScrollRef.current) return;
+
             const target = e.target;
 
             // Игнорируем мелкие элементы, ищем только те, что могут быть основными контейнерами
@@ -43,10 +46,23 @@ export const GlobalScrollToTop = () => {
         };
     }, []);
 
-    // Сбрасываем состояние при смене страницы
+    // Сбрасываем состояние при смене страницы или по требованию (например, закрытие модалки)
     useEffect(() => {
-        setIsVisible(false);
-        activeContainerRef.current = null;
+        const resetState = () => {
+            setIsVisible(false);
+            activeContainerRef.current = null;
+            
+            // Игнорируем случайные события скролла, которые могут возникнуть при закрытии модалки (восстановление скроллбара и т.д.)
+            ignoreScrollRef.current = true;
+            setTimeout(() => {
+                ignoreScrollRef.current = false;
+            }, 1000);
+        };
+        
+        resetState(); // Вызываем при смене pathname
+        
+        window.addEventListener('forceHideScrollToTop', resetState);
+        return () => window.removeEventListener('forceHideScrollToTop', resetState);
     }, [pathname]);
 
     useEffect(() => {
@@ -116,7 +132,7 @@ export const GlobalScrollToTop = () => {
             <div
                 ref={btnRef}
                 onClick={handleBackToTop}
-                className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[200] cursor-pointer opacity-0 translate-y-[30px] hidden"
+                className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[9999] cursor-pointer opacity-0 translate-y-[30px] hidden"
                 style={{ pointerEvents: 'none' }}
             >
                 <div className="relative group transition-transform duration-300 hover:scale-110 active:scale-95">
@@ -134,7 +150,7 @@ export const GlobalScrollToTop = () => {
         <div
             ref={btnRef}
             onClick={handleBackToTop}
-            className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[200] cursor-pointer opacity-0 translate-y-[30px] hidden"
+            className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[9999] cursor-pointer opacity-0 translate-y-[30px] hidden"
             style={{ pointerEvents: 'none' }}
             onMouseEnter={() => {
                 if (lottieRef.current && window.innerWidth >= 1441) {
@@ -150,7 +166,7 @@ export const GlobalScrollToTop = () => {
             }}
         >
             <div className="relative group transition-transform duration-300 hover:scale-110 active:scale-95">
-                <div className="w-[100px] md:w-[120px] lg:w-[150px] h-auto">
+                <div className="w-[100px] md:w-[120px] lg:w-[150px] h-auto [&_path]:!fill-[#e2fd6f] [&_path]:!stroke-[#e2fd6f]">
                     <Lottie 
                         lottieRef={lottieRef}
                         animationData={upAnimationData} 

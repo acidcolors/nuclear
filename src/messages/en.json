@@ -1,6 +1,7 @@
 {
   "Header": {
     "project": "Projects",
+    "archive": "Archive",
     "contact": "Contact",
     "cart": "Cart"
   },
@@ -32,6 +33,10 @@
   },
   "Projects": {
     "title": "Projects",
+    "all": "All"
+  },
+  "Archive": {
+    "title": "Archive",
     "all": "All"
   },
   "Contact": {

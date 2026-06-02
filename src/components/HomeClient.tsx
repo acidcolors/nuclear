@@ -225,9 +225,7 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
               className={`home-desc animate-up opacity-0 translate-y-5 absolute transition-[top,left] duration-700 z-10
               ${viewMode === 'mobile'
                   ? 'w-[88vw] top-[var(--home-desc-top)] left-[6vw]'
-                  : viewMode === 'adaptive'
-                    ? 'w-[40vw] top-[var(--home-desc-top)] -translate-y-1/2 left-[30vw]'
-                    : 'w-[40vw] top-[var(--home-desc-top)] left-[30vw]'}`}
+                  : 'w-[40vw] top-[var(--home-desc-top)] left-[30vw]'}`}
             >
               <p className="text-[length:var(--desc-size)] font-medium leading-[1.45] lg:leading-[1.4] text-[#ebebeb]">
                 <span className="relative text-[inherit]" style={{ whiteSpace: 'pre-wrap' }}>

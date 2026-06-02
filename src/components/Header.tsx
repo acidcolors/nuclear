@@ -141,10 +141,10 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
         <div className="py-[15px] px-[2vw] lg:py-[20px] lg:px-[15px] lg:h-full lg:flex lg:items-center">
             <div className="overflow-hidden relative h-[20px] block flex-shrink-0">
                 <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                    <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
+                    <span className="text-[14px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
                         {text} <span ref={star1Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
                     </span>
-                    <span className="text-[16px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
+                    <span className="text-[14px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
                         {text} <span ref={star2Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
                     </span>
                 </div>
@@ -188,9 +188,38 @@ export const Header = () => {
 
     const { totalItems, setIsOpen } = useCart();
     const { setIsOpen: setIsSupportOpen } = useSupport();
-    const isProjectActive = pathname === '/project' || pathname.startsWith('/product/');
+
+    const [isArchiveProduct, setIsArchiveProduct] = useState(false);
+
+    useEffect(() => {
+        if (!pathname.startsWith('/product/')) {
+            setIsArchiveProduct(false);
+            return;
+        }
+        const parts = pathname.split('/');
+        const productId = parts[parts.length - 1];
+        if (typeof window !== 'undefined' && (window as any).__productArchiveCache && (window as any).__productArchiveCache[productId] !== undefined) {
+            setIsArchiveProduct((window as any).__productArchiveCache[productId]);
+        } else {
+            setIsArchiveProduct(false);
+        }
+    }, [pathname]);
+
+    useEffect(() => {
+        const handleOrigin = (e: Event) => {
+            const customEvent = e as CustomEvent;
+            setIsArchiveProduct(customEvent.detail.isArchive);
+        };
+        window.addEventListener('productOriginDetected', handleOrigin);
+        return () => {
+            window.removeEventListener('productOriginDetected', handleOrigin);
+        };
+    }, []);
+
+    const isProjectActive = pathname === '/project' || (pathname.startsWith('/product/') && !isArchiveProduct);
+    const isArchiveActive = pathname === '/archive' || (pathname.startsWith('/product/') && isArchiveProduct);
     const isHomePage = pathname === '/';
-    const isRightSideLogo = !['/', '/contact', '/space'].includes(pathname);
+    const isRightSideLogo = !['/', '/contact', '/space', '/archive'].includes(pathname);
 
     {/* const isDarkTheme = isProjectActive; */ }
     {/* const themeColor = isDarkTheme ? '#1a1a1a' : '#ebebeb'; */ }
@@ -530,17 +559,17 @@ export const Header = () => {
             marginRight = '5px';
             transform = 'none';
         } else if (switcherMode === 'tablet') {
-            marginLeft = '20px';
+            marginLeft = '0px';
             marginRight = '0px';
             transform = 'translateY(0.3vh)';
         } else if (switcherMode === 'app') {
             // Стиль для Telegram Mini App (можете настраивать отдельно!)
-            marginLeft = '20px';
+            marginLeft = '0px';
             marginRight = '0px';
             transform = 'translateY(0.3vh)';
         } else if (switcherMode === 'mobile') {
             // Стиль для обычной мобилки в браузере (можете настраивать отдельно!)
-            marginLeft = '20px';
+            marginLeft = '0px';
             marginRight = '0px';
             transform = 'translateY(0.3vh)';
         }
@@ -807,11 +836,12 @@ export const Header = () => {
                     </div>
 
                     {/* Mobile Nav Container */}
-                    <div className="absolute top-[4.2vh] left-[24vw] lg:hidden flex items-center justify-start z-[150] pointer-events-none h-[44px]">
+                    <div className="absolute top-[4.2vh] left-[18vw] lg:hidden flex items-center justify-start z-[150] pointer-events-none h-[44px]">
                         <nav className={`flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
     ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-auto visible' : 'duration-200 opacity-0 translate-x-8 pointer-events-none invisible'}
 `}>
                             <NavItem href="/project" text={t('project')} isActive={isProjectActive} color={themeColor} />
+                            <NavItem href="/archive" text={t('archive')} isActive={isArchiveActive} color={themeColor} />
                             <NavItem href="/contact" text={t('contact')} isActive={pathname === '/contact'} color={themeColor} />
                             {/* Невидимая распорка в основном меню */}
                             <div style={{ display: switcherMode === 'mobile' ? 'block' : 'none', width: '36px', height: '36px' }} />
@@ -823,6 +853,7 @@ export const Header = () => {
     ${displayLogoRight ? 'right-[240px]' : 'right-[80px]'}
 `}>
                         <NavItem href="/project" text={t('project')} isActive={isProjectActive} color={themeColor} />
+                        <NavItem href="/archive" text={t('archive')} isActive={isArchiveActive} color={themeColor} />
                         <NavItem href="/contact" text={t('contact')} isActive={pathname === '/contact'} color={themeColor} />
                         <NavItem
                             text={t('cart')}
@@ -909,16 +940,55 @@ export const Header = () => {
                 </div>
 
                 {/* 2. Мобильный бургер-переключатель */}
-                <div className="absolute top-[4.1vh] left-[28vw] lg:hidden flex items-center justify-start z-[150] pointer-events-none h-[44px]">
+                <div className="absolute top-[4.1vh] left-[22vw] lg:hidden flex items-center justify-start z-[150] pointer-events-none h-[44px]">
                     <nav className={`flex flex-row items-center transition-all ease-[cubic-bezier(0.76,0,0.24,1)] relative z-[200]
                         ${isMenuOpen ? 'duration-500 opacity-100 translate-x-0 pointer-events-none visible' : 'duration-200 opacity-0 translate-x-8 pointer-events-none invisible'}
                     `}>
                         {/* Распорки-тексты с идентичным размером и отступами для пиксельного совпадения */}
-                        <div className="opacity-0 pointer-events-none" style={{ padding: '15px 2vw' }}>
-                            <span className="text-[16px] font-bold tracking-widest">{t('project')}</span>
+                        <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '15px 2vw' }}>
+                            <span className="text-[14px] font-bold tracking-widest flex items-center whitespace-nowrap">
+                                {t('project')}
+                                <span
+                                    className="inline-flex overflow-hidden"
+                                    style={{
+                                        width: isProjectActive ? '14px' : '0px',
+                                        marginLeft: isProjectActive ? '6px' : '0px',
+                                        transition: 'width 0.6s cubic-bezier(0.76, 0, 0.24, 1), margin-left 0.6s cubic-bezier(0.76, 0, 0.24, 1)'
+                                    }}
+                                >
+                                    ✹
+                                </span>
+                            </span>
                         </div>
-                        <div className="opacity-0 pointer-events-none" style={{ padding: '15px 2vw' }}>
-                            <span className="text-[16px] font-bold tracking-widest">{t('contact')}</span>
+                        <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '15px 2vw' }}>
+                            <span className="text-[14px] font-bold tracking-widest flex items-center whitespace-nowrap">
+                                {t('archive')}
+                                <span
+                                    className="inline-flex overflow-hidden"
+                                    style={{
+                                        width: isArchiveActive ? '14px' : '0px',
+                                        marginLeft: isArchiveActive ? '6px' : '0px',
+                                        transition: 'width 0.6s cubic-bezier(0.76, 0, 0.24, 1), margin-left 0.6s cubic-bezier(0.76, 0, 0.24, 1)'
+                                    }}
+                                >
+                                    ✹
+                                </span>
+                            </span>
+                        </div>
+                        <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '15px 2vw' }}>
+                            <span className="text-[14px] font-bold tracking-widest flex items-center whitespace-nowrap">
+                                {t('contact')}
+                                <span
+                                    className="inline-flex overflow-hidden"
+                                    style={{
+                                        width: pathname === '/contact' ? '14px' : '0px',
+                                        marginLeft: pathname === '/contact' ? '6px' : '0px',
+                                        transition: 'width 0.6s cubic-bezier(0.76, 0, 0.24, 1), margin-left 0.6s cubic-bezier(0.76, 0, 0.24, 1)'
+                                    }}
+                                >
+                                    ✹
+                                </span>
+                            </span>
                         </div>
 
                         <div style={{ display: switcherMode === 'mobile' ? 'block' : 'none' }} className="pointer-events-auto">
@@ -932,11 +1002,50 @@ export const Header = () => {
                     ${displayLogoRight ? 'right-[240px]' : 'right-[80px]'}
                 `}>
                     {/* Распорки-тексты для пиксельного совпадения с основным меню */}
-                    <div className="opacity-0 pointer-events-none" style={{ padding: '20px 15px' }}>
-                        <span className="text-sm font-bold tracking-widest">{t('project')}</span>
+                    <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
+                        <span className="text-sm font-bold tracking-widest flex items-center whitespace-nowrap">
+                            {t('project')}
+                            <span
+                                className="inline-flex overflow-hidden"
+                                style={{
+                                    width: isProjectActive ? '14px' : '0px',
+                                    marginLeft: isProjectActive ? '6px' : '0px',
+                                    transition: 'width 0.6s cubic-bezier(0.76, 0, 0.24, 1), margin-left 0.6s cubic-bezier(0.76, 0, 0.24, 1)'
+                                }}
+                            >
+                                ✹
+                            </span>
+                        </span>
                     </div>
-                    <div className="opacity-0 pointer-events-none" style={{ padding: '20px 15px' }}>
-                        <span className="text-sm font-bold tracking-widest">{t('contact')}</span>
+                    <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
+                        <span className="text-sm font-bold tracking-widest flex items-center whitespace-nowrap">
+                            {t('archive')}
+                            <span
+                                className="inline-flex overflow-hidden"
+                                style={{
+                                    width: isArchiveActive ? '14px' : '0px',
+                                    marginLeft: isArchiveActive ? '6px' : '0px',
+                                    transition: 'width 0.6s cubic-bezier(0.76, 0, 0.24, 1), margin-left 0.6s cubic-bezier(0.76, 0, 0.24, 1)'
+                                }}
+                            >
+                                ✹
+                            </span>
+                        </span>
+                    </div>
+                    <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
+                        <span className="text-sm font-bold tracking-widest flex items-center whitespace-nowrap">
+                            {t('contact')}
+                            <span
+                                className="inline-flex overflow-hidden"
+                                style={{
+                                    width: pathname === '/contact' ? '14px' : '0px',
+                                    marginLeft: pathname === '/contact' ? '6px' : '0px',
+                                    transition: 'width 0.6s cubic-bezier(0.76, 0, 0.24, 1), margin-left 0.6s cubic-bezier(0.76, 0, 0.24, 1)'
+                                }}
+                            >
+                                ✹
+                            </span>
+                        </span>
                     </div>
                     <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
                         <span className="text-sm font-bold tracking-widest">{t('cart')}</span>

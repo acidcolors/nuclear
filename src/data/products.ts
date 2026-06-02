@@ -13,6 +13,7 @@ export interface Product {
     role: string;
     illustrator?: string; // Сделаем необязательным, если нужно
     tags: string[]; // <-- Добавили массив хэштегов
+    isArchive?: boolean; // <-- Добавили флаг для динамической логики
 }
 
 export const products: Product[] = [
@@ -55,9 +56,6 @@ export const getPreviewImagePath = (folderId: string) => {
 };
 
 // Хелпер для получения путей ко всем картинкам галереи
-// Обрати внимание: имена файлов в твоих папках не идут по порядку с 1.
-// Поэтому для автоматизации лучше переименовать их в image1.png, image2.png и т.д.
-// Ниже приведен пример логики, если файлы переименованы по порядку.
 export const getGalleryImagePaths = (folderId: string, count: number) => {
     const paths = [];
     for (let i = 1; i <= count; i++) {
@@ -70,7 +68,6 @@ export const getGalleryImagePaths = (folderId: string, count: number) => {
 export const getAllTags = () => {
     const tagsSet = new Set<string>();
     products.forEach(product => {
-        // Убрали .toUpperCase()
         product.tags.forEach(tag => tagsSet.add(tag));
     });
     return Array.from(tagsSet);

@@ -8,15 +8,21 @@ interface MarqueeProps {
 }
 
 export const Marquee: React.FC<MarqueeProps> = ({ text, link }) => {
-    // Теперь мы не добавляем пробелы в коде, а используем gap для отступов
     const formattedText = text;
     
     // Дублируем текст 12 раз (6+6) для заполнения и бесшовности
     const items = Array(12).fill(formattedText);
 
+    const handleClick = (e: React.MouseEvent) => {
+        e.preventDefault();
+        e.stopPropagation();
+        // Отправляем событие для открытия PromoModal
+        window.dispatchEvent(new CustomEvent('openPromoModal'));
+    };
+
     const content = (
         <div 
-            className="flex whitespace-nowrap animate-marquee py-2"
+            className="flex whitespace-nowrap animate-marquee py-2 cursor-pointer"
             style={{ gap: 'var(--marquee-gap, 40px)' }}
         >
             {items.map((item, idx) => (
@@ -33,7 +39,9 @@ export const Marquee: React.FC<MarqueeProps> = ({ text, link }) => {
 
     return (
         <div 
-            className="fixed bottom-0 left-0 w-full overflow-hidden bg-black text-white flex items-center"
+            className="fixed bottom-0 left-0 w-full overflow-hidden bg-black text-white flex items-center cursor-pointer"
+            onClick={handleClick}
+            data-cursor="pointer"
             style={{ 
                 zIndex: 900, 
                 height: 'var(--marquee-height, 50px)',
@@ -45,11 +53,18 @@ export const Marquee: React.FC<MarqueeProps> = ({ text, link }) => {
             }}
         >
             {link ? (
-                <a href={link} target="_blank" rel="noopener noreferrer" className="no-underline hover:opacity-80 transition-opacity" style={{ color: 'inherit' }}>
+                <a 
+                    href={link} 
+                    onClick={handleClick}
+                    className="no-underline hover:opacity-80 transition-opacity flex-1" 
+                    style={{ color: 'inherit' }}
+                >
                     {content}
                 </a>
             ) : (
-                content
+                <div className="flex-1 hover:opacity-80 transition-opacity" onClick={handleClick}>
+                    {content}
+                </div>
             )}
         </div>
     );

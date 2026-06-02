@@ -390,7 +390,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                                 )}
 
                                                 {(() => {
-                                                    const isSoldOut = product.price === 'SOLD' || product.price === 'Распродано';
+                                                    const isSoldOut = product.price === 'SOLD' || product.price === 'Распродано' || product.price === 'SOON' || product.price === 'Скоро';
                                                     const isInCart = items.some(item => item.id === product.id);
                                                     const isInSupport = supportItems.some(item => item.id === product.id);
 

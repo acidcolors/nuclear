@@ -246,7 +246,7 @@ export default function ProjectClient({ initialProducts }: ProjectClientProps) {
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-[25px] lg:gap-[1.5vw] w-full">
                             {filteredProducts.map((product: any) => {
                                 const previewImage = product.notionImages?.[0] || `/projects/${product.id}/main.jpg`;
-                                const isSoldOut = product.price === 'SOLD' || product.price === 'Распродано';
+                                const isSoldOut = product.price === 'SOLD' || product.price === 'Распродано' || product.price === 'SOON' || product.price === 'Скоро';
                                 const isInCart = cartItems.some(item => item.id === product.id);
                                 const isInSupport = supportItems.some(item => item.id === product.id);
                                 const currentTag = (product.tags?.[0] === 'Postcards' ? 'Открытки' : product.tags?.[0]) || 'Прочее';

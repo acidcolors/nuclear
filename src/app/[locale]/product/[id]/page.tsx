@@ -11,7 +11,7 @@ import { products, getProductById, getGalleryImagePaths } from '@/data/products'
 import { TransitionLink } from '@/components/TransitionLink';
 import { Lightbox } from '@/components/ui/Lightbox';
 import { ShareModal } from '@/components/ui/ShareModal';
-import { getNotionProducts } from '@/lib/notion';
+import { getNotionProducts, getNotionArchiveProducts } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
 import { useCart } from '@/app/store/useCart';
 import { useSupport } from '@/app/store/useSupport';
@@ -84,17 +84,43 @@ export default function ProductPage() {
     const [isAddedRecently, setIsAddedRecently] = useState(false);
     const [isSupportAddedRecently, setIsSupportAddedRecently] = useState(false);
     const buttonRef = useRef<HTMLButtonElement>(null);
+    const [isArchiveProduct, setIsArchiveProduct] = useState(false);
 
     useEffect(() => {
         if (!CMS_CONFIG.USE_NOTION) {
             setIsLoading(false);
+            setIsArchiveProduct(false);
+            if (typeof window !== 'undefined') {
+                (window as any).__productArchiveCache = (window as any).__productArchiveCache || {};
+                (window as any).__productArchiveCache[productId] = false;
+                window.dispatchEvent(new CustomEvent('productOriginDetected', { detail: { isArchive: false } }));
+            }
             return;
         }
         async function fetchData() {
             try {
-                const allNotion = await getNotionProducts();
+                const [allNotion, allArchive] = await Promise.all([
+                    getNotionProducts(),
+                    getNotionArchiveProducts()
+                ]);
                 const current = allNotion.find((p: any) => p.id === productId);
-                if (current) setNotionData(current);
+                let isArchived = false;
+                if (current) {
+                    setNotionData(current);
+                    setIsArchiveProduct(false);
+                } else {
+                    const archiveCurrent = allArchive.find((p: any) => p.id === productId);
+                    if (archiveCurrent) {
+                        setNotionData(archiveCurrent);
+                        setIsArchiveProduct(true);
+                        isArchived = true;
+                    }
+                }
+                if (typeof window !== 'undefined') {
+                    (window as any).__productArchiveCache = (window as any).__productArchiveCache || {};
+                    (window as any).__productArchiveCache[productId] = isArchived;
+                    window.dispatchEvent(new CustomEvent('productOriginDetected', { detail: { isArchive: isArchived } }));
+                }
             } catch (err) {
                 console.error(err);
             } finally {
@@ -118,7 +144,7 @@ export default function ProductPage() {
 
     const isSoldOut = useMemo(() => {
         if (!product) return false;
-        return product.price === 'SOLD' || product.price === 'Распродано';
+        return product.price === 'SOLD' || product.price === 'Распродано' || product.price === 'SOON' || product.price === 'Скоро';
     }, [product]);
 
     const isInCart = items.some(item => item.id === product?.id);
@@ -492,7 +518,7 @@ export default function ProductPage() {
                         </div>
 
                         <TransitionLink
-                            href="/project"
+                            href={isArchiveProduct ? '/archive' : '/project'}
                             className="hidden lg:block opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[10px] z-10"
                         >
                             <BackAnimation />
@@ -523,7 +549,7 @@ export default function ProductPage() {
 
                         {/* Кнопка Back для мобилок и айпадов (появляется ПОСЛЕ фото) */}
                         <TransitionLink
-                            href="/project"
+                            href={isArchiveProduct ? '/archive' : '/project'}
                             className="block lg:hidden opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[10px] mb-[60px] z-[10]"
                         >
                             <BackAnimation />

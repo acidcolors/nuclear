@@ -37,7 +37,7 @@
   --contact-desc-top: 20px;
   --contact-socials-mt: 30px;
   --contact-relax-scale: 1;
-  --space-vol-top: 76vh;
+  --space-vol-bottom: 25vh;
   --space-vol-left: calc(6vw - 3px);
   --space-social-bottom: 15vh;
   --marquee-height: 50px;
@@ -55,7 +55,7 @@
     --title-size: 80px;
     --desc-size: 18px;
     --marquee-height: 45px;
-    --marquee-bottom: 50px;
+    --marquee-bottom: 20vh;
     --home-title-top: 15vh;
     --home-desc-top: 40vh;
   }
@@ -75,7 +75,7 @@
     --contact-socials-mt: 40px;
     --space-vol-top: 56px;
     --marquee-height: 60px;
-    --marquee-bottom: 25px;
+    --marquee-bottom: 10vh;
   }
 }
 
@@ -102,6 +102,7 @@
 }
 
 @media (max-height: 650px) {
+
   .contact-info-field,
   .custom-tg,
   .contact-tg-link {
@@ -143,7 +144,7 @@
     --contact-desc-top: -64px !important;
     --contact-socials-mt: 36px !important;
     --contact-relax-scale: 0.7 !important;
-    --space-vol-top: 80% !important;
+    --space-vol-bottom: 20% !important;
     --space-vol-left: calc(6vw - 5px) !important;
     --space-social-bottom: 40px !important;
 
@@ -253,9 +254,10 @@ input[type="range"]::-moz-range-thumb {
 
 /* Мобильные экраны (по умолчанию) */
 .custom-vol {
-  position: absolute;
-  top: 20vh;
-  left: 6vw;
+  position: fixed !important;
+  top: auto !important;
+  bottom: var(--space-vol-bottom) !important;
+  left: var(--space-vol-left) !important;
 }
 
 .custom-nav {
@@ -300,8 +302,15 @@ input[type="range"]::-moz-range-thumb {
   .custom-vol {
     top: var(--space-vol-top) !important;
     bottom: auto !important;
-    left: 50% !important;
-    transform: translateX(-50%) !important;
+    left: calc(var(--space-vol-left) + 90px) !important;
+    transform: none !important;
+  }
+
+  @media (min-width: 1441px) {
+    .custom-vol {
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+    }
   }
 
   .custom-nav {

@@ -1,6 +1,7 @@
 {
   "Header": {
     "project": "Проекты",
+    "archive": "Архив",
     "contact": "Контакты",
     "cart": "Корзина"
   },
@@ -32,6 +33,10 @@
   },
   "Projects": {
     "title": "Проекты",
+    "all": "Все"
+  },
+  "Archive": {
+    "title": "Архив",
     "all": "Все"
   },
   "Contact": {

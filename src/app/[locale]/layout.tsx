@@ -6,6 +6,7 @@ import CustomCursor from '../../components/CustomCursor';
 import { GlobalScrollToTop } from '../../components/GlobalScrollToTop';
 import { CartDrawer } from '../../components/CartDrawer';
 import { SupportDrawer } from '../../components/SupportDrawer';
+import { PromoModal } from '../../components/PromoModal';
 // 1. Импортируем компонент для работы со скриптами
 import Script from 'next/script';
 
@@ -52,6 +53,7 @@ export default async function RootLayout({
           <CartDrawer />
           <SupportDrawer />
           <GlobalScrollToTop />
+          <PromoModal />
           {children}
         </NextIntlClientProvider>
       </body>
