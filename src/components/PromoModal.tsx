@@ -41,7 +41,8 @@ const BoxAnimation = ({ className }: { className?: string }) => {
     const imagesRef = useRef<HTMLImageElement[]>([]);
 
     useEffect(() => {
-        imagesRef.current = preloadImageSequence('/animation/Link01/SA01_', 181, '_R.webp');
+        const frames = 181;
+        imagesRef.current = preloadImageSequence('/animation/Link01/SA01_', frames, '_R.webp');
 
         let frame = 0;
         let animationId: number;
