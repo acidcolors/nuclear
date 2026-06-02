@@ -11,10 +11,38 @@ import logoAnimationData from '@/data/logo_t.json';
 const unbounded = Unbounded({ subsets: ['cyrillic', 'latin'], weight: ['400', '500', '700', '900'] });
 const playfair = Playfair_Display({ subsets: ['cyrillic', 'latin'], weight: ['400', '700'], style: ['normal', 'italic'] });
 
+// Global cache to prevent React StrictMode (Dev Mode) from loading images twice,
+// and to keep images in memory instantly available when the modal opens.
+const imageCache = new Map<string, HTMLImageElement>();
+
+const preloadImageSequence = (prefix: string, frames: number, suffix: string) => {
+    const images: HTMLImageElement[] = [];
+    for (let i = 0; i < frames; i++) {
+        const paddedFrame = String(i).padStart(4, '0');
+        const src = `${prefix}${paddedFrame}${suffix}`;
+        if (imageCache.has(src)) {
+            images.push(imageCache.get(src)!);
+        } else {
+            const img = new Image();
+            img.src = src;
+            // Optionally trigger background decode
+            if (img.decode) {
+                img.decode().catch(() => {});
+            }
+            imageCache.set(src, img);
+            images.push(img);
+        }
+    }
+    return images;
+};
+
 const BoxAnimation = ({ className }: { className?: string }) => {
-    const imgRef = useRef<HTMLImageElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
+    const imagesRef = useRef<HTMLImageElement[]>([]);
 
     useEffect(() => {
+        imagesRef.current = preloadImageSequence('/animation/Link01/SA01_', 181, '_R.webp');
+
         let frame = 0;
         let animationId: number;
         let lastTime = performance.now();
@@ -26,35 +54,49 @@ const BoxAnimation = ({ className }: { className?: string }) => {
             const delta = time - lastTime;
             if (delta > interval) {
                 lastTime = time - (delta % interval);
-                if (imgRef.current) {
-                    const paddedFrame = String(frame).padStart(4, '0');
-                    imgRef.current.src = `/animation/Link01/SA01_${paddedFrame}_R.webp`;
+
+                const canvas = canvasRef.current;
+                const ctx = canvas?.getContext('2d');
+                const img = imagesRef.current[frame];
+
+                if (canvas && ctx && img && img.complete) {
+                    if (canvas.width !== img.width && img.width > 0) {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 }
-                frame = (frame + 1) % 181;
+                frame = (frame + 1) % frames;
             }
         };
         animationId = requestAnimationFrame(loop);
-        return () => cancelAnimationFrame(animationId);
+
+        return () => {
+            cancelAnimationFrame(animationId);
+            imagesRef.current = []; // Free memory to avoid leaks
+        };
     }, []);
 
     return (
-        <img
-            ref={imgRef}
-            src="/animation/Link01/SA01_0000_R.webp"
-            alt="Box Animation"
+        <canvas
+            ref={canvasRef}
             className={className}
+            style={{ objectFit: 'contain' }}
         />
     );
 };
 
 const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
-    const imgRef = useRef<HTMLImageElement>(null);
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
+    const imagesRef = useRef<HTMLImageElement[]>([]);
 
     useEffect(() => {
         gsap.registerPlugin(ScrollTrigger);
+        imagesRef.current = preloadImageSequence('/animation/Link02/SA02_', 91, '_R.webp');
 
-        if (!imgRef.current || !containerRef.current) return;
+        if (!containerRef.current || !canvasRef.current) return;
 
         const obj = { frame: 0 };
 
@@ -65,14 +107,22 @@ const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
             scrollTrigger: {
                 trigger: containerRef.current,
                 scroller: "#promo-scroll-container",
-                start: "top 80%", // Start animating when top of container hits 80% of viewport height
-                end: "bottom -30%", // Finish animating when bottom of container hits 40% of viewport height
-                scrub: 1, // Smooth scrubbing (1 second delay)
+                start: "top 80%",
+                end: "bottom -30%",
+                scrub: true,
             },
             onUpdate: () => {
-                if (imgRef.current) {
-                    const paddedFrame = String(Math.round(obj.frame)).padStart(4, '0');
-                    imgRef.current.src = `/animation/Link02/SA02_${paddedFrame}_R.webp`;
+                const canvas = canvasRef.current;
+                const ctx = canvas?.getContext('2d');
+                const img = imagesRef.current[Math.round(obj.frame)];
+
+                if (canvas && ctx && img && img.complete) {
+                    if (canvas.width !== img.width && img.width > 0) {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 }
             }
         });
@@ -80,15 +130,14 @@ const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
         return () => {
             if (tween.scrollTrigger) tween.scrollTrigger.kill();
             tween.kill();
+            imagesRef.current = [];
         };
     }, []);
 
     return (
         <div ref={containerRef} className={className}>
-            <img
-                ref={imgRef}
-                src="/animation/Link02/SA02_0000_R.webp"
-                alt="Scroll Animation Element"
+            <canvas
+                ref={canvasRef}
                 className="w-[350px] h-auto object-contain pointer-events-none scale-[3] -translate-y-[50px]"
             />
         </div>
@@ -96,13 +145,15 @@ const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
 };
 
 const Link03Animation = ({ className }: { className?: string }) => {
+    const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
-    const imgRef = useRef<HTMLImageElement>(null);
+    const imagesRef = useRef<HTMLImageElement[]>([]);
 
     useEffect(() => {
         gsap.registerPlugin(ScrollTrigger);
+        imagesRef.current = preloadImageSequence('/animation/Link03/SA03_', 91, '_R.webp');
 
-        if (!imgRef.current || !containerRef.current) return;
+        if (!containerRef.current || !canvasRef.current) return;
 
         const obj = { frame: 0 };
 
@@ -113,14 +164,22 @@ const Link03Animation = ({ className }: { className?: string }) => {
             scrollTrigger: {
                 trigger: containerRef.current,
                 scroller: "#promo-scroll-container",
-                start: "top 90%", // Start animating when it appears at the bottom
-                end: "bottom 100%", // Finish animating when you scroll to its very bottom
-                scrub: 1, // Smooth scrubbing (1 second delay)
+                start: "top 95%",
+                end: "bottom 100%",
+                scrub: true,
             },
             onUpdate: () => {
-                if (imgRef.current) {
-                    const paddedFrame = String(Math.round(obj.frame)).padStart(4, '0');
-                    imgRef.current.src = `/animation/Link03/SA03_${paddedFrame}_R.webp`;
+                const canvas = canvasRef.current;
+                const ctx = canvas?.getContext('2d');
+                const img = imagesRef.current[Math.round(obj.frame)];
+
+                if (canvas && ctx && img && img.complete) {
+                    if (canvas.width !== img.width && img.width > 0) {
+                        canvas.width = img.width;
+                        canvas.height = img.height;
+                    }
+                    ctx.clearRect(0, 0, canvas.width, canvas.height);
+                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                 }
             }
         });
@@ -128,15 +187,14 @@ const Link03Animation = ({ className }: { className?: string }) => {
         return () => {
             if (tween.scrollTrigger) tween.scrollTrigger.kill();
             tween.kill();
+            imagesRef.current = [];
         };
     }, []);
 
     return (
         <div ref={containerRef} className={className}>
-            <img
-                ref={imgRef}
-                src="/animation/Link03/SA03_0000_R.webp"
-                alt="Bottom Animation Element"
+            <canvas
+                ref={canvasRef}
                 className="w-[350px] h-auto object-contain pointer-events-none scale-[2.5]"
             />
         </div>
@@ -235,7 +293,11 @@ export const PromoModal = () => {
             <div
                 id="promo-scroll-container"
                 className="w-full h-full overflow-y-auto relative"
-                style={{ WebkitOverflowScrolling: 'touch' }}
+                style={{
+                    WebkitOverflowScrolling: 'touch',
+                    overscrollBehavior: 'contain',
+                    willChange: 'transform'
+                }}
             >
                 <main
                     className="w-full min-h-[100dvh] overflow-x-hidden"
