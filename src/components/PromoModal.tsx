@@ -25,10 +25,8 @@ const preloadImageSequence = (prefix: string, frames: number, suffix: string) =>
         } else {
             const img = new Image();
             img.src = src;
-            // Optionally trigger background decode
-            if (img.decode) {
-                img.decode().catch(() => {});
-            }
+            // Removed img.decode() because firing 200+ decodes synchronously freezes mobile Safari/Chrome.
+            // Let the canvas decode them lazily upon first draw.
             imageCache.set(src, img);
             images.push(img);
         }
@@ -49,17 +47,26 @@ const BoxAnimation = ({ className }: { className?: string }) => {
         let lastTime = performance.now();
         const fps = 30;
         const interval = 1000 / fps;
+        
+        let isVisible = true;
+        const observer = new IntersectionObserver((entries) => {
+            isVisible = entries[0].isIntersecting;
+        });
+        if (canvasRef.current) observer.observe(canvasRef.current);
 
         const loop = (time: number) => {
             animationId = requestAnimationFrame(loop);
+            
+            if (!isVisible) return; // ПРОПУСКАЕМ ОТРИСОВКУ, ЕСЛИ НЕ В КАДРЕ
+            
             const delta = time - lastTime;
             if (delta > interval) {
                 lastTime = time - (delta % interval);
-
+                
                 const canvas = canvasRef.current;
                 const ctx = canvas?.getContext('2d');
                 const img = imagesRef.current[frame];
-
+                
                 if (canvas && ctx && img && img.complete) {
                     if (canvas.width !== img.width && img.width > 0) {
                         canvas.width = img.width;
@@ -72,9 +79,11 @@ const BoxAnimation = ({ className }: { className?: string }) => {
             }
         };
         animationId = requestAnimationFrame(loop);
-
+        
         return () => {
             cancelAnimationFrame(animationId);
+            if (canvasRef.current) observer.unobserve(canvasRef.current);
+            observer.disconnect();
             imagesRef.current = []; // Free memory to avoid leaks
         };
     }, []);
@@ -89,56 +98,11 @@ const BoxAnimation = ({ className }: { className?: string }) => {
 };
 
 const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const containerRef = useRef<HTMLDivElement>(null);
-    const imagesRef = useRef<HTMLImageElement[]>([]);
-
-    useEffect(() => {
-        gsap.registerPlugin(ScrollTrigger);
-        imagesRef.current = preloadImageSequence('/animation/Link02/SA02_', 91, '_R.webp');
-
-        if (!containerRef.current || !canvasRef.current) return;
-
-        const obj = { frame: 0 };
-
-        const tween = gsap.to(obj, {
-            frame: 90,
-            snap: "frame",
-            ease: "none",
-            scrollTrigger: {
-                trigger: containerRef.current,
-                scroller: "#promo-scroll-container",
-                start: "top 80%",
-                end: "bottom -30%",
-                scrub: true,
-            },
-            onUpdate: () => {
-                const canvas = canvasRef.current;
-                const ctx = canvas?.getContext('2d');
-                const img = imagesRef.current[Math.round(obj.frame)];
-
-                if (canvas && ctx && img && img.complete) {
-                    if (canvas.width !== img.width && img.width > 0) {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
-                    }
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                }
-            }
-        });
-
-        return () => {
-            if (tween.scrollTrigger) tween.scrollTrigger.kill();
-            tween.kill();
-            imagesRef.current = [];
-        };
-    }, []);
-
     return (
-        <div ref={containerRef} className={className}>
-            <canvas
-                ref={canvasRef}
+        <div className={className}>
+            <img
+                src="/animation/Link02/SA02.webp"
+                alt="Static Star Element"
                 className="w-[350px] h-auto object-contain pointer-events-none scale-[3] -translate-y-[50px]"
             />
         </div>
@@ -185,7 +149,13 @@ const Link03Animation = ({ className }: { className?: string }) => {
             }
         });
 
+        // Refresh triggers after the modal slide-up transition finishes (500ms + buffer)
+        const timeout = setTimeout(() => {
+            ScrollTrigger.refresh();
+        }, 550);
+
         return () => {
+            clearTimeout(timeout);
             if (tween.scrollTrigger) tween.scrollTrigger.kill();
             tween.kill();
             imagesRef.current = [];
@@ -296,7 +266,6 @@ export const PromoModal = () => {
                 className="w-full h-full overflow-y-auto relative"
                 style={{
                     WebkitOverflowScrolling: 'touch',
-                    overscrollBehavior: 'contain',
                     willChange: 'transform'
                 }}
             >
