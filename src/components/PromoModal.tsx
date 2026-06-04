@@ -42,7 +42,7 @@ const BoxAnimation = ({ className }: { className?: string }) => {
         let frame = 0;
         let animationId: number;
         let lastTime = performance.now();
-        const fps = 30;
+        const fps = 24;
         const interval = 1000 / fps;
 
         let isVisible = true;
@@ -60,13 +60,17 @@ const BoxAnimation = ({ className }: { className?: string }) => {
                 lastTime = time - (delta % interval);
 
                 const canvas = canvasRef.current;
-                const ctx = canvas?.getContext('2d');
+                const ctx = canvas?.getContext('2d', { alpha: true, desynchronized: true });
                 const img = imagesRef.current[frame];
 
                 if (canvas && ctx && img && img.complete) {
-                    if (canvas.width !== img.width && img.width > 0) {
-                        canvas.width = img.width;
-                        canvas.height = img.height;
+                    const scale = 0.5; // Уменьшаем разрешение рендера в 2 раза
+                    const renderWidth = Math.floor(img.width * scale);
+                    const renderHeight = Math.floor(img.height * scale);
+
+                    if (canvas.width !== renderWidth && renderWidth > 0) {
+                        canvas.width = renderWidth;
+                        canvas.height = renderHeight;
                     }
                     ctx.clearRect(0, 0, canvas.width, canvas.height);
                     ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
@@ -93,7 +97,7 @@ const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
             <img
                 src="/animation/Link02/SA02.webp"
                 alt="Static Star Element"
-                className="w-[1500px] max-w-[500vw] h-auto object-contain pointer-events-none -translate-y-[500px] -mb-[550px]"
+                className="w-[2000px] max-w-[500vw] h-auto object-contain pointer-events-none -translate-y-[800px] -mb-[550px]"
             />
         </div>
     );
@@ -117,10 +121,11 @@ const Link03Animation = ({ className }: { className?: string }) => {
 
             const firstImg = imagesRef.current[0];
             if (firstImg && firstImg.complete && firstImg.width > 0) {
-                canvasRef.current.width = firstImg.width;
-                canvasRef.current.height = firstImg.height;
+                const scale = 0.5;
+                canvasRef.current.width = Math.floor(firstImg.width * scale);
+                canvasRef.current.height = Math.floor(firstImg.height * scale);
                 const ctx = canvasRef.current.getContext('2d');
-                if (ctx) ctx.drawImage(firstImg, 0, 0);
+                if (ctx) ctx.drawImage(firstImg, 0, 0, canvasRef.current.width, canvasRef.current.height);
             }
 
             ctxGSAP = gsap.context(() => {
@@ -132,17 +137,25 @@ const Link03Animation = ({ className }: { className?: string }) => {
                     scrollTrigger: {
                         trigger: containerRef.current,
                         scroller: "#promo-scroll-container",
-                        start: "80% bottom",
+                        start: "82% bottom",
                         end: "35% top",
                         scrub: true,
                         markers: false, // Отключили маркеры
                     },
                     onUpdate: () => {
                         const canvas = canvasRef.current;
-                        const ctx = canvas?.getContext('2d');
+                        const ctx = canvas?.getContext('2d', { alpha: true, desynchronized: true });
                         const img = imagesRef.current[Math.round(obj.frame)];
 
                         if (canvas && ctx && img && img.complete && img.width > 0) {
+                            const scale = 0.5; // Уменьшаем разрешение рендера в 2 раза
+                            const renderWidth = Math.floor(img.width * scale);
+                            const renderHeight = Math.floor(img.height * scale);
+
+                            if (canvas.width !== renderWidth && renderWidth > 0) {
+                                canvas.width = renderWidth;
+                                canvas.height = renderHeight;
+                            }
                             ctx.clearRect(0, 0, canvas.width, canvas.height);
                             ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
                         }
@@ -170,7 +183,7 @@ const Link03Animation = ({ className }: { className?: string }) => {
 
     return (
         <div ref={containerRef} className={className}>
-            <canvas ref={canvasRef} className="w-[875px] max-w-[200vw] h-auto object-contain pointer-events-none" />
+            <canvas ref={canvasRef} className="w-[1200px] max-w-none shrink-0 h-auto object-contain pointer-events-none transform-gpu will-change-transform" />
         </div>
     );
 };
@@ -205,6 +218,12 @@ export const PromoModal = () => {
     const [shouldRender, setShouldRender] = useState(false);
     const [animateIn, setAnimateIn] = useState(false);
     const svgTextRef = useRef<SVGSVGElement>(null);
+    const flyingTextRef = useRef<HTMLDivElement>(null);
+    const textTargetRef = useRef<HTMLParagraphElement>(null);
+    const titleRef = useRef<HTMLHeadingElement>(null);
+    const descRef = useRef<HTMLParagraphElement>(null);
+    const star1Ref = useRef<HTMLImageElement>(null);
+    const star2Ref = useRef<HTMLImageElement>(null);
     const lottieArrowRef = useRef<any>(null);
     const arrowDirectionRef = useRef<number>(1);
 
@@ -215,13 +234,101 @@ export const PromoModal = () => {
             gsap.fromTo(svgTextRef.current,
                 { rotation: 0 },
                 {
-                    rotation: 360,
+                    rotation: -360,
                     duration: 15,
                     ease: "none",
                     repeat: -1,
                     transformOrigin: "center center"
                 }
             );
+
+            // Animate flying text from the text block down to the logo
+            if (flyingTextRef.current && textTargetRef.current) {
+                gsap.registerPlugin(ScrollTrigger);
+
+                // Animate position
+                gsap.fromTo(flyingTextRef.current,
+                    { y: -490 }, // Start position (centered on the text)
+                    {
+                        y: 0, // End position (centered on the logo)
+                        ease: "none",
+                        scrollTrigger: {
+                            trigger: textTargetRef.current,
+                            scroller: "#promo-scroll-container",
+                            start: "center center",
+                            end: "+=420",
+                            scrub: 1,
+                            markers: false
+                        }
+                    }
+                );
+
+                // Animate color
+                const textEl = flyingTextRef.current.querySelector('text');
+                if (textEl) {
+                    gsap.fromTo(textEl,
+                        { fill: "#e2fd6f" },
+                        {
+                            fill: "#000000",
+                            ease: "none",
+                            scrollTrigger: {
+                                trigger: textTargetRef.current,
+                                scroller: "#promo-scroll-container",
+                                start: "center center",
+                                end: "+=420",
+                                scrub: 1,
+                            }
+                        }
+                    );
+                }
+            }
+
+            // Fade in/out animations for central block text
+            const textElements = [titleRef.current, descRef.current];
+            textElements.forEach((el) => {
+                if (el) {
+                    gsap.fromTo(el,
+                        { opacity: 0, y: 30 }, // start slightly lower and invisible
+                        {
+                            opacity: 1,
+                            y: 0,
+                            duration: 0.8,
+                            ease: "power2.out",
+                            scrollTrigger: {
+                                trigger: el,
+                                scroller: "#promo-scroll-container",
+                                start: "top 90%",
+                                end: "bottom 10%",
+                                toggleActions: "play reverse play reverse",
+                                markers: false
+                            }
+                        }
+                    );
+                }
+            });
+
+            // Fade in/out animations for stars (opacity only, to preserve Tailwind transforms)
+            const starElements = [star1Ref.current, star2Ref.current];
+            starElements.forEach((el) => {
+                if (el) {
+                    gsap.fromTo(el,
+                        { opacity: 0 },
+                        {
+                            opacity: 1,
+                            duration: 0.8,
+                            ease: "power2.out",
+                            scrollTrigger: {
+                                trigger: el,
+                                scroller: "#promo-scroll-container",
+                                start: "top 90%",
+                                end: "bottom 10%",
+                                toggleActions: "play reverse play reverse",
+                                markers: false
+                            }
+                        }
+                    );
+                }
+            });
         });
 
         return () => {
@@ -293,7 +400,8 @@ export const PromoModal = () => {
                 <main
                     className="w-full min-h-[100dvh]"
                     style={{
-                        background: 'linear-gradient(180deg, #fbbcb6 0%, #000000ff 20%, #FF0000 35%, #000000ff 45%, #4a0000 75%, #000000 85%)'
+                        background: '#000000',
+                        /* background: 'linear-gradient(180deg, #fbbcb6 0%, #000000ff 20%, #FF0000 35%, #000000ff 45%, #4a0000 75%, #000000 85%)' */
                     }}
                 >
                     {/* Top Photo */}
@@ -313,8 +421,8 @@ export const PromoModal = () => {
 
                     {/* Sticky Wrapper for Marquee */}
                     <div className="w-full z-[500] self-stretch" style={{ position: 'sticky', top: '0px', WebkitPosition: '-webkit-sticky' } as any}>
-                        <div className="w-full bg-[#D9FF00] overflow-hidden py-3 border-y border-black flex items-center">
-                            <div className="flex whitespace-nowrap animate-marquee">
+                        <div className="w-full bg-[#D9FF00] overflow-hidden py-3 border-y border-black flex items-center" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
+                            <div className="flex whitespace-nowrap animate-marquee" style={{ willChange: 'transform', transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
                                 {marqueeItems.map((text, idx) => (
                                     <span key={idx} className={`text-[22px] italic font-bold px-2 uppercase tracking-wide ${playfair.className}`} style={{ color: '#000000' }}>
                                         {text}
@@ -325,53 +433,58 @@ export const PromoModal = () => {
                     </div>
 
                     {/* Central Block (Capsule) */}
-                    <div className="relative w-full px-6 mt-[110px] flex flex-col items-center">
+                    <div className="relative w-full px-6 mt-[350px] flex flex-col items-center">
                         <div className="relative w-[90vw] max-w-[400px]">
                             <div className="absolute inset-0 w-full h-full rounded-[220px] border border-[#D9FF00] pointer-events-none z-0" />
-                            <BoxAnimation className="-rotate-[15deg] w-[400px] max-w-none object-contain absolute -top-[220px] left-1/2 -translate-x-1/2 z-20 pointer-events-none" />
+                            <BoxAnimation className="-rotate-[15deg] w-[800px] max-w-none object-contain absolute -top-[550px] left-1/2 -translate-x-1/2 z-20 pointer-events-none transform-gpu will-change-transform" />
                             <div className="w-full bg-transparent flex flex-col pt-[200px] pb-16 z-10 relative min-h-[750px]">
-                                <h2 className="text-[#D9FF00] text-[28px] font-black leading-[1.1] text-left relative z-10 mx-[20px]">
+                                <h2 ref={titleRef} className="text-[#D9FF00] text-[28px] font-black leading-[1.1] text-left relative z-10 mx-[20px]">
                                     Горит Сарай<br />Гори и Хата
                                 </h2>
-                                <p className="mt-[150px] text-[#D9FF00] text-[20px] leading-[1.3] font-bold text-left relative z-10 mx-[20px]">
+                                <p ref={descRef} className="mt-[150px] text-[#D9FF00] text-[20px] leading-[1.3] font-bold text-left relative z-10 mx-[20px]">
                                     Коллекция открыток «Горит сарай — гори и хата». В наборе 10 штук формата 7 х 10.5 см. Всё уже упаковано и ready to gift: можно подарить весь сет целиком или раздарить поштучно.
                                 </p>
                             </div>
-                            <img src="/ST_03.svg" alt="Star 1" className="absolute top-[35%] -translate-y-1/2 -right-[280px] w-[550px] h-[550px] z-20 pointer-events-none" />
-                            <img src="/ST_02.svg" alt="Star 2" className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-48 h-48 z-20 pointer-events-none" />
+                            <img ref={star1Ref} src="/ST_03.svg" alt="Star 1" className="absolute top-[35%] -translate-y-1/2 -right-[280px] w-[550px] h-[550px] z-20 pointer-events-none" />
+                            <img ref={star2Ref} src="/ST_02.svg" alt="Star 2" className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-48 h-48 z-20 pointer-events-none" />
                         </div>
                     </div>
 
                     {/* Bottom Block */}
                     <div className="w-full mt-32 px-6 flex flex-col items-center pb-16">
-                        <ScrollSequenceAnimation className="relative z-50 w-full flex justify-center -mt-[200px] -mb-[20px]" />
-                        <p className="text-white font-black text-center text-[18px] leading-[1.2] max-w-[280px] mb-24">
+                        <ScrollSequenceAnimation className="relative z-50 w-full flex justify-center -mt-[200px] -mb-[320px]" />
+                        <p ref={textTargetRef} className="text-white font-black text-center text-[18px] leading-[1.2] max-w-[280px] mb-24 relative z-20">
                             Lorem ipsum<br />dolor sit amet,<br />consectetuer<br />adipiscing elit, sed<br />diam nonummy nibh<br />euismod tincidunt ut<br />laoreet dolore<br />magna aliquam<br />erat volutpat.<br />Ut wisi
                         </p>
 
-                        <div className="relative w-[360px] h-[360px] flex items-center justify-center mt-[100px]">
-                            <img src="/ST_01.svg" alt="Star 3" className="absolute inset-0 w-full h-full scale-[2.5] z-0 pointer-events-none" />
+                        <div className="relative w-[360px] h-[360px] flex items-center justify-center mt-[180px]">
+                            {/* Blurred glow circle */}
+                            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[360px] h-[360px] bg-[#e2fd6f] rounded-full blur-[70px] opacity-30 z-0 pointer-events-none"></div>
+
+                            <img src="/ST_01.svg" alt="Star 3" className="absolute inset-0 w-full h-full scale-[2.5] z-10 pointer-events-none" />
                             <div className="absolute inset-0 z-10 flex items-center justify-center mix-blend-exclusion pointer-events-none">
                                 <div className="w-[200px] h-[200px] flex items-center justify-center pointer-events-auto">
                                     <ModalLogoAnimation />
                                 </div>
                             </div>
                             <div className="absolute w-[240px] h-[240px] rounded-full pointer-events-none z-20" style={{ border: '4px solid #e2fd6f', boxShadow: '0 0 20px 2px #e2fd6f, inset 0 0 20px 2px #e2fd6f' }}></div>
-                            <svg ref={svgTextRef} viewBox="0 0 360 360" className="absolute inset-0 w-full h-full z-20 overflow-visible pointer-events-none">
-                                <defs>
-                                    <path id="bottom-curve" d="M 45 180 A 135 135 0 0 0 315 180" fill="transparent" />
-                                </defs>
-                                <text className="fill-black font-black text-[16px] uppercase tracking-widest">
-                                    <textPath href="#bottom-curve" startOffset="50%" textAnchor="middle">
-                                        Lorem ipsum dolor sit amet
-                                    </textPath>
-                                </text>
-                            </svg>
+                            <div ref={flyingTextRef} className="absolute inset-0 w-full h-full z-20 pointer-events-none">
+                                <svg ref={svgTextRef} viewBox="0 0 360 360" className="w-full h-full overflow-visible pointer-events-none">
+                                    <defs>
+                                        <path id="full-circle-path" d="M 55 180 A 125 125 0 0 1 305 180 A 125 125 0 0 1 55 180" fill="transparent" />
+                                    </defs>
+                                    <text className="font-black text-[15.4px] uppercase tracking-widest">
+                                        <textPath href="#full-circle-path" startOffset="0%" textAnchor="start">
+                                            Welome to other world  ✧  Welome to other world  ✧  Welome to other world  ✧
+                                        </textPath>
+                                    </text>
+                                </svg>
+                            </div>
                         </div>
                     </div>
 
                     {/* Content below the photo (Fixing the ghost tails) */}
-                    <div className="w-full flex flex-col items-center justify-center z-20 relative pb-[150px] mt-[50px]">
+                    <div className="w-full flex flex-col items-center justify-center z-20 relative pb-[150px] -mt-[70px]">
                         <Link03Animation className="w-full flex justify-center mb-0" />
                         <button
                             onClick={() => {
