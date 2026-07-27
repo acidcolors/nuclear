@@ -69,9 +69,9 @@
     --home-desc-top: 40vh;
 
     /* Контакты для десктопа - ПОДНЯЛИ ЕЩЕ ВЫШЕ */
-    --contact-padding-top: 14vh;
+    --contact-padding-top: 16vh;
     --contact-desc-size: 28px;
-    --contact-desc-top: 40px;
+    --contact-desc-top: 30px;
     --contact-socials-mt: 40px;
     --space-vol-top: 56px;
     --marquee-height: 60px;
@@ -633,5 +633,9 @@ input[type="range"]::-moz-range-thumb {
 .animate-marquee {
   animation: marquee var(--marquee-speed) linear infinite;
 }
-body.promo-modal-open #global-scroll-to-top { display: none !important; opacity: 0 !important; pointer-events: none !important; }
 
+body.promo-modal-open #global-scroll-to-top {
+  display: none !important;
+  opacity: 0 !important;
+  pointer-events: none !important;
+}

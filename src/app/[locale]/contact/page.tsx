@@ -220,8 +220,8 @@ export default function ContactPage() {
     const description = useMemo(() => {
         if (CMS_CONFIG.USE_NOTION && contactData.length > 0) {
             const row = contactData.find(c =>
-                c.description && 
-                (!c.url || c.url.trim() === '') && 
+                c.description &&
+                (!c.url || c.url.trim() === '') &&
                 !(c.title && c.title.toLowerCase().includes('friend'))
             );
             if (row) return row.description;
@@ -281,7 +281,7 @@ export default function ContactPage() {
         <main ref={containerRef} className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] overflow-hidden z-[60]">
             <div className="absolute top-0 left-0 w-full h-[100dvh] pointer-events-none z-30 flex flex-col lg:flex-row">
                 <div
-                    className="pointer-events-auto w-full h-full lg:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 box-border"
+                    className="pointer-events-auto w-full h-full lg:w-[70%] xl:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 box-border"
                     style={{ paddingTop: 'var(--contact-padding-top)' }}
                 >
                     <div className="w-full">
@@ -295,7 +295,7 @@ export default function ContactPage() {
                             )}
                         </div>
 
-                        <p className="animate-stagger opacity-0 translate-y-5 font-medium leading-[1.6] text-[#111]/90 mb-10 md:mb-16 lg:mb-12 max-w-[500px]" style={{ fontSize: 'var(--contact-desc-size)', marginTop: 'var(--contact-desc-top)' }}>
+                        <p className="animate-stagger opacity-0 translate-y-5 font-medium leading-[1.6] text-[#111]/90 mb-10 md:mb-16 lg:mb-12 max-w-[700px] lg:max-w-[700px]" style={{ fontSize: 'var(--contact-desc-size)', marginTop: 'var(--contact-desc-top)' }}>
                             {description}
                         </p>
 
@@ -332,7 +332,7 @@ export default function ContactPage() {
                                                         className="w-full h-full object-contain transition-all duration-300 grayscale brightness-[0.2] group-hover:brightness-[0.5]"
                                                     />
                                                 ) : (
-                                                    <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase text-center p-2">NO IMG<br/>{friend.name}</div>
+                                                    <div className="w-full h-full bg-[#d9d9d9] rounded-lg flex items-center justify-center text-[10px] font-bold opacity-40 uppercase text-center p-2">NO IMG<br />{friend.name}</div>
                                                 )}
                                             </div>
                                         );
