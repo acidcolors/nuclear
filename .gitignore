@@ -39,3 +39,6 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# служебные файлы с секретами — не коммитить
+HANDOFF.md

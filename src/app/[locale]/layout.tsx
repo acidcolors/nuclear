@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { Inter } from 'next/font/google';
+import localFont from 'next/font/local';
 import '../globals.css';
 import { Header } from '../../components/Header';
 import CustomCursor from '../../components/CustomCursor';
@@ -10,9 +10,9 @@ import { PromoModal } from '../../components/PromoModal';
 // 1. Импортируем компонент для работы со скриптами
 import Script from 'next/script';
 
-const inter = Inter({
-  subsets: ['latin', 'cyrillic'],
-  weight: ['400', '500', '700']
+const inter = localFont({
+  src: '../../../public/fonts/Inter-Variable.woff2',
+  variable: '--font-inter',
 });
 
 export const metadata: Metadata = {

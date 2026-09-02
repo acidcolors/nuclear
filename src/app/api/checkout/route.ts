@@ -190,7 +190,7 @@ async function sendTelegramMessage(
 
     // Умный прокси: только в продакшене
     const agent = process.env.NODE_ENV === 'production' 
-        ? new HttpsProxyAgent(process.env.PROXY_URL || 'http://103.75.126.30:8888') 
+        ? new HttpsProxyAgent(process.env.PROXY_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY || 'http://38.180.132.49:8888')
         : undefined;
 
     const axiosConfig = { 

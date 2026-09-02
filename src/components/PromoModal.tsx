@@ -2,15 +2,24 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { Unbounded, Playfair_Display } from 'next/font/google';
+import localFont from 'next/font/local';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lottie from 'lottie-react';
 import logoAnimationData from '@/data/logo_t.json';
 import upAnimationData from '@/data/up.json';
 
-const unbounded = Unbounded({ subsets: ['cyrillic', 'latin'], weight: ['400', '500', '700', '900'] });
-const playfair = Playfair_Display({ subsets: ['cyrillic', 'latin'], weight: ['400', '700'], style: ['normal', 'italic'] });
+const unbounded = localFont({
+    src: '../../public/fonts/Unbounded-Variable.woff2',
+    variable: '--font-unbounded',
+});
+const playfair = localFont({
+    src: [
+        { path: '../../public/fonts/PlayfairDisplay-Variable.woff2', style: 'normal' },
+        { path: '../../public/fonts/PlayfairDisplay-Italic-Variable.woff2', style: 'italic' },
+    ],
+    variable: '--font-playfair',
+});
 
 const imageCache = new Map<string, HTMLImageElement>();
 

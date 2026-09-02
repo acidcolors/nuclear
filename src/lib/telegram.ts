@@ -4,7 +4,7 @@ import { HttpsProxyAgent } from 'https-proxy-agent';
 /**
  * Настройка прокси для Telegram API.
  */
-const PROXY_URL = process.env.PROXY_URL || 'http://103.75.126.30:8888';
+const PROXY_URL = process.env.PROXY_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY || 'http://38.180.132.49:8888';
 const agent = new HttpsProxyAgent(PROXY_URL);
 
 const telegramAxios = axios.create({
