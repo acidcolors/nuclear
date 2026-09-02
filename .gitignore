@@ -42,3 +42,4 @@ next-env.d.ts
 
 # служебные файлы с секретами — не коммитить
 HANDOFF.md
+AGENT_NOTES.md
