@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getProxyDispatcher } from '@/lib/proxyDispatcher';
 
 export async function GET() {
     // Берем токен твоего бота из .env
@@ -40,7 +41,8 @@ export async function GET() {
                 ]
             }
         }),
-    });
+        dispatcher: getProxyDispatcher(),
+    } as any);
 
     const data = await response.json();
     return NextResponse.json(data);

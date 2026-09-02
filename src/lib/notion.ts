@@ -1,6 +1,7 @@
 'use server';
 
 import { getLocale } from 'next-intl/server';
+import { getProxyDispatcher } from '@/lib/proxyDispatcher';
 
 const NOTION_SECRET = process.env.NOTION_SECRET;
 
@@ -10,12 +11,13 @@ const NOTION_SECRET = process.env.NOTION_SECRET;
 async function fetchWithTimeout(url: string, options: any, timeout = 7000) {
     const controller = new AbortController();
     const id = setTimeout(() => controller.abort(), timeout);
-    
+
     try {
         const response = await fetch(url, {
             ...options,
+            dispatcher: getProxyDispatcher(),
             signal: controller.signal
-        });
+        } as any);
         clearTimeout(id);
         return response;
     } catch (error: any) {

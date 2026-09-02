@@ -1,5 +1,4 @@
-import https from 'node:https';
-import { HttpsProxyAgent } from 'https-proxy-agent';
+import { getProxyDispatcher } from '@/lib/proxyDispatcher';
 
 /**
  * Определяет тип контакта и нормализует его.
@@ -31,65 +30,35 @@ interface SendMessageOptions {
 /**
  * Отправляет сообщение в Telegram через прокси.
  *
- * ВАЖНО: используется "сырой" https.request, а не axios — axios ломает
- * CONNECT-туннель через HttpsProxyAgent (получает 400 Bad Request от
- * постороннего nginx вместо ответа Telegram), тогда как node:https
- * с тем же самым агентом отрабатывает корректно. Воспроизведено и
- * проверено на проде 2026-09-02.
+ * ВАЖНО: используется fetch() с явным `dispatcher` (тот же ProxyAgent,
+ * что и для Notion в src/lib/proxyDispatcher.ts), а не axios и не
+ * отдельный https.request+HttpsProxyAgent — при сосуществовании двух
+ * разных туннельных механизмов к одному прокси в одном процессе
+ * второй начинал получать 400 Bad Request от постороннего nginx
+ * вместо ответа Telegram. Один общий механизм работает надёжно.
+ * Воспроизведено и проверено на проде 2026-09-02.
  */
-export function sendTelegramMessageViaProxy({ botToken, chatId, threadId, text, parseMode = 'HTML' }: SendMessageOptions): Promise<any> {
-    const proxyUrl = process.env.PROXY_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY || 'http://38.180.132.49:8888';
-    const agent = process.env.NODE_ENV === 'production' ? new HttpsProxyAgent(proxyUrl) : undefined;
+export async function sendTelegramMessageViaProxy({ botToken, chatId, threadId, text, parseMode = 'HTML' }: SendMessageOptions): Promise<any> {
+    const response = await fetch(`https://api.telegram.org/bot${botToken}/sendMessage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            chat_id: chatId,
+            message_thread_id: threadId,
+            text,
+            parse_mode: parseMode,
+            disable_web_page_preview: true,
+        }),
+        dispatcher: getProxyDispatcher(),
+        signal: AbortSignal.timeout(10000),
+    } as any);
 
-    const bodyStr = JSON.stringify({
-        chat_id: chatId,
-        message_thread_id: threadId,
-        text,
-        parse_mode: parseMode,
-        disable_web_page_preview: true,
-    });
+    const data = await response.json().catch(() => null);
 
-    return new Promise((resolve, reject) => {
-        const request = https.request({
-            hostname: 'api.telegram.org',
-            path: `/bot${botToken}/sendMessage`,
-            method: 'POST',
-            agent,
-            headers: {
-                'Content-Type': 'application/json',
-                'Content-Length': Buffer.byteLength(bodyStr),
-            },
-            timeout: 10000,
-        }, (res) => {
-            let data = '';
-            res.on('data', (chunk) => { data += chunk; });
-            res.on('end', () => {
-                let parsed: any;
-                try {
-                    parsed = JSON.parse(data);
-                } catch {
-                    parsed = null;
-                }
+    if (response.ok && data?.ok) {
+        return data.result;
+    }
 
-                if (res.statusCode && res.statusCode >= 200 && res.statusCode < 300 && parsed?.ok) {
-                    resolve(parsed.result);
-                } else {
-                    console.error('Telegram sendMessage Error:', parsed || data.slice(0, 300));
-                    reject(new Error(`Telegram API Error: ${parsed?.description || `HTTP ${res.statusCode}`}`));
-                }
-            });
-        });
-
-        request.on('error', (err) => {
-            console.error('Telegram sendMessage Error:', err.message);
-            reject(new Error(`Telegram API Error: ${err.message}`));
-        });
-        request.on('timeout', () => {
-            request.destroy();
-            reject(new Error('Telegram API Error: request timed out'));
-        });
-
-        request.write(bodyStr);
-        request.end();
-    });
+    console.error('Telegram sendMessage Error:', data || `HTTP ${response.status}`);
+    throw new Error(`Telegram API Error: ${data?.description || `HTTP ${response.status}`}`);
 }
