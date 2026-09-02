@@ -1,9 +1,7 @@
 import { NextResponse } from 'next/server';
 import { Client } from '@notionhq/client';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import axios from 'axios';
 import { Resend } from 'resend';
-import { normalizeContact } from '@/lib/telegram';
+import { normalizeContact, sendTelegramMessageViaProxy } from '@/lib/telegram';
 
 // 1. Инициализация Notion
 const notion = new Client({ auth: process.env.NOTION_SECRET });
@@ -188,47 +186,33 @@ async function sendTelegramMessage(
         }).join('\n');
     }
 
-    // Умный прокси: только в продакшене
-    const agent = process.env.NODE_ENV === 'production' 
-        ? new HttpsProxyAgent(process.env.PROXY_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY || 'http://38.180.132.49:8888')
-        : undefined;
-
-    const axiosConfig = { 
-        httpsAgent: agent, 
-        proxy: false as const,
-        timeout: 10000
-    };
-
     try {
         console.log(`[Telegram] Sending admin notification. Mode: ${process.env.NODE_ENV}`);
-        await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            chat_id: chatId,
-            message_thread_id: threadId,
+        await sendTelegramMessageViaProxy({
+            botToken,
+            chatId,
+            threadId,
             text: messageText.trim(),
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-        }, axiosConfig);
+        });
 
         // Отправка подтверждения пользователю в личку (только для Telegram)
         if (contactType === 'telegram' && tgUser?.id) {
             const customerMessage = `Спасибо, мы получили информацию о вашем заказе!\nНомер вашего заказа: #${orderNumber}\nИтого: ${totalPrice} ₽\n\nНапишите нам в <a href="https://t.me/mynuclear">группу</a> для уточнения деталей и узнать статус заказа.`;
-            
+
             console.log(`[Telegram] Sending private message to user ${tgUser.id}`);
             try {
-                await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-                    chat_id: tgUser.id,
+                await sendTelegramMessageViaProxy({
+                    botToken,
+                    chatId: tgUser.id,
                     text: customerMessage,
-                    parse_mode: 'HTML',
-                    disable_web_page_preview: true,
-                }, axiosConfig);
+                });
             } catch (userErr: any) {
-                console.warn('[Telegram] Could not send private message to user:', userErr.response?.data || userErr.message);
+                console.warn('[Telegram] Could not send private message to user:', userErr.message);
             }
         }
     } catch (error: any) {
-        const errorData = error.response?.data;
-        console.error('[Telegram] API error:', errorData || error.message);
-        throw new Error(`Telegram API Error: ${errorData?.description || error.message}`);
+        console.error('[Telegram] API error:', error.message);
+        throw new Error(`Telegram API Error: ${error.message}`);
     }
 }
 

@@ -1,7 +1,5 @@
 import { NextResponse } from 'next/server';
-import { HttpsProxyAgent } from 'https-proxy-agent';
-import axios from 'axios';
-import { normalizeContact } from '@/lib/telegram';
+import { normalizeContact, sendTelegramMessageViaProxy } from '@/lib/telegram';
 
 export async function POST(req: Request) {
     try {
@@ -21,7 +19,7 @@ export async function POST(req: Request) {
 
         let messageText = `— <b>новое сообщение из поддержки</b>\n\n`;
         messageText += `<b>Контакт:</b> ${contactValue}\n`;
-        
+
         if (tgUser?.id) {
             messageText += `<b>ID:</b> <code>${tgUser.id}</code>\n`;
         } else {
@@ -37,24 +35,12 @@ export async function POST(req: Request) {
             messageText += items.map((item: any) => `— ${item.title}`).join('\n');
         }
 
-        // Умный прокси: только в продакшене
-        const agent = process.env.NODE_ENV === 'production' 
-            ? new HttpsProxyAgent(process.env.PROXY_URL || process.env.HTTPS_PROXY || process.env.HTTP_PROXY || 'http://38.180.132.49:8888')
-            : undefined;
-
-        const axiosConfig = { 
-            httpsAgent: agent, 
-            proxy: false as const, 
-            timeout: 10000 
-        };
-
-        await axios.post(`https://api.telegram.org/bot${botToken}/sendMessage`, {
-            chat_id: chatId,
-            message_thread_id: threadId,
+        await sendTelegramMessageViaProxy({
+            botToken,
+            chatId,
+            threadId,
             text: messageText.trim(),
-            parse_mode: 'HTML',
-            disable_web_page_preview: true,
-        }, axiosConfig);
+        });
 
         return NextResponse.json({ success: true });
     } catch (error: any) {
