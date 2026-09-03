@@ -4,21 +4,25 @@
 > Этот файл содержит критическую информацию для работы API и деплоя. Проверяй его перед внесением изменений в роуты Telegram или Notion.
 
 ## 1. Серверная информация
-- **IP сервера:** `89.127.209.11`
+- **IP сервера:** `91.193.180.173`
 - **Пользователь:** `root`
 - **Путь к приложению:** `/var/www/nuclear`
-- **Менеджер процессов:** PM2 (имя процесса: `nuclear`)
+- **Менеджер процессов:** PM2 (имя процесса: `nuclear`, порт `3000`)
 - **Команда деплоя:** `git pull && npm install && npm run build && pm2 restart nuclear`
 
-## 2. Telegram API и Прокси
-- **Проблема:** Сервер не имеет прямого доступа к `api.telegram.org`.
-- **Решение:** Все запросы к Telegram ДОЛЖНЫ проходить через французский прокси-сервер.
-- **Proxy URL:** `http://103.75.126.30:8888`
-- **Реализация:** Используется библиотека `axios` с `HttpsProxyAgent`. 
+## 2. Telegram/Notion API и прокси
+- **Проблема:** Сервер не имеет прямого доступа к `api.telegram.org` и `api.notion.com`.
+- **Решение:** Все такие запросы идут через NL-прокси-сервер (`http://38.180.132.49:8888`, задан в `.env.local` как `HTTPS_PROXY`/`HTTP_PROXY`).
+- **Реализация:** Единый механизм — `fetch()` с явным `dispatcher: getProxyDispatcher()` из `src/lib/proxyDispatcher.ts` (undici `ProxyAgent`).
+- **ВАЖНО:** не использовать `axios`/`https-proxy-agent` или второй параллельный прокси-механизм — два разных туннельных механизма к одному прокси в одном процессе конфликтуют между собой (проверено на практике 2026-09-02: Notion и Telegram работали по отдельности, но ломали друг друга при одновременной работе разными способами).
 - **Конфигурация (Node.js/TS):**
   ```typescript
-  const agent = new HttpsProxyAgent('http://103.75.126.30:8888');
-  const axiosConfig = { httpsAgent: agent, proxy: false as const };
+  import { getProxyDispatcher } from '@/lib/proxyDispatcher';
+
+  const response = await fetch(url, {
+    ...options,
+    dispatcher: getProxyDispatcher(),
+  } as any);
   ```
 
 ## 3. Маршрутизация уведомлений (Telegram)
