@@ -172,7 +172,7 @@ export const GlobalScrollToTop = () => {
             }}
         >
             <div className="relative group transition-transform duration-300 hover:scale-110 active:scale-95">
-                <div className="w-[100px] md:w-[120px] lg:w-[150px] h-auto [&_path]:!fill-[#e2fd6f] [&_path]:!stroke-[#e2fd6f]">
+                <div className="w-[100px] md:w-[120px] lg:w-[150px] h-auto [&_path]:!fill-[#111] [&_path]:!stroke-[#111]">
                     <Lottie 
                         lottieRef={lottieRef}
                         animationData={upAnimationData} 

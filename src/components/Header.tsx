@@ -922,9 +922,9 @@ export const Header = () => {
                         <span
                             className="flex items-center justify-center text-[12px] font-bold border-2 border-current rounded-full shrink-0"
                             style={{
-                                width: cartCount > 0 ? '22px' : '0px',
-                                height: cartCount > 0 ? '22px' : '0px',
-                                marginLeft: cartCount > 0 ? '7px' : '0px',
+                                width: displayCount > 0 ? '22px' : '0px',
+                                height: displayCount > 0 ? '22px' : '0px',
+                                marginLeft: displayCount > 0 ? '7px' : '0px',
                             }}
                         />
                     </div>
@@ -1055,9 +1055,9 @@ export const Header = () => {
                         <span
                             className="flex items-center justify-center border-2 border-current rounded-full"
                             style={{
-                                width: cartCount > 0 ? '22px' : '0px',
-                                height: cartCount > 0 ? '22px' : '0px',
-                                marginLeft: cartCount > 0 ? '8px' : '0px',
+                                width: displayCount > 0 ? '22px' : '0px',
+                                height: displayCount > 0 ? '22px' : '0px',
+                                marginLeft: displayCount > 0 ? '8px' : '0px',
                             }}
                         />
                     </div>
