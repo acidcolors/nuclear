@@ -141,10 +141,10 @@ const NavItem = ({ href, text, isActive, color, onClick, badge }: { href?: strin
         <div className="py-[15px] px-[2vw] lg:py-[20px] lg:px-[15px] lg:h-full lg:flex lg:items-center">
             <div className="overflow-hidden relative h-[20px] block flex-shrink-0">
                 <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                    <span className="text-[14px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
+                    <span className="text-[14px] lg:text-sm font-normal tracking-normal flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
                         {text} <span ref={star1Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
                     </span>
-                    <span className="text-[14px] lg:text-sm font-bold tracking-widest flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
+                    <span className="text-[14px] lg:text-sm font-normal tracking-normal flex items-center whitespace-nowrap h-[20px]" style={{ color }}>
                         {text} <span ref={star2Ref} className="inline-flex items-center justify-center overflow-hidden" style={{ width: 0, opacity: 0 }}>✹</span>
                     </span>
                 </div>
@@ -641,7 +641,7 @@ export const Header = () => {
                 >
                     <TransitionLink
                         href={getLocalizedPath('en')}
-                        className="text-[18px] font-bold transition-opacity no-underline leading-none"
+                        className="text-[18px] font-normal transition-opacity no-underline leading-none"
                         style={{ color: currentLocale === 'en' ? '#888888' : '#000000' }}
                         onClick={() => setIsLangOpen(false)}
                     >
@@ -649,7 +649,7 @@ export const Header = () => {
                     </TransitionLink>
                     <TransitionLink
                         href={getLocalizedPath('ru')}
-                        className="text-[18px] font-bold transition-opacity no-underline leading-none"
+                        className="text-[18px] font-normal transition-opacity no-underline leading-none"
                         style={{ color: currentLocale === 'ru' ? '#888888' : '#000000' }}
                         onClick={() => setIsLangOpen(false)}
                     >
@@ -949,7 +949,7 @@ export const Header = () => {
                     `}>
                         {/* Распорки-тексты с идентичным размером и отступами для пиксельного совпадения */}
                         <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '15px 2vw' }}>
-                            <span className="text-[14px] font-bold tracking-widest flex items-center whitespace-nowrap">
+                            <span className="text-[14px] font-normal tracking-normal flex items-center whitespace-nowrap">
                                 {t('project')}
                                 <span
                                     className="inline-flex overflow-hidden"
@@ -964,7 +964,7 @@ export const Header = () => {
                             </span>
                         </div>
                         <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '15px 2vw' }}>
-                            <span className="text-[14px] font-bold tracking-widest flex items-center whitespace-nowrap">
+                            <span className="text-[14px] font-normal tracking-normal flex items-center whitespace-nowrap">
                                 {t('archive')}
                                 <span
                                     className="inline-flex overflow-hidden"
@@ -979,7 +979,7 @@ export const Header = () => {
                             </span>
                         </div>
                         <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '15px 2vw' }}>
-                            <span className="text-[14px] font-bold tracking-widest flex items-center whitespace-nowrap">
+                            <span className="text-[14px] font-normal tracking-normal flex items-center whitespace-nowrap">
                                 {t('contact')}
                                 <span
                                     className="inline-flex overflow-hidden"
@@ -1006,7 +1006,7 @@ export const Header = () => {
                 `}>
                     {/* Распорки-тексты для пиксельного совпадения с основным меню */}
                     <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
-                        <span className="text-sm font-bold tracking-widest flex items-center whitespace-nowrap">
+                        <span className="text-sm font-normal tracking-normal flex items-center whitespace-nowrap">
                             {t('project')}
                             <span
                                 className="inline-flex overflow-hidden"
@@ -1021,7 +1021,7 @@ export const Header = () => {
                         </span>
                     </div>
                     <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
-                        <span className="text-sm font-bold tracking-widest flex items-center whitespace-nowrap">
+                        <span className="text-sm font-normal tracking-normal flex items-center whitespace-nowrap">
                             {t('archive')}
                             <span
                                 className="inline-flex overflow-hidden"
@@ -1036,7 +1036,7 @@ export const Header = () => {
                         </span>
                     </div>
                     <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
-                        <span className="text-sm font-bold tracking-widest flex items-center whitespace-nowrap">
+                        <span className="text-sm font-normal tracking-normal flex items-center whitespace-nowrap">
                             {t('contact')}
                             <span
                                 className="inline-flex overflow-hidden"
@@ -1051,7 +1051,7 @@ export const Header = () => {
                         </span>
                     </div>
                     <div className="opacity-0 pointer-events-none flex items-center" style={{ padding: '20px 15px' }}>
-                        <span className="text-sm font-bold tracking-widest">{t('cart')}</span>
+                        <span className="text-sm font-normal tracking-normal">{t('cart')}</span>
                         <span
                             className="flex items-center justify-center border-2 border-current rounded-full"
                             style={{

@@ -91,13 +91,15 @@ const CartItemRow = ({ item, handleRemoveItem, updateQuantity, formatPrice }: {
                 {/* Info */}
                 <div className="flex-1 min-w-0 pl-[10px]">
                     <p
-                        className="text-[18px] font-bold text-[#111] leading-tight tracking-tight"
+                        className="text-[18px] font-normal text-[#111] leading-tight tracking-tight"
                         style={{ margin: 0, marginBottom: '4px' }}
                     >
                         {item.title}
                     </p>
-                    <div className="bg-[#f2f2f2] px-3.5 py-1.5 rounded-[12px] inline-block font-bold text-[14px] text-[#111]">
-                        {typeof item.price === 'number' ? formatPrice(item.price) : item.price} ₽
+                    <div className="bg-white shadow-sm px-3.5 py-1.5 rounded-[12px] inline-block font-normal text-[14px] text-[#111]">
+                        {typeof item.price === 'number'
+                            ? `${formatPrice(item.price)} ₽`
+                            : (!isNaN(Number(item.price?.toString().replace(/\s/g, ''))) ? `${item.price} ₽` : item.price)}
                     </div>
                 </div>
             </div>
@@ -111,7 +113,7 @@ const CartItemRow = ({ item, handleRemoveItem, updateQuantity, formatPrice }: {
                     >
                         <Minus size={16} strokeWidth={2.5} />
                     </button>
-                    <span className="min-w-[1rem] text-center font-bold text-[18px] tabular-nums text-[#111]">
+                    <span className="min-w-[1rem] text-center font-normal text-[18px] tabular-nums text-[#111]">
                         {item.quantity}
                     </span>
                     <button
@@ -176,7 +178,7 @@ export const CartDrawerDesktop = ({
                 }}
             >
                 {/* Header */}
-                <div className="flex items-center justify-between px-[100px] pt-[10px] pb-1 min-h-[60px]">
+                <div className="flex items-center justify-between px-[100px] pt-[30px] pb-1 min-h-[60px]">
                     {orderStatus !== 'success' && (
                         <>
                             <h2 className="text-[32px] font-bold tracking-tight text-[#111]">
@@ -216,7 +218,7 @@ export const CartDrawerDesktop = ({
                             <p className="text-[16px]">{t('emptyDesc')}</p>
                         </div>
                     ) : (
-                        <div className="flex flex-col !gap-8 pb-10">
+                        <div className="flex flex-col !gap-8 pt-[20px] pb-10">
                             {items.map((item) => (
                                 <CartItemRow 
                                     key={item.id} 
@@ -237,7 +239,7 @@ export const CartDrawerDesktop = ({
                                         {t('total')}
                                     </span>
                                     <div
-                                        className="bg-[#e5e5e5] px-[20px] py-[10px] rounded-[10px] text-[22px] font-bold text-[#111] shadow-sm tabular-nums"
+                                        className="bg-[#e5e5e5] px-[20px] py-[10px] rounded-[10px] text-[22px] font-normal text-[#111] shadow-sm tabular-nums"
                                         style={{ marginTop: '10px' }}
                                     >
                                         {formatPrice(totalPrice())} ₽

@@ -192,7 +192,7 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
       <main ref={containerRef} className={`relative w-screen h-screen bg-[#ebebeb] overflow-hidden ${marqueeData?.isActive ? 'has-marquee' : ''}`}>
         <Preloader
           variant="home"
-          isLoading={isLocked}
+          isLoading={forcedLoading || isLoading}
           onComplete={handlePreloaderComplete}
         />
 
@@ -201,7 +201,7 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
           <div className="absolute top-0 left-0 w-full h-full z-[95] pointer-events-none blend-exclusion">
             {/* Приветственный текст */}
             <div className="animate-up opacity-0 translate-y-5 hidden lg:block absolute top-[55px] left-[22.2vw]">
-              <span className="text-sm font-bold tracking-widest text-[#ebebeb]">
+              <span className="text-sm font-normal tracking-normal text-[#ebebeb]">
                 Welcome <br /> to other world.
               </span>
             </div>
@@ -225,9 +225,9 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
               className={`home-desc animate-up opacity-0 translate-y-5 absolute transition-[top,left] duration-700 z-10
               ${viewMode === 'mobile'
                   ? 'w-[88vw] top-[var(--home-desc-top)] left-[6vw]'
-                  : 'w-[40vw] top-[var(--home-desc-top)] left-[30vw]'}`}
+                  : 'w-[40vw] top-[var(--home-desc-top)] left-1/2 -translate-x-1/2'}`}
             >
-              <p className="text-[length:var(--desc-size)] font-medium leading-[1.45] lg:leading-[1.4] text-[#ebebeb]">
+              <p className="text-[length:var(--desc-size)] font-normal leading-[1.45] lg:leading-[1.4] text-[#ebebeb]">
                 <span className="relative text-[inherit]" style={{ whiteSpace: 'pre-wrap' }}>
                   <style>{`
                   @keyframes custom-blink {
@@ -247,7 +247,7 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
             {/* Футер-текст слева */}
             <div className="custom-thank-you animate-up opacity-0 translate-y-5 absolute bottom-[var(--home-thank-you-bottom)] left-[6vw] lg:bottom-auto lg:top-[50vh] lg:left-[40px] lg:-translate-y-1/2 lg:w-auto flex items-center" style={{ gap: '10px' }}>
               <span className="text-[28px] max-h-[650px]:!text-[22px] md:text-[22px] lg:text-[32px] text-[#ebebeb] leading-none mt-1 -ml-2">✹</span>
-              <p className="text-[14px] max-h-[650px]:!text-[11px] md:text-[11px] lg:text-[16px] font-bold tracking-widest leading-tight text-[#ebebeb]">
+              <p className="text-[14px] max-h-[650px]:!text-[11px] md:text-[11px] lg:text-[16px] font-normal tracking-normal leading-tight text-[#ebebeb]">
                 Thank you <br /> for visiting this site.
               </p>
             </div>

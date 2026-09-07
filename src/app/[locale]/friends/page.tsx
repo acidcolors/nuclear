@@ -6,6 +6,7 @@ import gsap from 'gsap';
 import { getNotionFriendsData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
 import { useTranslations } from 'next-intl';
+import { Spinner } from '@/components/Spinner';
 
 export default function FriendsPage() {
     const t = useTranslations('Contact');
@@ -18,6 +19,25 @@ export default function FriendsPage() {
     const [loading, setLoading] = useState(true);
     const [isFetchingData, setIsFetchingData] = useState(true);
     const [friendsDescData, setFriendsDescData] = useState<string | null>(null);
+    const [preloaderDone, setPreloaderDone] = useState(false);
+    const mountTimeRef = useRef(Date.now());
+    const stillLoading = loading || isFetchingData;
+
+    // Прелоадера раньше не было — используем схему по умолчанию, как на архиве:
+    // страховка 2000мс + минимум 1500мс показа.
+    useEffect(() => {
+        if (!stillLoading) return;
+        const safetyTimer = setTimeout(() => setPreloaderDone(true), 2000);
+        return () => clearTimeout(safetyTimer);
+    }, [stillLoading]);
+
+    useEffect(() => {
+        if (stillLoading) return;
+        const timeElapsed = Date.now() - mountTimeRef.current;
+        const remainingTime = Math.max(0, 1500 - timeElapsed);
+        const t = setTimeout(() => setPreloaderDone(true), remainingTime);
+        return () => clearTimeout(t);
+    }, [stillLoading]);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 1024);
@@ -124,6 +144,11 @@ export default function FriendsPage() {
 
     return (
         <main ref={containerRef} className="fixed inset-0 w-full h-[100dvh] bg-[#efefef] text-[#111] overflow-hidden z-[60]">
+            {!preloaderDone && (
+                <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
+                    <Spinner />
+                </div>
+            )}
 
             <div className="fixed inset-0 pointer-events-none z-[61] overflow-visible">
                 <div
@@ -144,7 +169,7 @@ export default function FriendsPage() {
             <div className="relative w-full h-full flex items-center justify-center z-[62]">
                 <div className="w-[84vw] max-w-[500px] flex flex-col items-center text-center">
 
-                    <div className="grid grid-cols-2 md:grid-cols-3 w-full gap-4 pb-10 pt-2 px-2">
+                    <div className="flex flex-wrap justify-center mx-auto gap-4 pb-10 pt-2 px-2">
                         {isFetchingData ? null : (() => {
                             const descriptionText = friendsData.find(f => f.text && f.text.trim() !== '')?.text
                                 || t('friendsDesc');
@@ -179,11 +204,11 @@ export default function FriendsPage() {
                                     );
 
                                     return href ? (
-                                        <a href={href} target="_blank" rel="noopener noreferrer" key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] lg:p-[20%] transition-all duration-300 hover:scale-110 group block outline-none">
+                                        <a href={href} target="_blank" rel="noopener noreferrer" key={friend.id} className="animate-stagger opacity-0 translate-y-5 w-[144px] md:w-[168px] aspect-square flex flex-col items-center justify-center p-[3%] lg:p-[6%] transition-all duration-300 hover:scale-110 group block outline-none">
                                             {content}
                                         </a>
                                     ) : (
-                                        <div key={friend.id} className="animate-stagger opacity-0 translate-y-5 aspect-square flex flex-col items-center justify-center p-[10%] lg:p-[20%] transition-all duration-300 hover:scale-110 group">
+                                        <div key={friend.id} className="animate-stagger opacity-0 translate-y-5 w-[144px] md:w-[168px] aspect-square flex flex-col items-center justify-center p-[3%] lg:p-[6%] transition-all duration-300 hover:scale-110 group">
                                             {content}
                                         </div>
                                     );
@@ -193,7 +218,7 @@ export default function FriendsPage() {
                                     { src: '/logos/books.svg', alt: 'Books' },
                                     { src: '/logos/gutenberg.svg', alt: 'Gutenberg' }
                                 ].map((logo, i) => (
-                                    <div key={i} className="animate-stagger opacity-0 translate-y-5 aspect-square flex items-center justify-center p-[15%] lg:p-[25%] transition-all duration-300 hover:scale-105">
+                                    <div key={i} className="animate-stagger opacity-0 translate-y-5 w-[144px] md:w-[168px] aspect-square flex items-center justify-center p-[5%] lg:p-[8%] transition-all duration-300 hover:scale-105">
                                         <img
                                             src={logo.src}
                                             alt={logo.alt}
@@ -207,7 +232,7 @@ export default function FriendsPage() {
                     </div>
 
                     <div className="animate-stagger opacity-0 translate-y-5 w-full max-w-[400px]">
-                        <p className="text-[17px] md:text-[20px] font-medium leading-[1.3] text-[#111] opacity-90 mb-12">
+                        <p className="text-[17px] md:text-[13px] font-medium leading-[1.3] text-[#111] opacity-90 mb-12">
                             {friendsDescData || friendsData.find(f => f.text && f.text.trim() !== '')?.text || t('friendsDesc')}
                         </p>
                     </div>

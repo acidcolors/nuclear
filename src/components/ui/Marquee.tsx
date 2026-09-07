@@ -28,7 +28,7 @@ export const Marquee: React.FC<MarqueeProps> = ({ text, link }) => {
             {items.map((item, idx) => (
                 <span 
                     key={idx} 
-                    className="text-[24px] font-sans italic font-bold uppercase"
+                    className="text-[24px] italic font-normal uppercase"
                     style={{ whiteSpace: 'pre' }}
                 >
                     {item}

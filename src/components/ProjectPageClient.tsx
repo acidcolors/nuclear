@@ -11,6 +11,7 @@ import { ShoppingBag, Plus, Minus } from 'lucide-react';
 import { getNotionProducts, getNotionMainPageData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
 import { useTranslations } from 'next-intl';
+import { Spinner } from '@/components/Spinner';
 
 interface ProjectPageClientProps {
     initialProducts?: any[] | null;
@@ -280,9 +281,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
 
             {isLoading && (
                 <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
-                    <span className="text-[12px] font-bold tracking-widest text-[#111] opacity-40 animate-pulse">
-                        loading.
-                    </span>
+                    <Spinner />
                 </div>
             )}
 
@@ -308,11 +307,11 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                     className="flex flex-col justify-start lg:justify-center pointer-events-auto z-40 shrink-0 relative w-full h-auto pt-[12vh] pb-[8vh] px-[6vw] md:pt-[20vh] md:pb-[10vh] md:px-[60px] lg:fixed lg:top-0 lg:left-0 lg:w-[35%] lg:h-[100dvh] lg:py-[6vh] lg:px-[4vw] box-border opacity-0 animate-stagger"
                 >
                     <div className="flex flex-col w-full max-w-[100%] lg:max-w-[90%] my-auto lg:m-auto">
-                        <h2 className="text-[32px] md:text-[40px] lg:text-[3.5vw] font-bold tracking-tighter leading-none mb-6 text-[#111]">
+                        <h2 className="text-[32px] md:text-[26px] lg:text-[2.275vw] font-bold tracking-tighter leading-none mb-6 text-[#111]">
                             {headerTitle}
                         </h2>
 
-                        <p className="text-[20px] md:text-lg lg:text-[1.2vw] font-medium leading-[1.6] text-[#111] opacity-90 mb-12">
+                        <p className="text-[20px] md:text-[15px] lg:text-[1vw] font-medium leading-[1.6] text-[#111] opacity-90 mb-12">
                             {headerDescription}
                         </p>
 
@@ -349,7 +348,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                             const scrollDiv = document.getElementById('project-scroll-track');
                                             if (scrollDiv) scrollDiv.scrollTop = 0;
                                         }}
-                                        className={`p-[15px] rounded-[6px] text-[14px] md:text-[24px] font-extrabold tracking-tight shadow-sm flex items-center justify-center leading-none m-0 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer select-none block shrink-0 ${bgTextClass} ${opacityClass} ${transformClass}`}
+                                        className={`p-[15px] rounded-[6px] text-[14px] md:text-[15.6px] font-normal tracking-tight shadow-sm flex items-center justify-center leading-none m-0 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer select-none block shrink-0 ${bgTextClass} ${opacityClass} ${transformClass}`}
                                     >
                                         {label}
                                     </a>
@@ -376,15 +375,15 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                             href={`/product/${product.id}`}
                                             className="product-card cursor-pointer group relative bg-[#e3e3e3] aspect-square overflow-hidden shadow-sm w-full block"
                                         >
-                                            <div className="absolute top-[0px] md:top-[20px] left-[20px] z-10 flex flex-wrap items-center pointer-events-none pr-[20px]" style={{ columnGap: '10px', rowGap: '2px' }}>
+                                            <div className="absolute top-[20px] left-[20px] z-10 flex flex-wrap items-center pointer-events-none pr-[20px]" style={{ columnGap: '10px', rowGap: '2px' }}>
                                                 {product.title && (
-                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[40px] px-[10px] md:px-[14px] rounded-[8px] text-[13px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
+                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[26px] px-[10px] md:px-[9.1px] rounded-[8px] text-[13px] md:text-[15.6px] font-normal tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
                                                         {product.title}
                                                     </h3>
                                                 )}
 
                                                 {product.price && (
-                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[40px] px-[12px] md:px-[18px] rounded-[8px] text-[13px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
+                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[26px] px-[12px] md:px-[11.7px] rounded-[8px] text-[13px] md:text-[15.6px] font-normal tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
                                                         {!isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
                                                     </h3>
                                                 )}
@@ -440,24 +439,24 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                                                     setAddedStatus(prev => ({ ...prev, [product.id]: null }));
                                                                 }, 2000);
                                                             }}
-                                                            className={`h-[34px] w-[34px] md:h-[40px] md:w-[40px] rounded-[8px] flex items-center justify-center text-[#111] shadow-sm transition-all duration-500 pointer-events-auto border-none cursor-pointer group/cart active:scale-95 relative overflow-hidden ${isSoldOut
+                                                            className={`h-[34px] w-[34px] md:h-[26px] md:w-[26px] rounded-[8px] flex items-center justify-center text-[#111] shadow-sm transition-all duration-500 pointer-events-auto border-none cursor-pointer group/cart active:scale-95 relative overflow-hidden ${isSoldOut
                                                                     ? (supportStatus[product.id] === 'added' || (isInSupport && supportStatus[product.id] !== 'removed') ? 'bg-[#4ade80]' : 'bg-[#f4f4f4] hover:bg-[#ffffff]')
                                                                     : (!isSoldOut && (addedStatus[product.id] === 'added' || (isInCart && addedStatus[product.id] !== 'removed')) ? 'bg-[#4ade80]' : 'bg-[#f4f4f4] hover:bg-[#ffffff]')
                                                                 }`}
                                                         >
-                                                            <div className="relative w-5 h-5 flex items-center justify-center">
+                                                            <div className="relative w-5 h-5 md:w-[13px] md:h-[13px] flex items-center justify-center">
                                                                 {isSoldOut ? (
                                                                     <>
                                                                         <Plus
                                                                             size={20}
-                                                                            className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${supportStatus[product.id] === 'added'
+                                                                            className={`absolute md:w-[13px] md:h-[13px] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${supportStatus[product.id] === 'added'
                                                                                     ? 'opacity-100 scale-100 rotate-0'
                                                                                     : 'opacity-0 scale-50 rotate-90'
                                                                                 }`}
                                                                         />
                                                                         <Minus
                                                                             size={20}
-                                                                            className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${supportStatus[product.id] === 'removed'
+                                                                            className={`absolute md:w-[13px] md:h-[13px] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${supportStatus[product.id] === 'removed'
                                                                                     ? 'opacity-100 scale-100 rotate-0'
                                                                                     : 'opacity-0 scale-50 rotate-90'
                                                                                 }`}
@@ -465,7 +464,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                                                         <img
                                                                             src="/edit_chat.svg"
                                                                             alt="Уведомить"
-                                                                            className={`w-5 h-5 absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${supportStatus[product.id]
+                                                                            className={`w-5 h-5 md:w-[13px] md:h-[13px] absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${supportStatus[product.id]
                                                                                     ? 'opacity-0 scale-50'
                                                                                     : 'opacity-100 scale-100 group-hover/cart:scale-110'
                                                                                 }`}
@@ -475,21 +474,21 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                                                     <>
                                                                         <Plus
                                                                             size={20}
-                                                                            className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${addedStatus[product.id] === 'added'
+                                                                            className={`absolute md:w-[13px] md:h-[13px] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${addedStatus[product.id] === 'added'
                                                                                     ? 'opacity-100 scale-100 rotate-0'
                                                                                     : 'opacity-0 scale-50 rotate-90'
                                                                                 }`}
                                                                         />
                                                                         <Minus
                                                                             size={20}
-                                                                            className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${addedStatus[product.id] === 'removed'
+                                                                            className={`absolute md:w-[13px] md:h-[13px] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${addedStatus[product.id] === 'removed'
                                                                                     ? 'opacity-100 scale-100 rotate-0'
                                                                                     : 'opacity-0 scale-50 rotate-90'
                                                                                 }`}
                                                                         />
                                                                         <ShoppingBag
                                                                             size={20}
-                                                                            className={`absolute transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${addedStatus[product.id]
+                                                                            className={`absolute md:w-[13px] md:h-[13px] transition-all duration-500 ease-[cubic-bezier(0.23,1,0.32,1)] ${addedStatus[product.id]
                                                                                     ? 'opacity-0 scale-50'
                                                                                     : 'opacity-100 scale-100 group-hover/cart:scale-110'
                                                                                 }`}
@@ -503,8 +502,8 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                             </div>
 
                                             {product.edition && (
-                                                <div className="absolute bottom-[0px] left-[20px] z-10 pointer-events-none">
-                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[40px] px-[11px] md:px-[16px] rounded-[8px] text-[13px] md:text-[24px] font-extrabold tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
+                                                <div className="absolute bottom-[20px] left-[20px] z-10 pointer-events-none">
+                                                    <h3 className="bg-[#f4f4f4] h-[34px] md:h-[26px] px-[11px] md:px-[10.4px] rounded-[8px] text-[13px] md:text-[15.6px] font-normal tracking-tight text-[#111] shadow-sm flex items-center justify-center leading-none m-0 whitespace-nowrap">
                                                         {tProduct('edition')} {product.edition}
                                                     </h3>
                                                 </div>

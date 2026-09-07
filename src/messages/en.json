@@ -51,6 +51,7 @@
     "year": "Year:",
     "edition": "Edition:",
     "addToCart": "Add to Cart",
+    "inCart": "In Cart",
     "share": "Share"
   },
   "Home": { "heroTitle": "Nuclear Garden" }

@@ -166,10 +166,10 @@ export default function SpacePage() {
                         className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
                         <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
                             <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                                <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
+                                <span className="text-[15px] lg:text-sm font-bold tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
                                     instagram
                                 </span>
-                                <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
+                                <span className="text-[15px] lg:text-sm font-bold tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
                                     instagram
                                 </span>
                             </div>
@@ -182,10 +182,10 @@ export default function SpacePage() {
                         className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
                         <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
                             <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                                <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
+                                <span className="text-[15px] lg:text-sm font-bold tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
                                     telegram
                                 </span>
-                                <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
+                                <span className="text-[15px] lg:text-sm font-bold tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>
                                     telegram
                                 </span>
                             </div>

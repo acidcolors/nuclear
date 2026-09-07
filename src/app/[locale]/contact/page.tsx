@@ -8,6 +8,7 @@ import { TransitionLink } from '@/components/TransitionLink';
 import { getNotionContactData, getNotionFriendsData } from '@/lib/notion';
 import { CMS_CONFIG } from '@/config/cmsSwitch';
 import { useTranslations } from 'next-intl';
+import { Spinner } from '@/components/Spinner';
 
 // --- УНИФИЦИРОВАННЫЙ МАГНИТНЫЙ КОМПОНЕНТ ---
 const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boolean }) => {
@@ -96,13 +97,13 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                     return (
                         <div
                             key={item.id}
-                            className="xl:hidden animate-stagger opacity-0 translate-y-5 z-[100] relative mr-[10px]"
+                            className="animate-stagger opacity-0 translate-y-5 z-[100] relative mr-[10px]"
                             onMouseEnter={() => setHoveredIndex(index)}
                         >
                             <div style={commonStyle}>
                                 <TransitionLink
                                     href="/friends"
-                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-white hover:bg-[#ffffff] no-underline pointer-events-auto"
+                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-normal transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-[#111] hover:bg-[#ffffff] no-underline pointer-events-auto"
                                 >
                                     <img src="/icons/Fire.svg" alt="fire" className="w-[18px] h-auto pointer-events-none" />
                                     <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>{item.title}</span>
@@ -143,7 +144,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                             style={commonStyle}
                             className="outline-none cursor-pointer block shrink-0 p-[10px] will-change-[opacity,transform]"
                         >
-                            <div className="w-[32px] h-[32px] md:w-[40px] md:h-[40px] lg:w-[48px] lg:h-[48px] xl:w-[32px] xl:h-[32px]">
+                            <div className="w-[32px] h-[32px] md:w-[26px] md:h-[26px] lg:w-[31.2px] lg:h-[31.2px] xl:w-[20.8px] xl:h-[20.8px]">
                                 <img
                                     src={currentIcon}
                                     alt={item.title}
@@ -162,6 +163,8 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
 export default function ContactPage() {
     const t = useTranslations('Contact');
     const [loading, setLoading] = useState(true);
+    const [preloaderDone, setPreloaderDone] = useState(false);
+    const mountTimeRef = useRef(Date.now());
     const [animations, setAnimations] = useState<{ girl: any, cube: any, triangle: any } | null>(null);
     const [contactData, setContactData] = useState<any[]>([]);
     const [friendsData, setFriendsData] = useState<any[]>([]);
@@ -169,6 +172,22 @@ export default function ContactPage() {
     const loadTimerRef = useRef<NodeJS.Timeout | null>(null);
     const animatedRef = useRef(false);
     const [isMobile, setIsMobile] = useState(false);
+
+    // Прелоадера раньше не было — используем схему по умолчанию, как на архиве:
+    // страховка 2000мс + минимум 1500мс показа.
+    useEffect(() => {
+        if (!loading) return;
+        const safetyTimer = setTimeout(() => setPreloaderDone(true), 2000);
+        return () => clearTimeout(safetyTimer);
+    }, [loading]);
+
+    useEffect(() => {
+        if (loading) return;
+        const timeElapsed = Date.now() - mountTimeRef.current;
+        const remainingTime = Math.max(0, 1500 - timeElapsed);
+        const t = setTimeout(() => setPreloaderDone(true), remainingTime);
+        return () => clearTimeout(t);
+    }, [loading]);
 
     useEffect(() => {
         const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -279,6 +298,12 @@ export default function ContactPage() {
 
     return (
         <main ref={containerRef} className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] overflow-hidden z-[60]">
+            {!preloaderDone && (
+                <div className="fixed top-0 left-0 w-full h-[100dvh] z-[100] flex items-center justify-center bg-[#efefef]">
+                    <Spinner />
+                </div>
+            )}
+
             <div className="absolute top-0 left-0 w-full h-[100dvh] pointer-events-none z-30 flex flex-col lg:flex-row">
                 <div
                     className="pointer-events-auto w-full h-full lg:w-[70%] xl:w-[45%] flex flex-col px-[6vw] lg:pl-[4vw] lg:pr-0 box-border"
@@ -303,9 +328,9 @@ export default function ContactPage() {
                     </div>
                 </div>
 
-                <div className="hidden xl:flex xl:w-[55%] h-full flex-col justify-center pl-[4vw]">
+                <div className="hidden xl:w-[55%] h-full flex-col justify-center pl-[4vw]">
                     <div className="w-full max-w-[650px]">
-                        <h2 className="animate-stagger opacity-0 translate-y-5 text-[1.8vw] font-bold mb-6 text-[#111]/60">{t('friends')}</h2>
+                        <h2 className="animate-stagger opacity-0 translate-y-5 text-[1.17vw] font-bold mb-6 text-[#111]/60">{t('friends')}</h2>
                         <div className="grid grid-cols-3 w-full gap-6">
                             {(() => {
                                 const logosData = friendsData.filter(f => f.image || (f.name && f.name.toLowerCase() !== 'discription' && f.name.toLowerCase() !== 'description' && f.name.trim() !== ''));

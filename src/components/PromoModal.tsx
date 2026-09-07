@@ -147,7 +147,7 @@ const Link03Animation = ({ className }: { className?: string }) => {
                         trigger: containerRef.current,
                         scroller: "#promo-scroll-container",
                         start: "82% bottom",
-                        end: "35% top",
+                        end: "60% top",
                         scrub: true,
                         markers: false, // Отключили маркеры
                     },
@@ -257,7 +257,7 @@ export const PromoModal = () => {
 
                 // Animate position
                 gsap.fromTo(flyingTextRef.current,
-                    { y: -490 }, // Start position (centered on the text)
+                    { y: -570 }, // Start position (centered on the text)
                     {
                         y: 0, // End position (centered on the logo)
                         ease: "none",
@@ -385,14 +385,14 @@ export const PromoModal = () => {
 
     return (
         <div
-            className={`fixed inset-0 z-[1000] h-[100dvh] w-full bg-black overflow-hidden transition-transform duration-500 ease-in-out ${animateIn ? 'translate-y-0' : 'translate-y-full'} ${unbounded.className}`}
+            className={`fixed inset-0 z-[1000] h-[100dvh] w-full bg-[#a8a8a8] overflow-hidden transition-transform duration-500 ease-in-out ${animateIn ? 'translate-y-0' : 'translate-y-full'} ${unbounded.className}`}
         >
             {/* Close Button */}
             <button
                 onClick={() => setIsOpen(false)}
                 onMouseEnter={(e) => gsap.to(e.currentTarget.firstChild, { rotate: 90, scale: 1.2, opacity: 1, duration: 0.5, ease: "back.out(1.5)" })}
                 onMouseLeave={(e) => gsap.to(e.currentTarget.firstChild, { rotate: 0, scale: 1, opacity: 0.8, duration: 0.4, ease: "power3.out" })}
-                className="absolute top-[15px] right-[15px] md:top-[30px] md:right-[30px] z-[5000] outline-none border-none bg-transparent flex items-center justify-center cursor-pointer p-[15px]"
+                className="absolute top-[45px] right-[15px] md:top-[60px] md:right-[30px] z-[5000] outline-none border-none bg-transparent flex items-center justify-center cursor-pointer p-[15px]"
             >
                 <span className="block text-[36px] font-black text-[#e2fd6f] opacity-80" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>✕</span>
             </button>
@@ -409,7 +409,7 @@ export const PromoModal = () => {
                 <main
                     className="w-full min-h-[100dvh]"
                     style={{
-                        background: '#000000',
+                        background: '#a8a8a8',
                         /* background: 'linear-gradient(180deg, #fbbcb6 0%, #000000ff 20%, #FF0000 35%, #000000ff 45%, #4a0000 75%, #000000 85%)' */
                     }}
                 >
@@ -430,10 +430,10 @@ export const PromoModal = () => {
 
                     {/* Sticky Wrapper for Marquee */}
                     <div className="w-full z-[500] self-stretch" style={{ position: 'sticky', top: '0px', WebkitPosition: '-webkit-sticky' } as any}>
-                        <div className="w-full bg-[#D9FF00] overflow-hidden py-3 border-y border-black flex items-center" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
+                        <div className="w-full bg-[#222222] overflow-hidden py-3 flex items-center" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
                             <div className="flex whitespace-nowrap animate-marquee" style={{ willChange: 'transform', transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
                                 {marqueeItems.map((text, idx) => (
-                                    <span key={idx} className={`text-[22px] italic font-bold px-2 uppercase tracking-wide ${playfair.className}`} style={{ color: '#000000' }}>
+                                    <span key={idx} className={`text-[22px] italic font-normal uppercase tracking-wide ${playfair.className}`} style={{ color: '#a8a8a8' }}>
                                         {text}
                                     </span>
                                 ))}
@@ -442,27 +442,26 @@ export const PromoModal = () => {
                     </div>
 
                     {/* Central Block (Capsule) */}
-                    <div className="relative w-full px-6 mt-[350px] flex flex-col items-center">
-                        <div className="relative w-[90vw] max-w-[400px]">
-                            <div className="absolute inset-0 w-full h-full rounded-[220px] border border-[#D9FF00] pointer-events-none z-0" />
-                            <BoxAnimation className="-rotate-[15deg] w-[800px] max-w-none object-contain absolute -top-[550px] left-1/2 -translate-x-1/2 z-20 pointer-events-none transform-gpu will-change-transform" />
-                            <div className="w-full bg-transparent flex flex-col pt-[200px] pb-16 z-10 relative min-h-[750px]">
-                                <h2 ref={titleRef} className="text-[#D9FF00] text-[28px] font-black leading-[1.1] text-left relative z-10 mx-[20px]">
-                                    Горит Сарай<br />Гори и Хата
+                    <div className="relative w-full px-6 mt-[80px] flex flex-col items-center">
+                        <div className="relative w-[90vw] max-w-[400px] lg:w-[95vw] lg:max-w-[1700px]">
+                            <BoxAnimation className="-rotate-[15deg] w-[500px] lg:w-[700px] max-w-none object-contain absolute -top-[140px] lg:top-[40px] left-1/2 -translate-x-1/2 lg:translate-x-[5%] z-20 pointer-events-none transform-gpu will-change-transform" />
+                            <div className="w-full bg-transparent flex flex-col pt-[-20px] pb-16 z-10 relative min-h-[300px] lg:min-h-[750px]">
+                                <h2 ref={titleRef} className="text-[#222222] uppercase font-black leading-[0.85] tracking-tight text-left relative z-10 w-full">
+                                    <span className="lg:hidden text-[88px]">Горит<br />Сарай<br />Гори<br />и Хата</span>
+                                    <span className="hidden lg:block text-[9vw]">Горит Сарай<br />Гори и Хата</span>
                                 </h2>
-                                <p ref={descRef} className="mt-[150px] text-[#D9FF00] text-[20px] leading-[1.3] font-bold text-left relative z-10 mx-[20px]">
+                                <p ref={descRef} className="mt-[50px] text-[#222222] text-[20px] lg:text-[28px] leading-[1.3] font-normal text-left relative z-10 mx-[20px] lg:mx-0 lg:max-w-[720px]">
                                     Коллекция открыток «Горит сарай — гори и хата». В наборе 10 штук формата 7 х 10.5 см. Всё уже упаковано и ready to gift: можно подарить весь сет целиком или раздарить поштучно.
                                 </p>
                             </div>
                             <img ref={star1Ref} src="/ST_03.svg" alt="Star 1" className="absolute top-[35%] -translate-y-1/2 -right-[280px] w-[550px] h-[550px] z-20 pointer-events-none" />
-                            <img ref={star2Ref} src="/ST_02.svg" alt="Star 2" className="absolute bottom-[10%] left-1/2 -translate-x-1/2 w-48 h-48 z-20 pointer-events-none" />
                         </div>
                     </div>
 
                     {/* Bottom Block */}
-                    <div className="w-full mt-32 px-6 flex flex-col items-center pb-16">
+                    <div className="w-full mt-8 lg:mt-32 px-6 flex flex-col items-center pb-16">
                         <ScrollSequenceAnimation className="relative z-50 w-full flex justify-center -mt-[200px] -mb-[320px]" />
-                        <p ref={textTargetRef} className="text-white font-black text-center text-[18px] leading-[1.2] max-w-[280px] mb-24 relative z-20">
+                        <p ref={textTargetRef} className="text-[#222222] font-normal text-center text-[18px] leading-[1.2] max-w-[280px] mb-24 relative z-20">
                             Lorem ipsum<br />dolor sit amet,<br />consectetuer<br />adipiscing elit, sed<br />diam nonummy nibh<br />euismod tincidunt ut<br />laoreet dolore<br />magna aliquam<br />erat volutpat.<br />Ut wisi
                         </p>
 
@@ -472,7 +471,7 @@ export const PromoModal = () => {
 
                             <img src="/ST_01.svg" alt="Star 3" className="absolute inset-0 w-full h-full scale-[2.5] z-10 pointer-events-none" />
                             <div className="absolute inset-0 z-10 flex items-center justify-center mix-blend-exclusion pointer-events-none">
-                                <div className="w-[200px] h-[200px] flex items-center justify-center pointer-events-auto">
+                                <div className="relative w-[180px] h-[180px] flex items-center justify-center pointer-events-auto">
                                     <ModalLogoAnimation />
                                 </div>
                             </div>
@@ -482,7 +481,7 @@ export const PromoModal = () => {
                                     <defs>
                                         <path id="full-circle-path" d="M 55 180 A 125 125 0 0 1 305 180 A 125 125 0 0 1 55 180" fill="transparent" />
                                     </defs>
-                                    <text className="font-black text-[15.4px] uppercase tracking-widest">
+                                    <text className="font-normal text-[15.4px] uppercase tracking-widest">
                                         <textPath href="#full-circle-path" startOffset="0%" textAnchor="start">
                                             Welome to other world  ✧  Welome to other world  ✧  Welome to other world  ✧
                                         </textPath>
@@ -500,7 +499,7 @@ export const PromoModal = () => {
                                 setIsOpen(false);
                                 setTimeout(() => router.push('/product/prj_01'), 500);
                             }}
-                            className={`-mt-[50px] flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-bold transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-black hover:bg-[#ffffff] no-underline pointer-events-auto relative z-[150] ${unbounded.className}`}
+                            className={`-mt-[50px] flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-normal transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-black hover:bg-[#ffffff] no-underline pointer-events-auto relative z-[150] ${unbounded.className}`}
                         >
                             <span style={{ transform: 'translateY(1px)' }}>Подробнее</span>
                         </button>

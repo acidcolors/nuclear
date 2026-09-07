@@ -7,7 +7,7 @@ import gsap from 'gsap';
 import Lottie from 'lottie-react';
 import backAnimationData from '@/data/back.json';
 // Импортируем нашу обновленную базу и хелперы
-import { products, getProductById, getGalleryImagePaths } from '@/data/products';
+import { getProductById, getGalleryImagePaths } from '@/data/products';
 import { TransitionLink } from '@/components/TransitionLink';
 import { Lightbox } from '@/components/ui/Lightbox';
 import { ShareModal } from '@/components/ui/ShareModal';
@@ -17,6 +17,7 @@ import { useCart } from '@/app/store/useCart';
 import { useSupport } from '@/app/store/useSupport';
 import { ShoppingBag, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
+import { Spinner } from '@/components/Spinner';
 
 const BackAnimation = () => {
     const lottieRef = useRef<any>(null);
@@ -76,6 +77,8 @@ export default function ProductPage() {
 
     const [notionData, setNotionData] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
+    const [preloaderDone, setPreloaderDone] = useState(false);
+    const mountTimeRef = useRef(Date.now());
     const [hoveredBtnIndex, setHoveredBtnIndex] = useState<number | null>(null);
     const { addItem, setIsOpen, items } = useCart();
     const { items: supportItems, addItem: addSupportItem, removeItem: removeSupportItem, setIsOpen: setIsSupportOpen } = useSupport();
@@ -130,6 +133,33 @@ export default function ProductPage() {
         fetchData();
     }, [productId]);
 
+    // Прелоадер (спиннер) для товаров из Notion: своего тайминга раньше не было
+    // (просто ждали isLoading), поэтому используем схему по умолчанию — как на архиве:
+    // страховка 2000мс + минимум 1500мс показа.
+    useEffect(() => {
+        if (!CMS_CONFIG.USE_NOTION) {
+            setPreloaderDone(true);
+        }
+    }, []);
+
+    useEffect(() => {
+        if (!CMS_CONFIG.USE_NOTION || !isLoading) return;
+        const safetyTimer = setTimeout(() => {
+            setPreloaderDone(true);
+        }, 2000);
+        return () => clearTimeout(safetyTimer);
+    }, [isLoading]);
+
+    useEffect(() => {
+        if (!CMS_CONFIG.USE_NOTION || isLoading) return;
+        const timeElapsed = Date.now() - mountTimeRef.current;
+        const remainingTime = Math.max(0, 1500 - timeElapsed);
+        const t = setTimeout(() => {
+            setPreloaderDone(true);
+        }, remainingTime);
+        return () => clearTimeout(t);
+    }, [isLoading]);
+
     const baseProduct = getProductById(productId);
 
     // В режиме Notion мы доверяем ТОЛЬКО данным из таблицы.
@@ -170,8 +200,8 @@ export default function ProductPage() {
                 bgColor = 'transparent'; 
                 textColor = '#111111';
             } else if (isInCart) {
-                bgColor = '#dcfce7'; 
-                textColor = '#166534';
+                bgColor = '#1a1a1a';
+                textColor = '#ebebeb';
             }
         }
 
@@ -300,20 +330,19 @@ export default function ProductPage() {
         };
     }, [product, isDesktop]);
 
-    // Предотвращаем рендер, если продукт почему-то не найден
-    if (!product) return null;
-
-    // Заглушка загрузки для динамических товаров (которых нет в статике)
-    const isStaticProduct = products.some(p => p.id === productId);
-    if (CMS_CONFIG.USE_NOTION && !isStaticProduct && isLoading) {
+    // Прелоадер: показываем, пока не пройдёт минимальное время + не придут данные из Notion.
+    // Проверяем ДО "!product", иначе товар из Notion всегда попадал бы в return null ниже,
+    // ни разу не долетев до этого экрана (product становится доступен только после загрузки).
+    if (CMS_CONFIG.USE_NOTION && !preloaderDone) {
         return (
             <div className="fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] z-[100] flex items-center justify-center">
-                <span className="text-[12px] font-bold tracking-widest text-[#111] opacity-40 animate-pulse">
-                    Loading
-                </span>
+                <Spinner />
             </div>
         );
     }
+
+    // Предотвращаем рендер, если продукт почему-то не найден
+    if (!product) return null;
 
     return (
         <div id="product-main-container" ref={containerRef} className={`fixed top-0 left-0 w-full h-[100dvh] bg-[#efefef] text-[#111] z-[60] ${isDesktop ? 'overflow-hidden' : 'overflow-y-auto overflow-x-hidden'}`}>
@@ -341,34 +370,34 @@ export default function ProductPage() {
                 >
                     <div className="animate-stagger flex flex-col w-full max-w-[100%] lg:max-w-[90%] my-auto lg:m-auto">
 
-                        <h2 className="text-[28px] md:text-[40px] lg:text-[3.5vw] font-bold tracking-tighter leading-[1.05] mb-[12px] lg:mb-[20px] text-[#111]">
+                        <h2 className="text-[28px] md:text-[26px] lg:text-[2.275vw] font-bold tracking-tight leading-[1.05] mb-[12px] lg:mb-[20px] text-[#111]">
                             {product.title}
                         </h2>
 
-                        <div className="mb-[18px] lg:mb-[30px]">
+                        <div className="mb-[36px] lg:mb-[52px]">
                             {product.price && (
-                                <h3 className="inline-block bg-[#f4f4f4] px-[12px] py-[5px] md:px-[16px] md:py-[6px] rounded-[8px] text-[#111] font-bold text-[15px] md:text-[22px] self-start shadow-sm mr-[10px]">
+                                <h3 className="inline-block bg-[#f4f4f4] px-[12px] py-[5px] md:px-[10.4px] md:py-[3.9px] rounded-[8px] text-[#111] font-normal text-[15px] md:text-[14.3px] self-start shadow-sm mr-[10px]">
                                     {!isNaN(Number(product.price.toString().replace(/\s/g, ''))) ? `${product.price} ₽` : product.price}
                                 </h3>
                             )}
                             {product.edition && (
-                                <h3 className="inline-block bg-[#f4f4f4] px-[12px] py-[5px] md:px-[16px] md:py-[6px] rounded-[8px] text-[#111] font-bold text-[15px] md:text-[22px] self-start shadow-sm">
+                                <h3 className="inline-block bg-[#f4f4f4] px-[12px] py-[5px] md:px-[10.4px] md:py-[3.9px] rounded-[8px] text-[#111] font-normal text-[15px] md:text-[14.3px] self-start shadow-sm">
                                     {t('edition')} {product.edition}
                                 </h3>
                             )}
                         </div>
 
-                        <p className="text-[16px] md:text-lg lg:text-[1.2vw] font-medium leading-[1.35] lg:leading-[1.5] opacity-90 mb-[25px] lg:mb-[40px] text-[#111]">
+                        <p className="text-[16px] md:text-[11.7px] lg:text-[0.78vw] font-medium leading-[1.35] lg:leading-[1.5] opacity-90 mb-[25px] lg:mb-[40px] text-[#111]">
                             {product.description}
                         </p>
 
                         <div className="flex flex-col gap-0.5 mb-[25px] lg:mb-[40px]">
-                            <span className="text-[10px] font-bold tracking-widest opacity-40 uppercase text-[#111]">{t('details')}</span>
-                            {product.size && <span className="text-[13px] font-bold opacity-80 mt-1.5 text-[#111]">{t('size')} {product.size}</span>}
-                            {product.material && <span className="text-[13px] font-bold opacity-80 text-[#111]">{t('material')} {product.material}</span>}
-                            {product.year && <span className="text-[13px] font-bold opacity-80 text-[#111]">{t('year')} {product.year}</span>}
-                            {product.role && <span className="text-[13px] font-bold opacity-80 text-[#111]">Разработка: {product.role}</span>}
-                            {product.edition && <span className="text-[13px] font-bold opacity-80 text-[#111]">{t('edition')} {product.edition}</span>}
+                            <span className="text-[10px] font-normal tracking-widest opacity-40 uppercase text-[#111]">{t('details')}</span>
+                            {product.size && <span className="text-[13px] font-normal opacity-80 mt-1.5 text-[#111]">{t('size')} {product.size}</span>}
+                            {product.material && <span className="text-[13px] font-normal opacity-80 text-[#111]">{t('material')} {product.material}</span>}
+                            {product.year && <span className="text-[13px] font-normal opacity-80 text-[#111]">{t('year')} {product.year}</span>}
+                            {product.role && <span className="text-[13px] font-normal opacity-80 text-[#111]">Разработка: {product.role}</span>}
+                            {product.edition && <span className="text-[13px] font-normal opacity-80 text-[#111]">{t('edition')} {product.edition}</span>}
                         </div>
 
                         <div
@@ -387,9 +416,9 @@ export default function ProductPage() {
                             >
                                 <button
                                     ref={buttonRef}
-                                    style={{ 
-                                        backgroundColor: isAddedRecently ? 'transparent' : (isInCart ? '#dcfce7' : '#dddddd'),
-                                        color: (isInCart && !isAddedRecently) ? '#166534' : '#111111'
+                                    style={{
+                                        backgroundColor: isAddedRecently ? 'transparent' : (isInCart ? '#1a1a1a' : '#dddddd'),
+                                        color: (isInCart && !isAddedRecently) ? '#ebebeb' : '#111111'
                                     }}
                                     onClick={() => {
                                         if (isSoldOut) {
@@ -424,7 +453,7 @@ export default function ProductPage() {
                                             setIsOpen(true);
                                         }
                                     }}
-                                    className="relative flex items-center justify-center w-full h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer no-underline whitespace-nowrap shadow-sm active:scale-[0.95] overflow-hidden"
+                                    className="relative flex items-center justify-center w-full h-[55px] rounded-[16px] text-[16px] md:text-[11.7px] font-medium transition-all duration-300 outline-none border-none cursor-pointer no-underline whitespace-nowrap shadow-sm active:scale-[0.95] overflow-hidden"
                                 >
                                     {isSoldOut ? (
                                         <>
@@ -434,7 +463,7 @@ export default function ProductPage() {
                                                     ${!isInSupport && !isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5" />
+                                                <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5 md:w-[11.7px] md:h-[11.7px]" />
                                                 <span style={{ transform: 'translateY(1px)' }}>Уведомить</span>
                                             </div>
 
@@ -444,7 +473,7 @@ export default function ProductPage() {
                                                     ${isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <Check size={18} />
+                                                <Check size={18} className="md:w-[11.7px] md:h-[11.7px]" />
                                                 <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
                                             </div>
 
@@ -454,7 +483,7 @@ export default function ProductPage() {
                                                     ${isInSupport && !isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <img src="/chat_support.svg" alt="В списке" className="w-5 h-5" />
+                                                <img src="/chat_support.svg" alt="В списке" className="w-5 h-5 md:w-[11.7px] md:h-[11.7px]" />
                                                 <span style={{ transform: 'translateY(1px)' }}>В списке</span>
                                             </div>
                                         </>
@@ -466,7 +495,7 @@ export default function ProductPage() {
                                                     ${!isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <ShoppingBag size={18} />
+                                                <ShoppingBag size={18} className="md:w-[11.7px] md:h-[11.7px]" />
                                                 <span style={{ transform: 'translateY(1px)' }}>{t('addToCart')}</span>
                                             </div>
 
@@ -476,18 +505,18 @@ export default function ProductPage() {
                                                     ${isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <Check size={18} />
+                                                <Check size={18} className="md:w-[11.7px] md:h-[11.7px]" />
                                                 <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
                                             </div>
 
-                                            {/* Layer 3: In Cart (Green state) */}
+                                            {/* Layer 3: In Cart (dark state) */}
                                             <div 
                                                 className={`absolute inset-0 flex items-center justify-center gap-[10px] transition-all duration-300 ease-in-out
                                                     ${isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <ShoppingBag size={18} />
-                                                <span style={{ transform: 'translateY(1px)' }}>{t('addToCart')}</span>
+                                                <ShoppingBag size={18} className="md:w-[11.7px] md:h-[11.7px]" />
+                                                <span style={{ transform: 'translateY(1px)' }}>{t('inCart')}</span>
                                             </div>
                                         </>
                                     )}
@@ -506,9 +535,9 @@ export default function ProductPage() {
                             >
                                 <button
                                     onClick={() => setIsShareModalOpen(true)}
-                                    className="flex items-center justify-center gap-[8px] w-full px-[10px] h-[55px] rounded-[16px] text-[16px] md:text-[18px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff] whitespace-nowrap active:scale-[0.95]"
+                                    className="flex items-center justify-center gap-[8px] w-full px-[10px] h-[55px] rounded-[16px] text-[16px] md:text-[11.7px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff] whitespace-nowrap active:scale-[0.95]"
                                 >
-                                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg width="18" height="18" className="md:w-[11.7px] md:h-[11.7px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                     </svg>
