@@ -21,6 +21,16 @@ const playfair = localFont({
     variable: '--font-playfair',
 });
 
+// Фото товара наверху модалки — перебираем по кругу каждые 2 секунды
+const TOP_PHOTOS = [
+    '/product/prod_01/image1.jpg',
+    '/product/prod_01/image2.jpg',
+    '/product/prod_01/image3.jpg',
+    '/product/prod_01/image4.jpg',
+    '/product/prod_01/image5.jpg',
+    '/product/prod_01/image6.jpg',
+];
+
 const imageCache = new Map<string, HTMLImageElement>();
 
 const preloadImageSequence = (prefix: string, frames: number, suffix: string) => {
@@ -40,66 +50,6 @@ const preloadImageSequence = (prefix: string, frames: number, suffix: string) =>
     return images;
 };
 
-const BoxAnimation = ({ className }: { className?: string }) => {
-    const canvasRef = useRef<HTMLCanvasElement>(null);
-    const imagesRef = useRef<HTMLImageElement[]>([]);
-
-    useEffect(() => {
-        const frames = 181;
-        imagesRef.current = preloadImageSequence('/animation/Link01/SA01_', frames, '_R.webp');
-
-        let frame = 0;
-        let animationId: number;
-        let lastTime = performance.now();
-        const fps = 24;
-        const interval = 1000 / fps;
-
-        let isVisible = true;
-        const observer = new IntersectionObserver((entries) => {
-            isVisible = entries[0].isIntersecting;
-        });
-        if (canvasRef.current) observer.observe(canvasRef.current);
-
-        const loop = (time: number) => {
-            animationId = requestAnimationFrame(loop);
-            if (!isVisible) return;
-
-            const delta = time - lastTime;
-            if (delta > interval) {
-                lastTime = time - (delta % interval);
-
-                const canvas = canvasRef.current;
-                const ctx = canvas?.getContext('2d', { alpha: true, desynchronized: true });
-                const img = imagesRef.current[frame];
-
-                if (canvas && ctx && img && img.complete) {
-                    const scale = 0.5; // Уменьшаем разрешение рендера в 2 раза
-                    const renderWidth = Math.floor(img.width * scale);
-                    const renderHeight = Math.floor(img.height * scale);
-
-                    if (canvas.width !== renderWidth && renderWidth > 0) {
-                        canvas.width = renderWidth;
-                        canvas.height = renderHeight;
-                    }
-                    ctx.clearRect(0, 0, canvas.width, canvas.height);
-                    ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                }
-                frame = (frame + 1) % frames;
-            }
-        };
-        animationId = requestAnimationFrame(loop);
-
-        return () => {
-            cancelAnimationFrame(animationId);
-            if (canvasRef.current) observer.unobserve(canvasRef.current);
-            observer.disconnect();
-            imagesRef.current = [];
-        };
-    }, []);
-
-    return <canvas ref={canvasRef} className={className} style={{ objectFit: 'contain' }} />;
-};
-
 const ScrollSequenceAnimation = ({ className }: { className?: string }) => {
     return (
         <div className={className}>
@@ -116,6 +66,14 @@ const Link03Animation = ({ className }: { className?: string }) => {
     const canvasRef = useRef<HTMLCanvasElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const imagesRef = useRef<HTMLImageElement[]>([]);
+    // GSAP дёргает onUpdate синхронно на каждый скролл-тик (scrub), и во время
+    // быстрого флика их может быть больше одного за кадр — раньше на каждый такой
+    // вызов сразу шёл ctx.drawImage, то есть отрисовка была завязана на скролл-поток,
+    // а не на реальную частоту кадров экрана. Теперь onUpdate только запоминает
+    // нужный кадр, а рисуем не чаще одного раза за requestAnimationFrame.
+    const pendingFrameRef = useRef<number | null>(null);
+    const lastDrawnFrameRef = useRef<number>(-1);
+    const rafIdRef = useRef<number | null>(null);
 
     useEffect(() => {
         gsap.registerPlugin(ScrollTrigger);
@@ -124,6 +82,38 @@ const Link03Animation = ({ className }: { className?: string }) => {
         if (!containerRef.current || !canvasRef.current) return;
 
         let ctxGSAP: gsap.Context;
+
+        const drawFrame = (frameIndex: number) => {
+            const canvas = canvasRef.current;
+            const ctx = canvas?.getContext('2d', { alpha: true, desynchronized: true });
+            const img = imagesRef.current[frameIndex];
+
+            if (canvas && ctx && img && img.complete && img.width > 0) {
+                const scale = 0.5; // Уменьшаем разрешение рендера в 2 раза
+                const renderWidth = Math.floor(img.width * scale);
+                const renderHeight = Math.floor(img.height * scale);
+
+                if (canvas.width !== renderWidth && renderWidth > 0) {
+                    canvas.width = renderWidth;
+                    canvas.height = renderHeight;
+                }
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+            }
+        };
+
+        const scheduleDraw = (frameIndex: number) => {
+            pendingFrameRef.current = frameIndex;
+            if (rafIdRef.current !== null) return; // на этот кадр уже запланировано
+            rafIdRef.current = requestAnimationFrame(() => {
+                rafIdRef.current = null;
+                const frame = pendingFrameRef.current;
+                if (frame !== null && frame !== lastDrawnFrameRef.current) {
+                    lastDrawnFrameRef.current = frame;
+                    drawFrame(frame);
+                }
+            });
+        };
 
         const initAnimation = () => {
             if (!canvasRef.current || !containerRef.current) return;
@@ -135,6 +125,7 @@ const Link03Animation = ({ className }: { className?: string }) => {
                 canvasRef.current.height = Math.floor(firstImg.height * scale);
                 const ctx = canvasRef.current.getContext('2d');
                 if (ctx) ctx.drawImage(firstImg, 0, 0, canvasRef.current.width, canvasRef.current.height);
+                lastDrawnFrameRef.current = 0;
             }
 
             ctxGSAP = gsap.context(() => {
@@ -152,22 +143,7 @@ const Link03Animation = ({ className }: { className?: string }) => {
                         markers: false, // Отключили маркеры
                     },
                     onUpdate: () => {
-                        const canvas = canvasRef.current;
-                        const ctx = canvas?.getContext('2d', { alpha: true, desynchronized: true });
-                        const img = imagesRef.current[Math.round(obj.frame)];
-
-                        if (canvas && ctx && img && img.complete && img.width > 0) {
-                            const scale = 0.5; // Уменьшаем разрешение рендера в 2 раза
-                            const renderWidth = Math.floor(img.width * scale);
-                            const renderHeight = Math.floor(img.height * scale);
-
-                            if (canvas.width !== renderWidth && renderWidth > 0) {
-                                canvas.width = renderWidth;
-                                canvas.height = renderHeight;
-                            }
-                            ctx.clearRect(0, 0, canvas.width, canvas.height);
-                            ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-                        }
+                        scheduleDraw(Math.round(obj.frame));
                     }
                 });
 
@@ -186,6 +162,7 @@ const Link03Animation = ({ className }: { className?: string }) => {
 
         return () => {
             if (ctxGSAP) ctxGSAP.revert();
+            if (rafIdRef.current !== null) cancelAnimationFrame(rafIdRef.current);
             imagesRef.current = [];
         };
     }, []);
@@ -226,6 +203,7 @@ export const PromoModal = () => {
     const [isMounted, setIsMounted] = useState(false);
     const [shouldRender, setShouldRender] = useState(false);
     const [animateIn, setAnimateIn] = useState(false);
+    const [topPhotoIndex, setTopPhotoIndex] = useState(0);
     const svgTextRef = useRef<SVGSVGElement>(null);
     const flyingTextRef = useRef<HTMLDivElement>(null);
     const textTargetRef = useRef<HTMLParagraphElement>(null);
@@ -352,6 +330,15 @@ export const PromoModal = () => {
         return () => window.removeEventListener('openPromoModal', handleOpen);
     }, []);
 
+    // Фото товара наверху — меняется каждые 2 секунды, пока модалка открыта
+    useEffect(() => {
+        if (!shouldRender) return;
+        const interval = setInterval(() => {
+            setTopPhotoIndex((i) => (i + 1) % TOP_PHOTOS.length);
+        }, 2000);
+        return () => clearInterval(interval);
+    }, [shouldRender]);
+
     useEffect(() => {
         if (isOpen) {
             setShouldRender(true);
@@ -413,10 +400,13 @@ export const PromoModal = () => {
                         /* background: 'linear-gradient(180deg, #fbbcb6 0%, #000000ff 20%, #FF0000 35%, #000000ff 45%, #4a0000 75%, #000000 85%)' */
                     }}
                 >
-                    {/* Top Photo */}
-                    <div className="w-full h-[80dvh] min-h-[300px] relative">
-                        <img src="/product/prod_01/image5.jpg" alt="Cards" className="w-full h-full object-cover" />
-                        <div className="absolute bottom-[-10%] left-1/2 -translate-x-1/2 w-[400px] h-[400px] flex flex-col items-center justify-center z-10 pointer-events-none">
+                    {/* Top Photo — h-[100dvh] минус высота бегущей строки ниже (56px), чтобы
+                        строка была видна сразу на первом экране, без скролла. dvh сама
+                        подстраивается под реальную видимую высоту экрана (в т.ч. с учётом
+                        скрывающейся адресной строки на мобильных) — без JS-замеров. */}
+                    <div className="w-full h-[calc(100dvh-56px)] min-h-[300px] relative">
+                        <img src={TOP_PHOTOS[topPhotoIndex]} alt="Cards" className="w-full h-full object-cover" />
+                        <div className="absolute bottom-[-20%] left-1/2 -translate-x-1/2 w-[400px] h-[400px] flex flex-col items-center justify-center z-10 pointer-events-none">
                             <svg viewBox="0 0 1305.63 913.63" className="absolute inset-0 w-full h-full -rotate-[125deg] scale-[2.3] pointer-events-none">
                                 <path
                                     d="M1305.63,94.14c-509.51,283.07-550.91,374.44-188.61,416.24-362.31-41.81-432.31,26.79-318.91,312.51-113.4-285.72-202.73-265.8-406.93,90.74,204.2-356.54,118.33-377.2-391.18-94.14,509.51-283.07,550.91-374.44,188.61-416.24,362.31,41.81,432.31-26.79,318.91-312.51C620.92,376.46,710.24,356.54,914.45,0c-204.2,356.54-118.33,377.2,391.18,94.14Z"
@@ -428,33 +418,30 @@ export const PromoModal = () => {
                         </div>
                     </div>
 
-                    {/* Sticky Wrapper for Marquee */}
-                    <div className="w-full z-[500] self-stretch" style={{ position: 'sticky', top: '0px', WebkitPosition: '-webkit-sticky' } as any}>
-                        <div className="w-full bg-[#222222] overflow-hidden py-3 flex items-center" style={{ transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
-                            <div className="flex whitespace-nowrap animate-marquee" style={{ willChange: 'transform', transform: 'translateZ(0)', WebkitTransform: 'translateZ(0)' }}>
-                                {marqueeItems.map((text, idx) => (
-                                    <span key={idx} className={`text-[22px] italic font-normal uppercase tracking-wide ${playfair.className}`} style={{ color: '#a8a8a8' }}>
-                                        {text}
-                                    </span>
-                                ))}
-                            </div>
+                    {/* Бегущая строка — обычный блок в потоке (не fixed/sticky): изначально
+                        стоит прямо под фото, как футер первого экрана, а при скролле уезжает
+                        вверх вместе с остальным контентом, никуда не прилипая. */}
+                    <div className="w-full h-[56px] bg-[#222222] overflow-hidden flex items-center">
+                        <div className="flex whitespace-nowrap animate-marquee">
+                            {marqueeItems.map((text, idx) => (
+                                <span key={idx} className={`text-[22px] italic font-normal uppercase tracking-wide ${playfair.className}`} style={{ color: '#a8a8a8' }}>
+                                    {text}
+                                </span>
+                            ))}
                         </div>
                     </div>
 
                     {/* Central Block (Capsule) */}
                     <div className="relative w-full px-6 mt-[80px] flex flex-col items-center">
                         <div className="relative w-[90vw] max-w-[400px] lg:w-[95vw] lg:max-w-[1700px]">
-                            <BoxAnimation className="-rotate-[15deg] w-[500px] lg:w-[700px] max-w-none object-contain absolute -top-[140px] lg:top-[40px] left-1/2 -translate-x-1/2 lg:translate-x-[5%] z-20 pointer-events-none transform-gpu will-change-transform" />
                             <div className="w-full bg-transparent flex flex-col pt-[-20px] pb-16 z-10 relative min-h-[300px] lg:min-h-[750px]">
-                                <h2 ref={titleRef} className="text-[#222222] uppercase font-black leading-[0.85] tracking-tight text-left relative z-10 w-full">
-                                    <span className="lg:hidden text-[88px]">Горит<br />Сарай<br />Гори<br />и Хата</span>
-                                    <span className="hidden lg:block text-[9vw]">Горит Сарай<br />Гори и Хата</span>
+                                <h2 ref={titleRef} className="text-[#222222] font-bold text-[20px] lg:text-[28px] leading-[1.3] text-left relative z-10 mx-[20px] lg:mx-0 lg:w-full">
+                                    Набор открыток
                                 </h2>
                                 <p ref={descRef} className="mt-[50px] text-[#222222] text-[20px] lg:text-[28px] leading-[1.3] font-normal text-left relative z-10 mx-[20px] lg:mx-0 lg:max-w-[720px]">
                                     Коллекция открыток «Горит сарай — гори и хата». В наборе 10 штук формата 7 х 10.5 см. Всё уже упаковано и ready to gift: можно подарить весь сет целиком или раздарить поштучно.
                                 </p>
                             </div>
-                            <img ref={star1Ref} src="/ST_03.svg" alt="Star 1" className="absolute top-[35%] -translate-y-1/2 -right-[280px] w-[550px] h-[550px] z-20 pointer-events-none" />
                         </div>
                     </div>
 
