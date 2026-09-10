@@ -22,7 +22,6 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
     console.log('[Marquee Debug] Data from Notion:', marqueeData);
   }, [marqueeData]);
 
-  const [viewMode, setViewMode] = useState<'mobile' | 'adaptive' | 'desktop'>('mobile');
   const [startPressure, setStartPressure] = useState(false);
   const containerRef = useRef<HTMLDivElement>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -76,20 +75,6 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
     }
   }, [forcedLoading]);
 
-  // 1. ТИП УСТРОЙСТВА
-  useEffect(() => {
-    const handleResize = () => {
-      const width = window.innerWidth;
-      if (width < 1024) setViewMode('mobile');
-      else if (width <= 1440) setViewMode('adaptive');
-      else setViewMode('desktop');
-    };
-
-    handleResize();
-    window.addEventListener('resize', handleResize);
-    return () => window.removeEventListener('resize', handleResize);
-  }, []);
-
   // 2. ЗАДЕРЖКА ДЛЯ ТЯЖЕЛЫХ АНИМАЦИЙ
   useEffect(() => {
     if (!isLocked) {
@@ -105,7 +90,8 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
     // Жестко блокируем GSAP, пока крутится прелоадер или висит заглушка
     if (isLocked || !containerRef.current) return;
 
-    requestAnimationFrame(() => {
+    let ctx: gsap.Context | undefined;
+    const raf = requestAnimationFrame(() => {
       const selectors = [
         ".custom-home-btn",
         ".custom-nav",
@@ -124,7 +110,7 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
 
       if (newTargets.length === 0) return;
 
-      gsap.context(() => {
+      ctx = gsap.context(() => {
         gsap.fromTo(newTargets,
           { y: 20, opacity: 0 },
             {
@@ -139,6 +125,14 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
         );
       }, containerRef);
     });
+
+    // Защита для React StrictMode (dev): без отмены RAF/контекста повторный
+    // вызов эффекта при mount->cleanup->mount мог бы запустить второй твин
+    // поверх первого и столкнуть их через overwrite:true.
+    return () => {
+      cancelAnimationFrame(raf);
+      ctx?.revert();
+    };
   }, [isLocked]);
 
   // 4. УМНОЕ ФОРМАТИРОВАНИЕ ЗАГОЛОВКОВ
@@ -189,7 +183,7 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
 
   return (
     <>
-      <main ref={containerRef} className={`relative w-screen h-screen bg-[#ebebeb] overflow-hidden ${marqueeData?.isActive ? 'has-marquee' : ''}`}>
+      <main ref={containerRef} className={`relative w-screen h-[100dvh] bg-[#ebebeb] overflow-hidden ${marqueeData?.isActive ? 'has-marquee' : ''}`}>
         <Preloader
           variant="home"
           isLoading={forcedLoading || isLoading}
@@ -206,116 +200,118 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
               </span>
             </div>
 
-            {/* Заголовок основной */}
-            <div
-              className={`home-title animate-up opacity-0 translate-y-5 absolute transition-[top,left] duration-700
-                ${viewMode === 'mobile'
-                  ? 'w-[90vw] top-[var(--home-title-top)] left-[6vw]'
-                  : 'w-[50vw] top-[var(--home-title-top)] left-[22.2vw]'}`}
-            >
-              <TextPressure
-                text={titles.fg}
-                className="text-[length:var(--title-size)] leading-[0.95] lg:leading-[0.9] tracking-tighter text-[#ebebeb]"
-                animateMode={startPressure ? 'random' : 'none'}
-              />
-            </div>
+            {/* Мобильная колонка: заголовок/описание/соцсети/thank-you идут
+                друг за другом с равными зазорами (justify-content: space-evenly
+                в .mobile-content-flow) вместо независимых top/bottom-координат.
+                На десктопе (lg) эта обёртка становится display:contents и не
+                участвует — там работает старая абсолютная раскладка. */}
+            <div className="mobile-content-flow">
+              {/* На десктопе (lg) заголовок и описание — тоже flex-колонка с
+                  равными зазорами (.lg-title-desc-anchor), тот же принцип, что
+                  и на мобильных, только без соцсетей/thank-you внутри */}
+              <div className="lg-title-desc-anchor">
+                {/* Заголовок основной */}
+                <div className="home-title animate-up opacity-0 translate-y-5 w-full lg:transition-[margin] lg:duration-700 lg:w-[50vw] lg:ml-[22.2vw]">
+                  <TextPressure
+                    text={titles.fg}
+                    className="text-[length:var(--title-size)] leading-[0.95] lg:leading-[0.9] tracking-tighter text-[#ebebeb]"
+                    animateMode={startPressure ? 'random' : 'none'}
+                  />
+                </div>
 
-            {/* Описание */}
-            <div
-              className={`home-desc animate-up opacity-0 translate-y-5 absolute transition-[top,left] duration-700 z-10
-              ${viewMode === 'mobile'
-                  ? 'w-[88vw] top-[var(--home-desc-top)] left-[6vw]'
-                  : 'w-[40vw] top-[var(--home-desc-top)] left-1/2 -translate-x-1/2'}`}
-            >
-              <p className="text-[length:var(--desc-size)] font-normal leading-[1.45] lg:leading-[1.4] text-[#ebebeb]">
-                <span className="relative text-[inherit]" style={{ whiteSpace: 'pre-wrap' }}>
-                  <style>{`
-                  @keyframes custom-blink {
-                    0%, 100% { opacity: 1; }
-                    50% { opacity: 0; }
-                  }
-                  .cursor-blink {
-                    animation: custom-blink 1s step-end infinite;
-                  }
-                `}</style>
-                  {displayDescription}
-                  <span className="cursor-blink inline-block ml-[1px] font-bold">_</span>
-                </span>
-              </p>
-            </div>
+                {/* Описание */}
+                <div className="home-desc animate-up opacity-0 translate-y-5 w-full z-10 lg:transition-[margin] lg:duration-700 lg:w-[40vw] lg:mx-auto">
+                  <p className="text-[length:var(--desc-size)] font-normal leading-[1.45] lg:leading-[1.4] text-[#ebebeb]">
+                    <span className="relative text-[inherit]" style={{ whiteSpace: 'pre-wrap' }}>
+                      <style>{`
+                      @keyframes custom-blink {
+                        0%, 100% { opacity: 1; }
+                        50% { opacity: 0; }
+                      }
+                      .cursor-blink {
+                        animation: custom-blink 1s step-end infinite;
+                      }
+                    `}</style>
+                      {displayDescription}
+                      <span className="cursor-blink inline-block ml-[1px] font-bold">_</span>
+                    </span>
+                  </p>
+                </div>
+              </div>
 
-            {/* Футер-текст слева */}
-            <div className="custom-thank-you animate-up opacity-0 translate-y-5 absolute bottom-[var(--home-thank-you-bottom)] left-[6vw] lg:bottom-auto lg:top-[50vh] lg:left-[40px] lg:-translate-y-1/2 lg:w-auto flex items-center" style={{ gap: '10px' }}>
-              <span className="text-[28px] max-h-[650px]:!text-[22px] md:text-[22px] lg:text-[32px] text-[#ebebeb] leading-none mt-1 -ml-2">✹</span>
-              <p className="text-[14px] max-h-[650px]:!text-[11px] md:text-[11px] lg:text-[16px] font-normal tracking-normal leading-tight text-[#ebebeb]">
-                Thank you <br /> for visiting this site.
-              </p>
-            </div>
+              {/* СОЦИАЛЬНЫЕ СЕТИ */}
+              <div className="home-mobile-socials lg:block">
+                {homeLinks.length > 0 ? (
+                  homeLinks.map((link: any) => {
+                    const name = link.name.toLowerCase();
+                    const isInsta = name.includes('insta');
+                    const isTg = name.includes('tg') || name.includes('telegr');
 
-            {/* СОЦИАЛЬНЫЕ СЕТИ */}
-            <div className="flex flex-col lg:block">
-              {homeLinks.length > 0 ? (
-                homeLinks.map((link: any) => {
-                  const name = link.name.toLowerCase();
-                  const isInsta = name.includes('insta');
-                  const isTg = name.includes('tg') || name.includes('telegr');
+                    // Скрываем инстаграм и телеграм, если включена бегущая строка
+                    if (marqueeData?.isActive && (isInsta || isTg)) {
+                      return null;
+                    }
 
-                  // Скрываем инстаграм и телеграм, если включена бегущая строка
-                  if (marqueeData?.isActive && (isInsta || isTg)) {
-                    return null;
-                  }
+                    // Скрываем телеграм, если пользователь зашел из Telegram / короткого экрана
+                    if (isActualMiniAppUser && isTg) {
+                      return null;
+                    }
 
-                  // Скрываем телеграм, если пользователь зашел из Telegram / короткого экрана
-                  if (isActualMiniAppUser && isTg) {
-                    return null;
-                  }
+                    let posClass = "relative lg:hidden";
+                    if (isInsta) posClass = "custom-insta";
+                    else if (isTg) posClass = "custom-tg";
+                    else if (name.includes('behan')) posClass = "custom-behance";
 
-                  let posClass = "relative mt-4 ml-[6vw] lg:hidden";
-                  if (isInsta) posClass = "custom-insta";
-                  else if (isTg) posClass = "custom-tg";
-                  else if (name.includes('behan')) posClass = "custom-behance";
-
-                  return (
-                    <div key={link.id} className={`${posClass} pointer-events-auto animate-up opacity-0 translate-y-5`}>
-                      <a href={link.url} target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
-                        <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
-                          <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
-                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
+                    return (
+                      <div key={link.id} className={`${posClass} pointer-events-auto animate-up opacity-0 translate-y-5`}>
+                        <a href={link.url} target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                          <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
+                            <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                              <span className="text-[15px] lg:text-sm font-normal tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
+                              <span className="text-[15px] lg:text-sm font-normal tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>{link.name}</span>
+                            </div>
                           </div>
-                        </div>
-                      </a>
-                    </div>
-                  );
-                })
-              ) : (
-                <>
-                  {!marqueeData?.isActive && (
-                    <div className="custom-insta pointer-events-auto animate-up opacity-0 translate-y-5">
-                      <a href="https://www.instagram.com/gardennuclear/" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
-                        <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
-                          <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
-                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
+                        </a>
+                      </div>
+                    );
+                  })
+                ) : (
+                  <>
+                    {!marqueeData?.isActive && (
+                      <div className="custom-insta pointer-events-auto animate-up opacity-0 translate-y-5">
+                        <a href="https://www.instagram.com/gardennuclear/" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                          <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
+                            <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                              <span className="text-[15px] lg:text-sm font-normal tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
+                              <span className="text-[15px] lg:text-sm font-normal tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>instagram</span>
+                            </div>
                           </div>
-                        </div>
-                      </a>
-                    </div>
-                  )}
-                  {!marqueeData?.isActive && !isActualMiniAppUser && (
-                    <div className="custom-tg pointer-events-auto animate-up opacity-0 translate-y-5">
-                      <a href="https://t.me/mynuclear" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
-                        <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
-                          <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
-                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
-                            <span className="text-[15px] lg:text-sm font-bold tracking-widest text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                        </a>
+                      </div>
+                    )}
+                    {!marqueeData?.isActive && !isActualMiniAppUser && (
+                      <div className="custom-tg pointer-events-auto animate-up opacity-0 translate-y-5">
+                        <a href="https://t.me/mynuclear" target="_blank" rel="noopener noreferrer" className="group inline-block p-[15px] -m-[15px] no-underline outline-none cursor-pointer">
+                          <div className="overflow-hidden" style={{ position: 'relative', height: '20px', display: 'block' }}>
+                            <div className="transition-transform duration-500 ease-[cubic-bezier(0.76,0,0.24,1)] group-hover:-translate-y-1/2 flex flex-col">
+                              <span className="text-[15px] lg:text-sm font-normal tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                              <span className="text-[15px] lg:text-sm font-normal tracking-normal text-[#ebebeb] flex items-center" style={{ height: '20px', whiteSpace: 'nowrap' }}>telegram</span>
+                            </div>
                           </div>
-                        </div>
-                      </a>
-                    </div>
-                  )}
-                </>
-              )}
+                        </a>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+
+              {/* Футер-текст слева */}
+              <div className="custom-thank-you animate-up opacity-0 translate-y-5 flex items-center lg:absolute lg:bottom-auto lg:top-[50vh] lg:left-[40px] lg:-translate-y-1/2" style={{ gap: '10px' }}>
+                <span className="text-[28px] max-h-[650px]:!text-[22px] md:text-[22px] lg:text-[32px] text-[#ebebeb] leading-none mt-1 -ml-2">✹</span>
+                <p className="text-[14px] max-h-[650px]:!text-[11px] md:text-[11px] lg:text-[16px] font-normal tracking-normal leading-tight text-[#ebebeb]">
+                  Thank you <br /> for visiting this site.
+                </p>
+              </div>
             </div>
           </div>
         </div>

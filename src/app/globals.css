@@ -23,11 +23,14 @@
   --logo-desktop-height: 62px;
   /* Высота логотипа на десктопе */
 
-  /* Динамические позиции для главной */
-  --home-title-top: 14vh;
-  --home-desc-top: 37vh;
-  --home-thank-you-bottom: 10vh;
-  --home-social-bottom: 20vh;
+  /* Динамические позиции для главной (dvh, а не vh — иначе на iOS Safari
+     контент скачет и наезжает на fixed хедер/футер при скрытии адресной строки).
+     Заголовок и описание — не абсолютные координаты, а flex-колонка с
+     justify-content: space-evenly (см. .mobile-content-flow / .lg-title-desc-anchor),
+     одинаковая логика на мобильных и на десктопе — зазоры считаются сами,
+     а не подбираются вручную под каждый брейкпоинт. */
+  --home-thank-you-bottom: 10dvh;
+  --home-social-bottom: 20dvh;
 
   /* Динамические позиции для контактов (Мобилки по умолчанию) */
   --contact-padding-top: 10vh;
@@ -41,7 +44,9 @@
   --marquee-height: 50px;
   --marquee-bg: #000000;
   --marquee-text-color: #ebebeb;
-  --marquee-bottom: 20vh;
+  /* Бегущая строка сидит вплотную над футером (footer: height 36px + 1px border) —
+     фиксированное расстояние, не vh/dvh, т.к. футер не меняет высоту по брейкпоинтам */
+  --marquee-bottom: 37px;
   --marquee-speed: 30s;
   --marquee-gap: 21px;
 }
@@ -53,9 +58,6 @@
     --title-size: 80px;
     --desc-size: 18px;
     --marquee-height: 45px;
-    --marquee-bottom: 20vh;
-    --home-title-top: 15vh;
-    --home-desc-top: 40vh;
   }
 }
 
@@ -63,8 +65,6 @@
   :root {
     --title-size: 72px;
     --desc-size: 21px;
-    --home-title-top: 20vh;
-    --home-desc-top: 40vh;
 
     /* Контакты для десктопа - ПОДНЯЛИ ЕЩЕ ВЫШЕ */
     --contact-padding-top: 9vh;
@@ -73,7 +73,6 @@
     --contact-socials-mt: 18px;
     --space-vol-top: 56px;
     --marquee-height: 60px;
-    --marquee-bottom: 10vh;
   }
 }
 
@@ -131,8 +130,6 @@
     /* Уменьшаем описание */
 
     /* Сжимаем вертикальные отступы */
-    --home-title-top: 70px !important;
-    --home-desc-top: 230px !important;
     --home-thank-you-bottom: 20px !important;
     --home-social-bottom: 100px !important;
 
@@ -148,15 +145,8 @@
 
     /* Бегущая строка на коротких экранах */
     --marquee-height: 45px !important;
-    --marquee-bottom: 100px !important;
   }
 
-  /* Для десктопной версии в маленьком окне корректируем центрирование */
-  @media (min-width: 1024px) {
-    :root {
-      --home-desc-top: 220px !important;
-    }
-  }
 
 }
 
@@ -244,6 +234,94 @@ input[type="range"]::-moz-range-thumb {
   width: 14px;
   border-radius: 50%;
   border: none;
+}
+
+/* ============================================================
+   МОБИЛЬНАЯ КОЛОНКА ГЛАВНОЙ: равные пропорциональные зазоры
+   между заголовком/описанием/соцсетями/"Thank you" вместо
+   независимых top/bottom-координат (которые давали разные
+   зазоры в зависимости от длины текста). Считается один раз
+   через justify-content, а не подбором vh под каждый брейкпоинт.
+   На десктопе (lg) эта обёртка выключается (display:contents) —
+   там свой аналог, .lg-title-desc-anchor, см. ниже.
+   ============================================================ */
+.mobile-content-flow {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: space-evenly;
+  padding: 100px 6vw 40px;
+  box-sizing: border-box;
+}
+
+/* Когда активна бегущая строка — колонка уступает ей место снизу,
+   зазоры пересчитываются автоматически, никаких новых чисел не нужно */
+.has-marquee .mobile-content-flow {
+  padding-bottom: calc(var(--marquee-bottom) + var(--marquee-height) + 16px);
+}
+
+@media (min-width: 1024px) {
+  .mobile-content-flow {
+    display: contents;
+  }
+}
+
+/* Десктоп: тот же принцип, что и .mobile-content-flow — заголовок и описание
+   стоят в flex-колонке между хедером и футером/бегущей строкой, зазоры
+   (хедер→заголовок, заголовок→описание, описание→футер) равные и считаются
+   сами через justify-content, а не подбираются вручную под каждый брейкпоинт.
+   Остальные элементы (welcome-текст, "Thank you", соцсети) сюда не входят и
+   остаются на старых абсолютных местах. На мобильных обёртка прозрачна
+   (display:contents), чтобы заголовок/описание были прямыми flex-детьми
+   .mobile-content-flow. */
+.lg-title-desc-anchor {
+  display: contents;
+}
+
+@media (min-width: 1024px) {
+  .lg-title-desc-anchor {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    justify-content: space-evenly;
+    position: absolute;
+    inset: 0;
+    padding: 100px 0 40px;
+    box-sizing: border-box;
+  }
+
+  .has-marquee .lg-title-desc-anchor {
+    padding-bottom: calc(var(--marquee-bottom) + var(--marquee-height) + 16px);
+  }
+}
+
+/* Соцсети (insta/tg) внутри мобильной колонки — раньше были
+   position:absolute с left:6vw/35vw (стояли рядом по горизонтали
+   за счёт разных left), теперь то же самое даёт flex-row + gap */
+.home-mobile-socials {
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: 8vw;
+  row-gap: 8px;
+}
+
+/* Если соцсети скрыты (бегущая строка активна) — пустой div не должен
+   создавать лишний "слот" зазора в space-evenly */
+.mobile-content-flow > .home-mobile-socials:empty {
+  display: none;
+}
+
+@media (max-width: 1023px) {
+  .home-mobile-socials .custom-insta,
+  .home-mobile-socials .custom-tg {
+    position: static !important;
+    bottom: auto !important;
+    left: auto !important;
+  }
 }
 
 /* ============================================================
