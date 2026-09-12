@@ -4,8 +4,6 @@ import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams } from 'next/navigation';
 import Image from 'next/image';
 import gsap from 'gsap';
-import Lottie from 'lottie-react';
-import backAnimationData from '@/data/back.json';
 // Импортируем нашу обновленную базу и хелперы
 import { getProductById, getGalleryImagePaths } from '@/data/products';
 import { TransitionLink } from '@/components/TransitionLink';
@@ -19,55 +17,12 @@ import { ShoppingBag, Check } from 'lucide-react';
 import { useTranslations } from 'next-intl';
 import { Spinner } from '@/components/Spinner';
 
-const BackAnimation = () => {
-    const lottieRef = useRef<any>(null);
-
-    useEffect(() => {
-        // Цикличная анимация только для экранов меньше 1441px
-        if (window.innerWidth >= 1441) return;
-
-        let direction = 1;
-        const interval = setInterval(() => {
-            if (lottieRef.current) {
-                lottieRef.current.setDirection(direction);
-                lottieRef.current.play();
-                direction = direction === 1 ? -1 : 1;
-            }
-        }, 1500);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    // Защита: если данных нет, показываем обычную картинку
-    if (!backAnimationData || !backAnimationData.layers) {
-        return <img src="/label_03.svg" alt="Back" className="w-[180px] h-auto" />;
-    }
-
-    return (
-        <div 
-            className="w-[180px] h-auto cursor-pointer"
-            onMouseEnter={() => {
-                if (lottieRef.current && window.innerWidth >= 1441) {
-                    lottieRef.current.setDirection(1);
-                    lottieRef.current.play();
-                }
-            }}
-            onMouseLeave={() => {
-                if (lottieRef.current && window.innerWidth >= 1441) {
-                    lottieRef.current.setDirection(-1);
-                    lottieRef.current.play();
-                }
-            }}
-        >
-            <Lottie 
-                lottieRef={lottieRef}
-                animationData={backAnimationData} 
-                loop={false}
-                autoplay={false}
-            />
-        </div>
-    );
-};
+const BackAnimation = () => (
+    <span className="flex items-center gap-[10px] font-mono text-[14px] lg:text-[15px] text-[#111]">
+        <span>←</span>
+        <span>Назад</span>
+    </span>
+);
 
 export default function ProductPage() {
     const t = useTranslations('Product');
@@ -184,30 +139,36 @@ export default function ProductPage() {
     useEffect(() => {
         if (!buttonRef.current) return;
         
-        let bgColor = '#dddddd';
+        let bgColor = 'transparent';
         let textColor = '#111111';
+        let borderColor = '#111111';
 
         if (isSoldOut) {
             if (isSupportAddedRecently) {
                 bgColor = 'transparent';
                 textColor = '#111111';
+                borderColor = '#111111';
             } else if (isInSupport) {
-                bgColor = '#dcfce7'; 
+                bgColor = 'transparent';
                 textColor = '#166534';
+                borderColor = '#166534';
             }
         } else {
             if (isAddedRecently) {
-                bgColor = 'transparent'; 
+                bgColor = 'transparent';
                 textColor = '#111111';
+                borderColor = '#111111';
             } else if (isInCart) {
-                bgColor = '#1a1a1a';
+                bgColor = '#111111';
                 textColor = '#ebebeb';
+                borderColor = '#111111';
             }
         }
 
         gsap.to(buttonRef.current, {
             backgroundColor: bgColor,
             color: textColor,
+            borderColor: borderColor,
             duration: 0.3,
             ease: "power2.inOut"
         });
@@ -387,7 +348,7 @@ export default function ProductPage() {
                             )}
                         </div>
 
-                        <p className="text-[16px] md:text-[11.7px] lg:text-[0.78vw] font-medium leading-[1.35] lg:leading-[1.5] opacity-90 mb-[25px] lg:mb-[40px] text-[#111]">
+                        <p className="text-[16px] lg:text-[1vw] font-medium leading-[1.35] lg:leading-[1.5] opacity-90 mb-[25px] lg:mb-[40px] text-[#111]">
                             {product.description}
                         </p>
 
@@ -416,10 +377,6 @@ export default function ProductPage() {
                             >
                                 <button
                                     ref={buttonRef}
-                                    style={{
-                                        backgroundColor: isAddedRecently ? 'transparent' : (isInCart ? '#1a1a1a' : '#dddddd'),
-                                        color: (isInCart && !isAddedRecently) ? '#ebebeb' : '#111111'
-                                    }}
                                     onClick={() => {
                                         if (isSoldOut) {
                                             if (isInSupport) {
@@ -453,7 +410,7 @@ export default function ProductPage() {
                                             setIsOpen(true);
                                         }
                                     }}
-                                    className="relative flex items-center justify-center w-full h-[55px] rounded-[16px] text-[16px] md:text-[11.7px] font-medium transition-all duration-300 outline-none border-none cursor-pointer no-underline whitespace-nowrap shadow-sm active:scale-[0.95] overflow-hidden"
+                                    className="relative flex items-center justify-center w-full h-[42px] text-[14px] font-medium transition-all duration-300 outline-none border cursor-pointer no-underline whitespace-nowrap active:scale-[0.95] overflow-hidden"
                                 >
                                     {isSoldOut ? (
                                         <>
@@ -463,7 +420,7 @@ export default function ProductPage() {
                                                     ${!isInSupport && !isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <img src="/edit_chat.svg" alt="Уведомить" className="w-5 h-5 md:w-[11.7px] md:h-[11.7px]" />
+                                                <img src="/edit_chat.svg" alt="Уведомить" className="w-4 h-4" />
                                                 <span style={{ transform: 'translateY(1px)' }}>Уведомить</span>
                                             </div>
 
@@ -473,7 +430,7 @@ export default function ProductPage() {
                                                     ${isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <Check size={18} className="md:w-[11.7px] md:h-[11.7px]" />
+                                                <Check size={16} />
                                                 <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
                                             </div>
 
@@ -483,7 +440,7 @@ export default function ProductPage() {
                                                     ${isInSupport && !isSupportAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <img src="/chat_support.svg" alt="В списке" className="w-5 h-5 md:w-[11.7px] md:h-[11.7px]" />
+                                                <img src="/chat_support.svg" alt="В списке" className="w-4 h-4" />
                                                 <span style={{ transform: 'translateY(1px)' }}>В списке</span>
                                             </div>
                                         </>
@@ -495,7 +452,7 @@ export default function ProductPage() {
                                                     ${!isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <ShoppingBag size={18} className="md:w-[11.7px] md:h-[11.7px]" />
+                                                <ShoppingBag size={16} />
                                                 <span style={{ transform: 'translateY(1px)' }}>{t('addToCart')}</span>
                                             </div>
 
@@ -505,7 +462,7 @@ export default function ProductPage() {
                                                     ${isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 -translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <Check size={18} className="md:w-[11.7px] md:h-[11.7px]" />
+                                                <Check size={16} />
                                                 <span style={{ transform: 'translateY(1px)' }}>Добавлено</span>
                                             </div>
 
@@ -515,7 +472,7 @@ export default function ProductPage() {
                                                     ${isInCart && !isAddedRecently ? 'opacity-100 translate-y-0' : 'opacity-0 translate-y-2 pointer-events-none'}
                                                 `}
                                             >
-                                                <ShoppingBag size={18} className="md:w-[11.7px] md:h-[11.7px]" />
+                                                <ShoppingBag size={16} />
                                                 <span style={{ transform: 'translateY(1px)' }}>{t('inCart')}</span>
                                             </div>
                                         </>
@@ -535,9 +492,9 @@ export default function ProductPage() {
                             >
                                 <button
                                     onClick={() => setIsShareModalOpen(true)}
-                                    className="flex items-center justify-center gap-[8px] w-full px-[10px] h-[55px] rounded-[16px] text-[16px] md:text-[11.7px] font-medium transition-all duration-300 outline-none border-none cursor-pointer bg-[#dddddd] text-[#111] hover:text-white hover:bg-[#ffffff] whitespace-nowrap active:scale-[0.95]"
+                                    className="flex items-center justify-center gap-[8px] w-full px-[10px] h-[42px] text-[14px] font-medium transition-opacity duration-300 outline-none border border-[#111] cursor-pointer bg-transparent text-[#111] hover:opacity-60 whitespace-nowrap active:scale-[0.95]"
                                 >
-                                    <svg width="18" height="18" className="md:w-[11.7px] md:h-[11.7px]" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
                                         <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
                                         <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
                                     </svg>
@@ -548,7 +505,7 @@ export default function ProductPage() {
 
                         <TransitionLink
                             href={isArchiveProduct ? '/archive' : '/project'}
-                            className="hidden lg:block opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[10px] z-10"
+                            className="hidden lg:block opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[50px] z-10"
                         >
                             <BackAnimation />
                         </TransitionLink>
@@ -576,10 +533,12 @@ export default function ProductPage() {
                             ))}
                         </div>
 
-                        {/* Кнопка Back для мобилок и айпадов (появляется ПОСЛЕ фото) */}
+                        {/* Кнопка Back для мобилок и айпадов (появляется ПОСЛЕ фото).
+                            mb — vh, а не px, чтобы совпадать с bottom-[14vh]/[3vh] у GlobalScrollToTop
+                            (кнопка "наверх"): при упоре страницы вниз обе кнопки на одной высоте. */}
                         <TransitionLink
                             href={isArchiveProduct ? '/archive' : '/project'}
-                            className="block lg:hidden opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[10px] mb-[60px] z-[10]"
+                            className="block lg:hidden opacity-90 hover:opacity-50 transition-opacity outline-none border-none bg-transparent self-start mt-[40px] mb-[8vh] md:-mb-[3vh] z-[10]"
                         >
                             <BackAnimation />
                         </TransitionLink>

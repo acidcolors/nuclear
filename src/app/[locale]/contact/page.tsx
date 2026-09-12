@@ -63,7 +63,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
 
     return (
         <div
-            className="flex flex-row items-center gap-[10px] md:gap-[20px] lg:gap-[30px] xl:gap-[15px] z-10 w-full flex-wrap pl-0 -ml-[10px]"
+            className="flex flex-row items-center gap-[18px] md:gap-[28px] lg:gap-[38px] xl:gap-[22px] z-10 w-full flex-wrap pl-0 -ml-[10px]"
             style={{ marginTop: 'var(--contact-socials-mt)' }}
             onMouseLeave={() => setHoveredIndex(null)}
         >
@@ -97,39 +97,24 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                     return (
                         <div
                             key={item.id}
-                            className="animate-stagger opacity-0 translate-y-5 z-[100] relative mr-[10px]"
+                            className="animate-stagger opacity-0 translate-y-5 z-[100] relative"
                             onMouseEnter={() => setHoveredIndex(index)}
                         >
                             <div style={commonStyle}>
                                 <TransitionLink
                                     href="/friends"
-                                    className="flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-normal transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-[#111] hover:bg-[#ffffff] no-underline pointer-events-auto"
+                                    className="flex items-center gap-[10px] w-max font-mono text-[14px] lg:text-[15px] text-[#111] transition-opacity duration-300 outline-none border-none cursor-pointer bg-transparent hover:opacity-70 no-underline pointer-events-auto"
                                 >
-                                    <img src="/icons/Fire.svg" alt="fire" className="w-[18px] h-auto pointer-events-none" />
-                                    <span className="pointer-events-none" style={{ transform: 'translateY(1px)' }}>{item.title}</span>
+                                    <span className="pointer-events-none">→</span>
+                                    <span className="pointer-events-none">{item.title}</span>
                                 </TransitionLink>
                             </div>
                         </div>
                     );
                 }
 
-                // Логика иконок
                 const lowerName = item.title.toLowerCase();
-                let currentIcon = '/icons/telegram.svg';
-                let iconColor = '/icons/telegram_color.svg';
-                if (lowerName.includes('instagram')) {
-                    currentIcon = '/icons/instagram.svg';
-                    iconColor = '/icons/instagram_color.svg';
-                }
                 const isTelegram = lowerName.includes('telegram') || (!lowerName.includes('instagram'));
-
-                if (hoveredIndex === index && !isTelegram) {
-                    currentIcon = iconColor;
-                }
-
-                const iconStyle = (hoveredIndex === index && isTelegram)
-                    ? { filter: 'invert(58%) sepia(82%) saturate(541%) hue-rotate(159deg) brightness(91%) contrast(92%)' }
-                    : {};
 
                 return (
                     <div
@@ -142,16 +127,10 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
                             target="_blank"
                             rel="noopener noreferrer"
                             style={commonStyle}
-                            className="outline-none cursor-pointer block shrink-0 p-[10px] will-change-[opacity,transform]"
+                            className="outline-none cursor-pointer flex items-center gap-[8px] shrink-0 py-[10px] font-mono text-[14px] lg:text-[15px] text-[#111] no-underline will-change-[opacity,transform]"
                         >
-                            <div className="w-[32px] h-[32px] md:w-[26px] md:h-[26px] lg:w-[31.2px] lg:h-[31.2px] xl:w-[20.8px] xl:h-[20.8px]">
-                                <img
-                                    src={currentIcon}
-                                    alt={item.title}
-                                    className="w-full h-full object-contain pointer-events-none transition-all duration-300"
-                                    style={iconStyle}
-                                />
-                            </div>
+                            <span className="pointer-events-none">→</span>
+                            <span className="pointer-events-none">{item.title}</span>
                         </a>
                     </div>
                 );

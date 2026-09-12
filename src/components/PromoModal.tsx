@@ -7,7 +7,6 @@ import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lottie from 'lottie-react';
 import logoAnimationData from '@/data/logo_t.json';
-import upAnimationData from '@/data/up.json';
 
 const unbounded = localFont({
     src: '../../public/fonts/Unbounded-Variable.woff2',
@@ -174,6 +173,31 @@ const Link03Animation = ({ className }: { className?: string }) => {
     );
 };
 
+// Streamline "Pixel" — interface-essential-bookmark_1 (CC BY 4.0)
+const BookmarkIcon = ({ className }: { className?: string }) => (
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32" className={className}>
+        <g fill="#a8a8a8">
+            <path d="m19.81 10.67 0 -6.09 -1.52 0 0 25.9 1.52 0 0 -18.28 9.14 0 0 -9.15 -1.52 0 0 7.62 -7.62 0z" />
+            <path d="M25.91 1.53h1.52v1.52h-1.52Z" />
+            <path d="M19.81 3.05h1.52v1.53h-1.52Z" />
+            <path d="M16.76 30.48h1.53V32h-1.53Z" />
+            <path d="M15.24 28.96h1.52v1.52h-1.52Z" />
+            <path d="M13.72 27.43h1.52v1.53h-1.52Z" />
+            <path d="m15.24 9.15 -3.05 0 0 1.52 -1.52 0 0 -1.52 -3.05 0 0 1.52 -1.52 0 0 3.05 1.52 0 0 1.52 1.52 0 0 1.53 1.53 0 0 1.52 1.52 0 0 -1.52 1.53 0 0 -1.53 1.52 0 0 -1.52 1.52 0 0 -3.05 -1.52 0 0 -1.52z" />
+            <path d="M12.19 25.91h1.53v1.52h-1.53Z" />
+            <path d="M10.67 24.39h1.52v1.52h-1.52Z" />
+            <path d="M9.14 25.91h1.53v1.52H9.14Z" />
+            <path d="m7.62 1.53 13.71 0 0 1.52 1.53 0 0 -1.52 3.05 0 0 -1.53L7.62 0l0 1.53z" />
+            <path d="M7.62 27.43h1.52v1.53H7.62Z" />
+            <path d="M6.1 28.96h1.52v1.52H6.1Z" />
+            <path d="M6.1 1.53h1.52v1.52H6.1Z" />
+            <path d="M4.57 30.48H6.1V32H4.57Z" />
+            <path d="M4.57 3.05H6.1v1.53H4.57Z" />
+            <path d="M3.05 4.58h1.52v25.9H3.05Z" />
+        </g>
+    </svg>
+);
+
 const ModalLogoAnimation = () => {
     const lottieRef = useRef<any>(null);
     return (
@@ -211,8 +235,6 @@ export const PromoModal = () => {
     const descRef = useRef<HTMLParagraphElement>(null);
     const star1Ref = useRef<HTMLImageElement>(null);
     const star2Ref = useRef<HTMLImageElement>(null);
-    const lottieArrowRef = useRef<any>(null);
-    const arrowDirectionRef = useRef<number>(1);
 
     useEffect(() => {
         if (!shouldRender || !svgTextRef.current) return;
@@ -372,16 +394,17 @@ export const PromoModal = () => {
 
     return (
         <div
-            className={`fixed inset-0 z-[1000] h-[100dvh] w-full bg-[#a8a8a8] overflow-hidden transition-transform duration-500 ease-in-out ${animateIn ? 'translate-y-0' : 'translate-y-full'} ${unbounded.className}`}
+            className={`fixed inset-0 z-[1000] h-[100dvh] w-full bg-[#222222] overflow-hidden transition-transform duration-500 ease-in-out ${animateIn ? 'translate-y-0' : 'translate-y-full'} ${unbounded.className}`}
         >
-            {/* Close Button */}
+            {/* Close Button — текст в шрифте/размере меню (Header NavItem: 14px/text-sm, normal) */}
             <button
                 onClick={() => setIsOpen(false)}
-                onMouseEnter={(e) => gsap.to(e.currentTarget.firstChild, { rotate: 90, scale: 1.2, opacity: 1, duration: 0.5, ease: "back.out(1.5)" })}
-                onMouseLeave={(e) => gsap.to(e.currentTarget.firstChild, { rotate: 0, scale: 1, opacity: 0.8, duration: 0.4, ease: "power3.out" })}
-                className="absolute top-[45px] right-[15px] md:top-[60px] md:right-[30px] z-[5000] outline-none border-none bg-transparent flex items-center justify-center cursor-pointer p-[15px]"
+                onMouseEnter={(e) => gsap.to(e.currentTarget.querySelector('.close-x-icon'), { rotate: 90, scale: 1.2, opacity: 1, duration: 0.5, ease: "back.out(1.5)" })}
+                onMouseLeave={(e) => gsap.to(e.currentTarget.querySelector('.close-x-icon'), { rotate: 0, scale: 1, opacity: 0.8, duration: 0.4, ease: "power3.out" })}
+                className="absolute top-[10px] right-[15px] md:top-[20px] md:right-[30px] z-[5000] outline-none border-none bg-transparent flex items-center gap-[8px] cursor-pointer p-[15px]"
             >
-                <span className="block text-[36px] font-black text-[#e2fd6f] opacity-80" style={{ textShadow: '0 2px 10px rgba(0,0,0,0.3)' }}>✕</span>
+                <span className="text-[14px] lg:text-sm font-normal tracking-normal text-[#a8a8a8]" style={{ fontFamily: 'Inter, sans-serif' }}>свернуть</span>
+                <span className="close-x-icon block text-[16px] font-normal text-[#a8a8a8] opacity-80">✕</span>
             </button>
 
             {/* Scrolling Container */}
@@ -396,7 +419,7 @@ export const PromoModal = () => {
                 <main
                     className="w-full min-h-[100dvh]"
                     style={{
-                        background: '#a8a8a8',
+                        background: '#222222',
                         /* background: 'linear-gradient(180deg, #fbbcb6 0%, #000000ff 20%, #FF0000 35%, #000000ff 45%, #4a0000 75%, #000000 85%)' */
                     }}
                 >
@@ -435,20 +458,28 @@ export const PromoModal = () => {
                     <div className="relative w-full px-6 mt-[80px] flex flex-col items-center">
                         <div className="relative w-[90vw] max-w-[400px] lg:w-[95vw] lg:max-w-[1700px]">
                             <div className="w-full bg-transparent flex flex-col pt-[-20px] pb-16 z-10 relative min-h-[300px] lg:min-h-[750px]">
-                                <h2 ref={titleRef} className="text-[#222222] font-bold text-[20px] lg:text-[28px] leading-[1.3] text-left relative z-10 mx-[20px] lg:mx-0 lg:w-full">
+                                <h2 ref={titleRef} className="text-[#a8a8a8] font-bold text-[20px] lg:text-[28px] leading-[1.3] text-left relative z-10 mx-[20px] lg:mx-0 lg:w-full">
                                     Набор открыток
                                 </h2>
-                                <p ref={descRef} className="mt-[50px] text-[#222222] text-[20px] lg:text-[28px] leading-[1.3] font-normal text-left relative z-10 mx-[20px] lg:mx-0 lg:max-w-[720px]">
+                                <p ref={descRef} className="mt-[50px] text-[#a8a8a8] text-[20px] lg:text-[28px] leading-[1.3] font-normal text-left relative z-10 mx-[20px] lg:mx-0 lg:max-w-[720px]">
                                     Коллекция открыток «Горит сарай — гори и хата». В наборе 10 штук формата 7 х 10.5 см. Всё уже упаковано и ready to gift: можно подарить весь сет целиком или раздарить поштучно.
                                 </p>
                             </div>
                         </div>
                     </div>
 
+                    {/* Стрелка-разделитель в пустом пространстве между описанием и фото ниже —
+                        выровнена по левому краю текста (тот же контейнер, что у заголовка/описания) */}
+                    <div className="w-full px-6 flex justify-center">
+                        <div className="w-[90vw] max-w-[400px] lg:w-[95vw] lg:max-w-[1700px]">
+                            <BookmarkIcon className="w-[60px] h-auto ml-[20px] lg:ml-0" />
+                        </div>
+                    </div>
+
                     {/* Bottom Block */}
-                    <div className="w-full mt-8 lg:mt-32 px-6 flex flex-col items-center pb-16">
+                    <div className="w-full mt-[-60px] lg:mt-[-20px] px-6 flex flex-col items-center pb-16">
                         <ScrollSequenceAnimation className="relative z-50 w-full flex justify-center -mt-[200px] -mb-[320px]" />
-                        <p ref={textTargetRef} className="text-[#222222] font-normal text-center text-[18px] leading-[1.2] max-w-[280px] mb-24 relative z-20">
+                        <p ref={textTargetRef} className="text-[#a8a8a8] font-normal text-center text-[18px] leading-[1.2] max-w-[280px] mb-24 relative z-20">
                             Lorem ipsum<br />dolor sit amet,<br />consectetuer<br />adipiscing elit, sed<br />diam nonummy nibh<br />euismod tincidunt ut<br />laoreet dolore<br />magna aliquam<br />erat volutpat.<br />Ut wisi
                         </p>
 
@@ -486,39 +517,10 @@ export const PromoModal = () => {
                                 setIsOpen(false);
                                 setTimeout(() => router.push('/product/prj_01'), 500);
                             }}
-                            className={`-mt-[50px] flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] rounded-[15px] text-[17px] font-normal transition-all duration-300 outline-none border-none cursor-pointer bg-[#d9d9d9] text-[#111] hover:text-black hover:bg-[#ffffff] no-underline pointer-events-auto relative z-[150] ${unbounded.className}`}
+                            className="-mt-[130px] flex items-center justify-center gap-[10px] w-max px-[22px] h-[55px] font-mono text-[14px] lg:text-[15px] text-[#a8a8a8] bg-transparent border-none outline-none cursor-pointer transition-opacity duration-300 hover:opacity-70 no-underline pointer-events-auto relative z-[150]"
                         >
-                            <span style={{ transform: 'translateY(1px)' }}>Подробнее</span>
-                        </button>
-
-                        {/* Scroll to top button (Custom Lottie) */}
-                        <button
-                            onClick={() => {
-                                const container = document.getElementById('promo-scroll-container');
-                                if (container) {
-                                    container.scrollTo({ top: 0, behavior: 'smooth' });
-                                }
-                            }}
-                            className="mt-[90px] flex items-center justify-center w-[100px] md:w-[120px] lg:w-[150px] cursor-pointer z-[150] transition-transform duration-300 hover:scale-110 active:scale-95 outline-none border-none bg-transparent"
-                            aria-label="Наверх"
-                        >
-                            <div className="w-full h-auto [&_path]:!fill-[#e2fd6f] [&_path]:!stroke-[#e2fd6f]">
-                                <Lottie
-                                    lottieRef={lottieArrowRef}
-                                    animationData={upAnimationData}
-                                    loop={false}
-                                    autoplay={true}
-                                    onComplete={() => {
-                                        setTimeout(() => {
-                                            if (lottieArrowRef.current) {
-                                                arrowDirectionRef.current = arrowDirectionRef.current === 1 ? -1 : 1;
-                                                lottieArrowRef.current.setDirection(arrowDirectionRef.current);
-                                                lottieArrowRef.current.play();
-                                            }
-                                        }, 500);
-                                    }}
-                                />
-                            </div>
+                            <span>→</span>
+                            <span>Подробнее</span>
                         </button>
                     </div>
                 </main>

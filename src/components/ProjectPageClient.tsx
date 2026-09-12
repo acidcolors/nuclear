@@ -348,7 +348,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                             const scrollDiv = document.getElementById('project-scroll-track');
                                             if (scrollDiv) scrollDiv.scrollTop = 0;
                                         }}
-                                        className={`p-[15px] rounded-[6px] text-[14px] md:text-[15.6px] font-normal tracking-tight shadow-sm flex items-center justify-center leading-none m-0 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer select-none block shrink-0 ${bgTextClass} ${opacityClass} ${transformClass}`}
+                                        className={`p-[15px] rounded-[6px] text-[14px] md:text-[15.6px] font-normal tracking-tight shadow-sm flex items-center justify-center leading-none m-0 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer select-none block shrink-0 ${bgTextClass} ${opacityClass} ${transformClass} lg:bg-transparent lg:shadow-none lg:rounded-none lg:p-0 lg:px-[4px] lg:py-[10px] lg:font-mono lg:text-[15px] lg:border-b-2 ${isActive ? 'lg:border-[#111]' : 'lg:border-transparent'}`}
                                     >
                                         {label}
                                     </a>

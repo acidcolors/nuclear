@@ -3,8 +3,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { usePathname } from 'next/navigation';
 import gsap from 'gsap';
-import Lottie from 'lottie-react';
-import upAnimationData from '@/data/up.json';
 
 export const GlobalScrollToTop = () => {
     const pathname = usePathname();
@@ -114,43 +112,6 @@ export const GlobalScrollToTop = () => {
         });
     };
 
-    const lottieRef = useRef<any>(null);
-
-    useEffect(() => {
-        if (window.innerWidth >= 1441) return;
-
-        let direction = 1;
-        const interval = setInterval(() => {
-            if (lottieRef.current) {
-                lottieRef.current.setDirection(direction);
-                lottieRef.current.play();
-                direction = direction === 1 ? -1 : 1;
-            }
-        }, 1500);
-
-        return () => clearInterval(interval);
-    }, []);
-
-    // Защита: если данных нет, показываем обычную картинку
-    if (!upAnimationData || !upAnimationData.layers) {
-        return (
-            <div
-                ref={btnRef}
-                onClick={handleBackToTop}
-                className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[9999] cursor-pointer opacity-0 translate-y-[30px] hidden"
-                style={{ pointerEvents: 'none' }}
-            >
-                <div className="relative group transition-transform duration-300 hover:scale-110 active:scale-95">
-                    <img
-                        src="/label_up.svg"
-                        alt="Back to top"
-                        className="w-[100px] md:w-[120px] lg:w-[150px] h-auto drop-shadow-md"
-                    />
-                </div>
-            </div>
-        );
-    }
-
     return (
         <div
             id="global-scroll-to-top"
@@ -158,28 +119,10 @@ export const GlobalScrollToTop = () => {
             onClick={handleBackToTop}
             className="fixed bottom-[14vh] md:bottom-[3vh] right-[4vw] lg:bottom-[40px] lg:right-[40px] z-[9999] cursor-pointer opacity-0 translate-y-[30px] hidden"
             style={{ pointerEvents: 'none' }}
-            onMouseEnter={() => {
-                if (lottieRef.current && window.innerWidth >= 1441) {
-                    lottieRef.current.setDirection(1);
-                    lottieRef.current.play();
-                }
-            }}
-            onMouseLeave={() => {
-                if (lottieRef.current && window.innerWidth >= 1441) {
-                    lottieRef.current.setDirection(-1);
-                    lottieRef.current.play();
-                }
-            }}
         >
-            <div className="relative group transition-transform duration-300 hover:scale-110 active:scale-95">
-                <div className="w-[100px] md:w-[120px] lg:w-[150px] h-auto [&_path]:!fill-[#111] [&_path]:!stroke-[#111]">
-                    <Lottie 
-                        lottieRef={lottieRef}
-                        animationData={upAnimationData} 
-                        loop={false}
-                        autoplay={false}
-                    />
-                </div>
+            <div className="flex items-center gap-[10px] font-mono text-[14px] lg:text-[15px] text-[#111] transition-opacity duration-300 hover:opacity-70">
+                <span>↑</span>
+                <span>Наверх</span>
             </div>
         </div>
     );
