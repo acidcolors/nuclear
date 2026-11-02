@@ -165,7 +165,7 @@ export const CartDrawer = () => {
                     type: 'order',
                     source,
                     contactType, // Добавляем тип контакта в запрос
-                    ...(tgUser && { tgUser })
+                    ...(tgUser && { tgInitData: (window as any).Telegram.WebApp.initData })
                 }),
             });
 

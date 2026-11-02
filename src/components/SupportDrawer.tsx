@@ -133,7 +133,7 @@ export const SupportDrawer = () => {
                     subject,
                     items,
                     source,
-                    ...(tgUser && { tgUser })
+                    ...(tgUser && { tgInitData: (window as any).Telegram.WebApp.initData })
                 }),
             });
 
