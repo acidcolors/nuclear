@@ -1,0 +1,69 @@
+#!/bin/bash
+# Деплой по git push. Лежит на сервере: /var/repo/nuclear.git/hooks/post-receive
+# Принимает только ветку main.
+# Порядок: обновить код -> npm install -> build (с бэкапом .next) -> pm2 restart -> проверка -> при сбое откат.
+APP=/var/www/nuclear
+REPO=/var/repo/nuclear.git
+LOG=/var/log/nuclear-deploy.log
+export PATH=/usr/local/bin:/usr/bin:/bin
+
+while read -r oldrev newrev ref; do
+  if [ "$ref" != "refs/heads/main" ]; then
+    echo ">> $ref принят, но не деплоится (деплой только из main)"
+    continue
+  fi
+
+  exec 9>/var/lock/nuclear-deploy.lock
+  flock -n 9 || { echo "!! Другой деплой уже идёт, повторите позже"; exit 1; }
+
+  unset GIT_DIR GIT_WORK_TREE
+  cd "$APP" || exit 1
+
+  {
+    echo "=== $(date '+%F %T') деплой ${newrev:0:7} ==="
+    PREV=$(git rev-parse HEAD)
+    echo ">> предыдущая версия: ${PREV:0:7}"
+
+    git fetch -q "$REPO" main && git reset -q --hard FETCH_HEAD || { echo "!! не удалось обновить код"; exit 1; }
+    echo ">> код обновлён до $(git rev-parse --short HEAD)"
+
+    echo ">> npm install"
+    npm install --no-audit --no-fund > /tmp/nuclear-install.log 2>&1
+    tail -3 /tmp/nuclear-install.log
+
+    echo ">> бэкап .next и сборка"
+    rm -rf .next-backup
+    [ -d .next ] && cp -a .next .next-backup
+    npm run build > /tmp/nuclear-build.log 2>&1
+    BUILD_RC=$?
+    tail -25 /tmp/nuclear-build.log
+
+    if [ "$BUILD_RC" -ne 0 ] || [ ! -f .next/BUILD_ID ]; then
+      echo "!! СБОРКА УПАЛА — откатываю на ${PREV:0:7}, сайт не тронут"
+      rm -rf .next
+      [ -d .next-backup ] && mv .next-backup .next
+      git reset -q --hard "$PREV"
+      exit 1
+    fi
+
+    echo ">> pm2 restart nuclear"
+    pm2 restart nuclear --update-env > /dev/null 2>&1
+    sleep 6
+    CODE=$(curl -s -o /dev/null -m 20 -w '%{http_code}' http://127.0.0.1:3000/ru)
+    echo ">> проверка /ru: HTTP $CODE"
+
+    if [ "$CODE" != "200" ]; then
+      echo "!! САЙТ НЕ ОТВЕЧАЕТ — откатываю на ${PREV:0:7}"
+      rm -rf .next
+      [ -d .next-backup ] && mv .next-backup .next
+      git reset -q --hard "$PREV"
+      pm2 restart nuclear --update-env > /dev/null 2>&1
+      exit 1
+    fi
+
+    rm -rf .next-backup
+    echo ">> ГОТОВО: ${newrev:0:7} задеплоен"
+  } 2>&1 | tee -a "$LOG"
+
+  [ "${PIPESTATUS[0]}" -eq 0 ] || exit 1
+done
