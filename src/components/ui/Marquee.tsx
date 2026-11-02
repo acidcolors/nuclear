@@ -9,9 +9,14 @@ interface MarqueeProps {
 
 export const Marquee: React.FC<MarqueeProps> = ({ text, link }) => {
     const formattedText = text;
-    
-    // Дублируем текст 12 раз (6+6) для заполнения и бесшовности
-    const items = Array(12).fill(formattedText);
+
+    // Разбиваем на отдельные токены (слова/значки), чтобы flex-gap давал
+    // одинаковый отступ между каждым токеном — иначе пробел внутри строки
+    // и gap между повторами отличались бы по ширине.
+    const tokens = formattedText.split(/\s+/).filter(Boolean);
+
+    // Дублируем токены 12 раз (6+6) для заполнения и бесшовности
+    const items = Array(12).fill(tokens).flat();
 
     const handleClick = (e: React.MouseEvent) => {
         e.preventDefault();

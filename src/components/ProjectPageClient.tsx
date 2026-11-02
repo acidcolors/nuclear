@@ -322,7 +322,6 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                             {filters.map((tag, index) => {
                                 const isActive = activeFilter === tag;
                                 const label = tag === 'All' ? t('all') : tag;
-                                let bgTextClass = isActive ? 'bg-[#d1d1d1] text-[#111]' : 'bg-[#f4f4f4] text-[#111]';
                                 let opacityClass = isActive ? 'opacity-100' : 'opacity-80';
                                 let transformClass = 'translate-x-0 scale-100 z-0';
 
@@ -348,7 +347,7 @@ export default function ProjectPageClient({ initialProducts, initialHeader, forc
                                             const scrollDiv = document.getElementById('project-scroll-track');
                                             if (scrollDiv) scrollDiv.scrollTop = 0;
                                         }}
-                                        className={`p-[15px] rounded-[6px] text-[14px] md:text-[15.6px] font-normal tracking-tight shadow-sm flex items-center justify-center leading-none m-0 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer select-none block shrink-0 ${bgTextClass} ${opacityClass} ${transformClass} lg:bg-transparent lg:shadow-none lg:rounded-none lg:p-0 lg:px-[4px] lg:py-[10px] lg:font-mono lg:text-[15px] lg:border-b-2 ${isActive ? 'lg:border-[#111]' : 'lg:border-transparent'}`}
+                                        className={`bg-transparent text-[#111] shadow-none rounded-none p-0 px-[4px] py-[10px] font-mono text-[14px] lg:text-[15px] tracking-tight flex items-center justify-center leading-none m-0 transition-all duration-500 ease-[cubic-bezier(0.25,1,0.5,1)] cursor-pointer select-none block shrink-0 border-b-2 ${opacityClass} ${transformClass} ${isActive ? 'border-[#111]' : 'border-transparent'}`}
                                     >
                                         {label}
                                     </a>

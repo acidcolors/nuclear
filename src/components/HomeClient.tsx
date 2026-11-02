@@ -194,8 +194,8 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
           {/* ВЕСЬ ТВОЙ ОСТАЛЬНОЙ JSX (Заголовки, кнопки и т.д.) ОСТАЕТСЯ БЕЗ ИЗМЕНЕНИЙ */}
           <div className="absolute top-0 left-0 w-full h-full z-[95] pointer-events-none blend-exclusion">
             {/* Приветственный текст */}
-            <div className="animate-up opacity-0 translate-y-5 hidden lg:block absolute top-[55px] left-[22.2vw]">
-              <span className="text-sm font-normal tracking-normal text-[#ebebeb]">
+            <div className="animate-up opacity-0 translate-y-5 hidden lg:block absolute top-[55px] left-[22.2vw] text-[14px] max-h-[650px]:!text-[11px] md:text-[11px] lg:text-[12px] leading-tight">
+              <span className="font-normal tracking-normal leading-tight text-[#ebebeb]">
                 Welcome <br /> to other world.
               </span>
             </div>
@@ -308,8 +308,8 @@ export default function HomeClient({ initialMain, initialLinks, forcedLoading = 
               {/* Футер-текст слева */}
               <div className="custom-thank-you animate-up opacity-0 translate-y-5 flex items-center lg:absolute lg:bottom-auto lg:top-[50vh] lg:left-[40px] lg:-translate-y-1/2" style={{ gap: '10px' }}>
                 <span className="text-[28px] max-h-[650px]:!text-[22px] md:text-[22px] lg:text-[32px] text-[#ebebeb] leading-none mt-1 -ml-2">✹</span>
-                <p className="text-[14px] max-h-[650px]:!text-[11px] md:text-[11px] lg:text-[16px] font-normal tracking-normal leading-tight text-[#ebebeb]">
-                  Thank you <br /> for visiting this site.
+                <p className="text-[14px] max-h-[650px]:!text-[11px] md:text-[11px] lg:text-[12px] font-normal tracking-normal leading-tight text-[#ebebeb]">
+                  Thank you <br /> for visiting <br className="hidden lg:inline" /> this site.
                 </p>
               </div>
             </div>

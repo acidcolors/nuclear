@@ -63,7 +63,7 @@ const UnifiedSocials = ({ items, showFriends }: { items: any[], showFriends: boo
 
     return (
         <div
-            className="flex flex-row items-center gap-[18px] md:gap-[28px] lg:gap-[38px] xl:gap-[22px] z-10 w-full flex-wrap pl-0 -ml-[10px]"
+            className="flex flex-row items-center gap-[18px] md:gap-[28px] lg:gap-[38px] xl:gap-[22px] z-10 w-full flex-wrap"
             style={{ marginTop: 'var(--contact-socials-mt)' }}
             onMouseLeave={() => setHoveredIndex(null)}
         >

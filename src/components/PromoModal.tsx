@@ -2,23 +2,10 @@
 
 import React, { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import localFont from 'next/font/local';
 import gsap from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import Lottie from 'lottie-react';
 import logoAnimationData from '@/data/logo_t.json';
-
-const unbounded = localFont({
-    src: '../../public/fonts/Unbounded-Variable.woff2',
-    variable: '--font-unbounded',
-});
-const playfair = localFont({
-    src: [
-        { path: '../../public/fonts/PlayfairDisplay-Variable.woff2', style: 'normal' },
-        { path: '../../public/fonts/PlayfairDisplay-Italic-Variable.woff2', style: 'italic' },
-    ],
-    variable: '--font-playfair',
-});
 
 // Фото товара наверху модалки — перебираем по кругу каждые 2 секунды
 const TOP_PHOTOS = [
@@ -390,18 +377,18 @@ export const PromoModal = () => {
 
     if (!isMounted || !shouldRender) return null;
 
-    const marqueeItems = Array(12).fill('✸ ДРОП ✸ СВЕЖИЙ ✸ МОКРЫЙ ');
+    const marqueeItems = Array(12).fill('→ ДРОП → СВЕЖИЙ → МОКРЫЙ');
 
     return (
         <div
-            className={`fixed inset-0 z-[1000] h-[100dvh] w-full bg-[#222222] overflow-hidden transition-transform duration-500 ease-in-out ${animateIn ? 'translate-y-0' : 'translate-y-full'} ${unbounded.className}`}
+            className={`fixed inset-0 z-[1000] h-[100dvh] w-full bg-[#222222] overflow-hidden transition-transform duration-500 ease-in-out ${animateIn ? 'translate-y-0' : 'translate-y-full'}`}
         >
             {/* Close Button — текст в шрифте/размере меню (Header NavItem: 14px/text-sm, normal) */}
             <button
                 onClick={() => setIsOpen(false)}
                 onMouseEnter={(e) => gsap.to(e.currentTarget.querySelector('.close-x-icon'), { rotate: 90, scale: 1.2, opacity: 1, duration: 0.5, ease: "back.out(1.5)" })}
                 onMouseLeave={(e) => gsap.to(e.currentTarget.querySelector('.close-x-icon'), { rotate: 0, scale: 1, opacity: 0.8, duration: 0.4, ease: "power3.out" })}
-                className="absolute top-[10px] right-[15px] md:top-[20px] md:right-[30px] z-[5000] outline-none border-none bg-transparent flex items-center gap-[8px] cursor-pointer p-[15px]"
+                className="absolute top-[10px] right-[15px] md:top-[20px] md:right-[30px] z-[5000] outline-none border border-[#a8a8a8]/50 rounded-none bg-transparent flex items-center gap-[8px] cursor-pointer px-[14px] py-[10px]"
             >
                 <span className="text-[14px] lg:text-sm font-normal tracking-normal text-[#a8a8a8]" style={{ fontFamily: 'Inter, sans-serif' }}>свернуть</span>
                 <span className="close-x-icon block text-[16px] font-normal text-[#a8a8a8] opacity-80">✕</span>
@@ -445,9 +432,9 @@ export const PromoModal = () => {
                         стоит прямо под фото, как футер первого экрана, а при скролле уезжает
                         вверх вместе с остальным контентом, никуда не прилипая. */}
                     <div className="w-full h-[56px] bg-[#222222] overflow-hidden flex items-center">
-                        <div className="flex whitespace-nowrap animate-marquee">
+                        <div className="flex whitespace-nowrap animate-marquee gap-x-[14px]" style={{ animationDuration: '300s' }}>
                             {marqueeItems.map((text, idx) => (
-                                <span key={idx} className={`text-[22px] italic font-normal uppercase tracking-wide ${playfair.className}`} style={{ color: '#a8a8a8' }}>
+                                <span key={idx} className="text-[22px] font-normal uppercase tracking-wide" style={{ color: '#a8a8a8' }}>
                                     {text}
                                 </span>
                             ))}
@@ -457,13 +444,15 @@ export const PromoModal = () => {
                     {/* Central Block (Capsule) */}
                     <div className="relative w-full px-6 mt-[80px] flex flex-col items-center">
                         <div className="relative w-[90vw] max-w-[400px] lg:w-[95vw] lg:max-w-[1700px]">
-                            <div className="w-full bg-transparent flex flex-col pt-[-20px] pb-16 z-10 relative min-h-[300px] lg:min-h-[750px]">
-                                <h2 ref={titleRef} className="text-[#a8a8a8] font-bold text-[20px] lg:text-[28px] leading-[1.3] text-left relative z-10 mx-[20px] lg:mx-0 lg:w-full">
-                                    Набор открыток
-                                </h2>
-                                <p ref={descRef} className="mt-[50px] text-[#a8a8a8] text-[20px] lg:text-[28px] leading-[1.3] font-normal text-left relative z-10 mx-[20px] lg:mx-0 lg:max-w-[720px]">
-                                    Коллекция открыток «Горит сарай — гори и хата». В наборе 10 штук формата 7 х 10.5 см. Всё уже упаковано и ready to gift: можно подарить весь сет целиком или раздарить поштучно.
-                                </p>
+                            <div className="w-full bg-transparent flex flex-col pt-[-20px] pb-16 z-10 relative min-h-[300px]">
+                                <div className="lg:mx-auto lg:w-full lg:max-w-[900px]">
+                                    <h2 ref={titleRef} className="text-[#a8a8a8] font-bold text-[20px] lg:text-[28px] leading-[1.3] text-left relative z-10 mx-[20px] lg:mx-0 lg:w-full">
+                                        Набор открыток
+                                    </h2>
+                                    <p ref={descRef} className="mt-[50px] text-[#a8a8a8] text-[20px] lg:text-[28px] leading-[1.3] font-normal text-left relative z-10 mx-[20px] lg:mx-0 lg:max-w-[720px]">
+                                        Коллекция открыток «Горит сарай — гори и хата». В наборе 10 штук формата 7 х 10.5 см. Всё уже упаковано и ready to gift: можно подарить весь сет целиком или раздарить поштучно.
+                                    </p>
+                                </div>
                             </div>
                         </div>
                     </div>
@@ -472,7 +461,9 @@ export const PromoModal = () => {
                         выровнена по левому краю текста (тот же контейнер, что у заголовка/описания) */}
                     <div className="w-full px-6 flex justify-center">
                         <div className="w-[90vw] max-w-[400px] lg:w-[95vw] lg:max-w-[1700px]">
-                            <BookmarkIcon className="w-[60px] h-auto ml-[20px] lg:ml-0" />
+                            <div className="lg:mx-auto lg:w-full lg:max-w-[900px]">
+                                <BookmarkIcon className="w-[60px] h-auto ml-[20px] lg:ml-[220px]" />
+                            </div>
                         </div>
                     </div>
 
